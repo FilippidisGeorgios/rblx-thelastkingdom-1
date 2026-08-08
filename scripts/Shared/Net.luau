@@ -44,6 +44,7 @@ local EVENT_NAMES: { string } = {
 	"AreaEvent", -- server -> client: which chamber you are in, and whether its gate is shut
 	"ObjectiveHint", -- server -> client: the one line at the top saying what to do now
 	"RequestToggleWeapon", -- client -> server: draw the weapon, or put it away
+	"WeaponState", -- server -> client: who has their weapon out, so arms can be posed
 }
 local FUNCTION_NAMES: { string } = {}
 

@@ -137,12 +137,14 @@ local function onAttack(player: Player, aim: any)
 	lastSwing[player] = now
 
 	--[[
-		Swing the arm the moment the cooldown lets the attack through, BEFORE
-		hits are resolved. It costs nothing and it means the animation plays on
-		exactly the swings the server counted — a whiff looks like a whiff, and
-		a swing eaten by the cooldown correctly shows nothing at all.
+		The arm is swung by the CLIENT, off the CombatEvent broadcast at the end
+		of this function — see Client/Controllers/WeaponAnimController for why
+		the server cannot win that fight with the animator.
+
+		Which means the animation plays on exactly the swings the server
+		counted: a whiff looks like a whiff, and a swing eaten by the cooldown
+		correctly shows nothing at all, because no event goes out for it.
 	]]
-	WeaponVisualService.swing(player)
 
 	-- Facing: accept a sane client aim, else the character's look direction. The
 	-- server still owns hit resolution regardless of what the client sends.

@@ -60,18 +60,17 @@ local log = Logger.new("WeaponVisualService")
 --[[
 	How the hilt sits in the fist.
 
-	Adjusted from a playtest: it was rotated a quarter turn about X and pointing
-	down and forward, and the correction never survived a respawn because the
-	sword is rebuilt from this constant every time a character loads. Baked in
-	now, so it survives dying.
+	The blade came out FLAT — parallel with the ground, edges pointing left and
+	right, the flat of it facing sky and earth. That is because the grip
+	attachment's own +Y runs forward out of the fist, and gripSeat aligns the
+	blade's length to +Y with no roll of its own.
 
-	If it is still wrong, this is the ONE value to change. Print the truth with:
-
-	    local c = game.Players.<name>.Character
-	    local a = c.RightHand.RightGripAttachment
-	    print(a.CFrame:Inverse() * c.RightHand.WeaponGrip.C0)
+	So two corrections live here. Fifty degrees about X lifts the point up and
+	forward instead of straight out; ninety about Y rolls the blade a quarter
+	turn so the EDGES face up and down, which is how a sword is carried and how
+	it has to sit for a swing to look like a cut rather than a slap.
 ]]
-local GRIP = CFrame.new(0, -0.55, 0)
+local GRIP = CFrame.new(0, -0.55, 0) * CFrame.Angles(math.rad(-50), math.rad(90), 0)
 
 --[[
 	And where it rides when it is put away: ON THE RIGHT LEG.
@@ -82,64 +81,30 @@ local GRIP = CFrame.new(0, -0.55, 0)
 	and it is what was asked for.
 
 	+X is outboard of the right leg, so 0.62 puts it clear of the thigh rather
-	than inside it. The 194 degrees about Z is 180 to turn the blade downward
-	plus 14 of rake, so the hilt kicks forward off the hip instead of lying
-	flat against it — which is the difference between a sword worn and a sword
-	stuck on.
+	than inside it. The 194 about Z is 180 to turn the blade downward plus 14 of
+	rake, so the hilt kicks off the hip instead of lying flat against it.
+
+	And 35 about X is the katana lean. Hanging dead vertical, point at the
+	floor, reads as a sword stored rather than a sword worn — a scabbard sits
+	back off the leg, tip trailing, closer to the diagonal than to either the
+	upright or the horizontal. That angle is the whole difference.
 ]]
-local SHEATH = CFrame.new(0.62, 0.35, 0.1) * CFrame.Angles(0, 0, math.rad(194))
+local SHEATH = CFrame.new(0.62, 0.35, 0.1) * CFrame.Angles(math.rad(35), 0, math.rad(194))
 
 --==========================================================================
--- The arm
---==========================================================================
-
 --[[
-	How the sword arm is carried while the weapon is DRAWN.
+	THE ARM IS NOT ANIMATED HERE.
 
-	A character holding a blade in the same pose as a character holding nothing
-	is a character who has not noticed they are holding a blade. The arm comes
-	out and forward a little and stays there, and everything else — the walk,
-	the idle breathing — plays on top, because this is an offset on the joint
-	rather than an animation fighting one.
+	It was, and it did nothing, because a character's pose is
+	`C0 * Transform * C1:Inverse()` and Roblox's Animator rewrites Transform on
+	the CLIENT every frame from whatever idle is playing. A server writing C0
+	is composing with an idle that is holding the arm down, not replacing it.
+
+	The carry stance and the swing arcs now live in
+	`Client/Controllers/WeaponAnimController`, which runs after the animator and
+	gets the last word. This service keeps what it is actually good at: owning
+	the weld, deciding what is equipped, and broadcasting who has drawn.
 ]]
-local READY = CFrame.Angles(math.rad(-16), math.rad(-10), math.rad(-14))
-
---[[
-	Three swings, cycled.
-
-	The same arc three times in a row is what makes combat read as a machine.
-	These are a backhand across the body, a forehand back across it, and an
-	overhead chop — so a run of hits looks like someone fighting rather than
-	someone pressing a button.
-]]
-local SWINGS = {
-	{
-		wind = CFrame.Angles(math.rad(-20), math.rad(-62), math.rad(-24)),
-		strike = CFrame.Angles(math.rad(-74), math.rad(48), math.rad(12)),
-	},
-	{
-		wind = CFrame.Angles(math.rad(-42), math.rad(58), math.rad(20)),
-		strike = CFrame.Angles(math.rad(-58), math.rad(-46), math.rad(-18)),
-	},
-	{
-		wind = CFrame.Angles(math.rad(-128), math.rad(-14), math.rad(-6)),
-		strike = CFrame.Angles(math.rad(-30), math.rad(6), math.rad(4)),
-	},
-}
-
---==========================================================================
--- Timing. Every arc in SWINGS runs on these.
---
--- 0.47s total against a 0.6s weapon cooldown, so a swing is always finished
--- and back on guard before the next one is allowed — the arm is never caught
--- mid-arc by its own successor.
---==========================================================================
-local NEUTRAL = CFrame.new()
-
-local T_WIND = 0.13 -- back
-local T_STRIKE = 0.12 -- through
-local T_RECOVER = 0.22 -- and back on guard
-
 local PALETTE = {
 	steel = Color3.fromRGB(168, 176, 186),
 	steelDark = Color3.fromRGB(104, 112, 124),
@@ -150,32 +115,8 @@ local PALETTE = {
 }
 
 --==========================================================================
-local swinging: { [Player]: number } = {} -- Player -> animation token
 local drawn: { [Player]: boolean } = {} -- is the weapon in hand, or on the leg
-local nextSwing: { [Player]: number } = {} -- which of the three arcs comes next
-
---[[
-	The shoulder's REST pose, remembered the first time each joint is seen.
-
-	Reading `joint.C0` at the start of every swing looks equivalent and is not:
-	interrupt a swing half way and the next one captures a half-raised arm as
-	its home, and the one after that captures a worse one. Within a dozen
-	swings the arm is somewhere behind the character's head and never comes
-	down. A fresh character has a fresh Motor6D, so the first read is always
-	the true rest pose.
-
-	Weak keys, so a dead character's joints do not sit in here for the session.
-]]
-local restPose: { [Motor6D]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
-
-local function homeOf(joint: Motor6D): CFrame
-	local cached = restPose[joint]
-	if not cached then
-		cached = joint.C0
-		restPose[joint] = cached
-	end
-	return cached
-end
+local weaponState: RemoteEvent? = nil
 
 --==========================================================================
 local function part(parent: Instance, name: string, size: Vector3, cf: CFrame, colour: Color3, material: Enum.Material): Part
@@ -312,18 +253,6 @@ local function buildSword(): (Model, BasePart)
 	return model, hilt
 end
 
---==========================================================================
--- Finding the joint. R15 keeps the shoulder inside RightUpperArm and R6 inside
--- Torso under a different name, and there is no reason for the rest of this
--- file to know which rig it got.
-local function rightShoulder(character: Model): Motor6D?
-	for _, d in character:GetDescendants() do
-		if d:IsA("Motor6D") and (d.Name == "RightShoulder" or d.Name == "Right Shoulder") then
-			return d
-		end
-	end
-	return nil
-end
 
 local function rightHand(character: Model): BasePart?
 	local hand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
@@ -676,7 +605,7 @@ local function attachWeapon(player: Player, character: Model)
 
 	-- Armed and on guard from the first frame, without waiting for a keypress.
 	drawn[player] = true
-	WeaponVisualService.carry(player, true)
+	WeaponVisualService.announce(player)
 
 	log:info(("armed %s with %s"):format(player.Name, tostring(def.DisplayName or weaponId)))
 end
@@ -747,162 +676,22 @@ function WeaponVisualService.setDrawn(player: Player, wantDrawn: boolean)
 	end
 
 	drawn[player] = wantDrawn
-	WeaponVisualService.carry(player, wantDrawn)
+	WeaponVisualService.announce(player)
 end
 
 --[[
-	Puts the sword arm into, or out of, its carrying pose.
+	Tells every client who is holding their weapon.
 
-	Half a second either way rather than a snap: drawing a sword is a movement,
-	and an arm that teleports into a guard is the thing that makes a game look
-	unfinished. It runs on the same joint the swing uses and through the same
-	token, so a swing during a draw simply takes over.
+	The ARM is posed on the client — see Client/Controllers/WeaponAnimController
+	for why the server cannot win that fight with the animator. This service
+	keeps what it is actually good at: owning the weld, deciding what is
+	equipped, and saying so.
 ]]
-function WeaponVisualService.carry(player: Player, armed: boolean)
-	local character = player.Character
-	if not character then
+function WeaponVisualService.announce(player: Player)
+	if not weaponState then
 		return
 	end
-	local joint = rightShoulder(character)
-	if not joint then
-		return
-	end
-
-	local rest = homeOf(joint)
-	local from = joint.C0
-	local to = if armed then rest * READY else rest
-
-	local token = (swinging[player] or 0) + 1
-	swinging[player] = token
-
-	task.spawn(function()
-		local t = 0
-		local seconds = 0.45
-		while t < seconds do
-			local dt = RunService.Heartbeat:Wait()
-			if swinging[player] ~= token or not joint.Parent then
-				return
-			end
-			t = math.min(t + dt, seconds)
-			local a = t / seconds
-			joint.C0 = from:Lerp(to, 1 - (1 - a) ^ 3)
-		end
-		if swinging[player] == token then
-			joint.C0 = to
-			swinging[player] = nil
-		end
-	end)
-end
-
-function WeaponVisualService.isDrawn(player: Player): boolean
-	return drawn[player] == true
-end
-
--- Draw if sheathed, sheathe if drawn. What the 1 key does.
-function WeaponVisualService.toggle(player: Player)
-	WeaponVisualService.setDrawn(player, not WeaponVisualService.isDrawn(player))
-end
-
---==========================================================================
---[[
-	Plays one swing.
-
-	Token-guarded rather than queued: a second swing during the first replaces
-	it. Attack speed is already limited by the weapon's cooldown on the server,
-	so anything that gets here is a legitimate swing and the newest one is the
-	one the player means.
-]]
-function WeaponVisualService.swing(player: Player)
-	local character = player.Character
-	if not character then
-		return
-	end
-	local joint = rightShoulder(character)
-	if not joint then
-		return
-	end
-
-	--[[
-		The trail lives on whichever part the joint holds — the built sword
-		calls it Hilt, a supplied one is called whatever it is called, and
-		searching by name is exactly the mistake that lost the sword once
-		already.
-	]]
-	local motor = character:FindFirstChild("WeaponGrip", true)
-	local hilt = motor and motor:IsA("Motor6D") and motor.Part1
-	local trail = hilt and hilt:FindFirstChildOfClass("Trail")
-
-	--[[
-		The next swing in the cycle. Three arcs, taken in turn, so a run of
-		hits looks like someone fighting rather than someone pressing a button.
-	]]
-	local index = ((nextSwing[player] or 0) % #SWINGS) + 1
-	nextSwing[player] = index
-	local arc = SWINGS[index]
-
-	local token = (swinging[player] or 0) + 1
-	swinging[player] = token
-
-	--[[
-		Everything is measured from the CARRYING pose, not from rest.
-
-		A swing that starts at the character's side and ends there puts the arm
-		down after every hit, and then the ready stance is something the player
-		sees for a fraction of a second between blows. Starting and finishing on
-		guard is what makes a sequence of swings look continuous.
-	]]
-	local rest = homeOf(joint)
-	local home = if WeaponVisualService.isDrawn(player) then rest * READY else rest
-
-	task.spawn(function()
-		local function pose(from: CFrame, to: CFrame, seconds: number, ease: (number) -> number)
-			local t = 0
-			while t < seconds do
-				local dt = RunService.Heartbeat:Wait()
-				if swinging[player] ~= token or not joint.Parent then
-					return false
-				end
-				t = math.min(t + dt, seconds)
-				joint.C0 = home * from:Lerp(to, ease(t / seconds))
-			end
-			return true
-		end
-
-		local easeOut = function(a: number)
-			return 1 - (1 - a) ^ 3
-		end
-		local easeIn = function(a: number)
-			return a * a
-		end
-
-		if not pose(NEUTRAL, arc.wind, T_WIND, easeOut) then
-			return
-		end
-
-		if trail then
-			trail.Enabled = true
-		end
-		if not pose(arc.wind, arc.strike, T_STRIKE, easeIn) then
-			if trail then
-				trail.Enabled = false
-			end
-			return
-		end
-		if trail then
-			trail.Enabled = false
-		end
-
-		if not pose(arc.strike, NEUTRAL, T_RECOVER, easeOut) then
-			return
-		end
-
-		-- Hand the joint back exactly as it was found, so a swing interrupted
-		-- by a respawn or a rig change cannot leave an arm stuck out.
-		if swinging[player] == token and joint.Parent then
-			joint.C0 = home
-			swinging[player] = nil
-		end
-	end)
+	weaponState:FireAllClients({ userId = player.UserId, drawn = drawn[player] == true })
 end
 
 --==========================================================================
@@ -915,9 +704,6 @@ end
 	the first attempt found nothing to attach.
 ]]
 local function onCharacter(player: Player, character: Model)
-	swinging[player] = nil
-	nextSwing[player] = nil
-
 	local function tryAttach()
 		if player.Character ~= character or not character.Parent then
 			return false
@@ -960,14 +746,14 @@ function WeaponVisualService.Start()
 		Motor6D change replicates. A client that spams the key just re-parents
 		one Motor6D, which is why this needs no rate limit.
 	]]
+	weaponState = Net.getEvent("WeaponState")
+
 	Net.getEvent("RequestToggleWeapon").OnServerEvent:Connect(function(player: Player)
 		WeaponVisualService.toggle(player)
 	end)
 
 	Players.PlayerRemoving:Connect(function(player)
-		swinging[player] = nil
 		drawn[player] = nil
-		nextSwing[player] = nil
 	end)
 
 	log:info("ready")
