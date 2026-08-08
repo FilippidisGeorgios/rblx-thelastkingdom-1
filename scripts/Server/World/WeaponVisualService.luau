@@ -84,16 +84,27 @@ local GRIP = CFrame.new(0, -0.55, 0) * CFrame.Angles(math.rad(-50), math.rad(90)
 	than inside it. The 194 about Z is 180 to turn the blade downward plus 14 of
 	rake, so the hilt kicks off the hip instead of lying flat against it.
 
-	And -52 about X is the katana lean. Hanging dead vertical with the point at
-	the floor reads as a sword stored rather than a sword worn — a scabbard sits
-	back off the leg with the tip TRAILING, closer to the diagonal than to
-	either the upright or the horizontal.
+	THE ANGLE IS BUILT, NOT GUESSED, because guessing it got the sign wrong
+	twice — first tipping the point forward, then still wrong the other way.
 
-	NEGATIVE, and that is the correction. The first attempt used +35, which
-	tipped the point forward — the wrong way round, and not far enough over to
-	read as a lean at all.
+	`gripSeat` puts the blade's length along the joint frame's +Y. So instead of
+	composing Euler angles and hoping, the frame is constructed with its UP
+	vector pointing exactly where the blade should go: down, and back behind the
+	leg. There is no sign left to get wrong.
+
+	Down and back rather than straight down, because a sword hanging dead
+	vertical with the point at the floor reads as stored; a scabbard rides at an
+	angle with the tip trailing. `right` is (1,0,0), outboard of the leg and
+	perpendicular to the lean, which is what makes the flat of the blade sit
+	against the thigh instead of edge-on to it.
 ]]
-local SHEATH = CFrame.new(0.62, 0.35, 0.1) * CFrame.Angles(math.rad(-52), 0, math.rad(194))
+local SHEATH_LEAN = math.rad(38)
+
+local SHEATH = CFrame.fromMatrix(
+	Vector3.new(0.62, 0.35, 0.1),
+	Vector3.new(1, 0, 0),
+	Vector3.new(0, -math.cos(SHEATH_LEAN), -math.sin(SHEATH_LEAN))
+)
 
 --==========================================================================
 --[[

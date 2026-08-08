@@ -149,6 +149,29 @@ local function targetPose(state: State): CFrame
 end
 
 --==========================================================================
+--[[
+	Each shoulder's untouched C0, remembered the first time it is seen.
+
+	The pose is written as `rest * blend` every frame rather than multiplied
+	onto whatever is already there. Multiplying accumulates: within a second
+	the arm is behind the character's head and never comes back. A fresh
+	character has a fresh Motor6D, so the first read is always the true rest.
+
+	Weak keys, so dead characters' joints do not pile up for the session.
+]]
+local restC0: { [Motor6D]: CFrame } = setmetatable({}, { __mode = "k" }) :: any
+
+local function restOf(joint: Motor6D): CFrame
+	local cached = restC0[joint]
+	if not cached then
+		cached = joint.C0
+		restC0[joint] = cached
+	end
+	return cached
+end
+
+local warned = false
+
 local function update(dt: number)
 	for player, state in states do
 		local character = player.Character
@@ -166,15 +189,25 @@ local function update(dt: number)
 				state.blend = state.blend:Lerp(want, rate)
 
 				--[[
-					Transform, not C0, and AFTER the animator.
+					C0, NOT Transform.
 
-					This binding runs at Character + 1, so the animator has
-					already written this frame's idle or walk into Transform.
-					Multiplying on top of it keeps the character breathing and
-					walking while the arm does something else — and, unlike C0,
-					it is not something the idle can out-vote.
+					The first version wrote `Transform`, on the theory that a
+					RenderStep binding at Character + 1 runs after the animator
+					and therefore gets the last word. It does not — swings were
+					arriving, the state was right, the joint was found, and the
+					arm did not move, because the animator's write lands after
+					this one and Transform is its channel, not ours.
+
+					C0 is nobody else's channel. The animator never writes it,
+					so nothing can overwrite this, and because the final pose is
+					`C0 * Transform * C1:Inverse()` the idle and the walk still
+					play on top — the arm holds its guard while the character
+					breathes and the legs move.
 				]]
-				joint.Transform = joint.Transform * state.blend
+				joint.C0 = restOf(joint) * state.blend
+			elseif not warned then
+				warned = true
+				log:warn(("no right shoulder on %s's character — nothing to pose"):format(player.Name))
 			end
 		end
 	end
@@ -220,6 +253,10 @@ function WeaponAnimController.Start()
 		local state = stateFor(player)
 		state.arc = (state.arc % #SWINGS) + 1
 		state.swingAt = os.clock()
+
+		if player == Players.LocalPlayer then
+			log:info(("swing %d of %d"):format(state.arc, #SWINGS))
+		end
 	end)
 
 	--------------------------------------------------------------------------
