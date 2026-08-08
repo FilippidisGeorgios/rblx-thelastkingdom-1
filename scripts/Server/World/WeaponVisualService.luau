@@ -84,12 +84,16 @@ local GRIP = CFrame.new(0, -0.55, 0) * CFrame.Angles(math.rad(-50), math.rad(90)
 	than inside it. The 194 about Z is 180 to turn the blade downward plus 14 of
 	rake, so the hilt kicks off the hip instead of lying flat against it.
 
-	And 35 about X is the katana lean. Hanging dead vertical, point at the
-	floor, reads as a sword stored rather than a sword worn — a scabbard sits
-	back off the leg, tip trailing, closer to the diagonal than to either the
-	upright or the horizontal. That angle is the whole difference.
+	And -52 about X is the katana lean. Hanging dead vertical with the point at
+	the floor reads as a sword stored rather than a sword worn — a scabbard sits
+	back off the leg with the tip TRAILING, closer to the diagonal than to
+	either the upright or the horizontal.
+
+	NEGATIVE, and that is the correction. The first attempt used +35, which
+	tipped the point forward — the wrong way round, and not far enough over to
+	read as a lean at all.
 ]]
-local SHEATH = CFrame.new(0.62, 0.35, 0.1) * CFrame.Angles(math.rad(35), 0, math.rad(194))
+local SHEATH = CFrame.new(0.62, 0.35, 0.1) * CFrame.Angles(math.rad(-52), 0, math.rad(194))
 
 --==========================================================================
 --[[
@@ -694,6 +698,34 @@ function WeaponVisualService.announce(player: Player)
 	weaponState:FireAllClients({ userId = player.UserId, drawn = drawn[player] == true })
 end
 
+function WeaponVisualService.isDrawn(player: Player): boolean
+	return drawn[player] == true
+end
+
+-- Draw if sheathed, sheathe if drawn. What the 1 key does.
+function WeaponVisualService.toggle(player: Player)
+	WeaponVisualService.setDrawn(player, not WeaponVisualService.isDrawn(player))
+end
+
+--[[
+	Tells everyone about everyone.
+
+	`announce` on its own races the client: the server arms the first character
+	from a deferred call on CharacterAdded, which can fire before
+	WeaponAnimController has connected its handler. The client then never learns
+	the player is armed and poses nothing at all, forever, with no error to say
+	so.
+
+	So the whole roster goes out whenever anybody spawns, and again a second
+	later. It is a handful of booleans and it removes an entire class of "it
+	works for me and not for him".
+]]
+function WeaponVisualService.announceAll()
+	for _, player in Players:GetPlayers() do
+		WeaponVisualService.announce(player)
+	end
+end
+
 --==========================================================================
 --[[
 	Arms a character as it spawns.
@@ -713,11 +745,16 @@ local function onCharacter(player: Player, character: Model)
 	end
 
 	task.defer(function()
-		if tryAttach() then
-			return
+		local ok = tryAttach()
+		if not ok then
+			task.wait(1)
+			tryAttach()
 		end
+		-- Twice, a second apart, so a client that was still booting during the
+		-- first one is not left posing nothing for the rest of the round.
+		WeaponVisualService.announceAll()
 		task.wait(1)
-		tryAttach()
+		WeaponVisualService.announceAll()
 	end)
 end
 

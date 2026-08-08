@@ -69,6 +69,21 @@ function CombatController.Start()
 		]]
 		if input.KeyCode == Enum.KeyCode.One then
 			requestToggle:FireServer()
+			return
+		end
+
+		--[[
+			T swings at nothing.
+
+			The avatar's idle holds both arms down, so a raised arm is the only
+			sign that a swing happened — and the only way to cause one was to
+			find something to hit. This fires the SAME request the mouse does,
+			so the server cooldown, the hit resolution and the CombatEvent are
+			all the real ones. It is not a preview; it is a swing with nobody
+			in front of it.
+		]]
+		if input.KeyCode == Enum.KeyCode.T then
+			requestAttack:FireServer(currentAim())
 		end
 	end)
 
