@@ -97,11 +97,38 @@ local function stateFor(player: Player): State
 end
 
 --==========================================================================
--- R15 keeps the shoulder inside RightUpperArm; R6 keeps it in Torso under a
--- name with a space in it.
+--[[
+	The joint that drives the right arm, found by WHAT IT MOVES.
+
+	This used to look for a Motor6D called "RightShoulder" or "Right Shoulder",
+	and on this avatar it is called neither — the log said so plainly: "no right
+	shoulder, nothing to pose". Every single thing in this feature that has
+	broken has broken because something was looked up by name.
+
+	So: find the arm part, then find the joint whose Part1 IS that part. A
+	Motor6D's Part1 is the thing it moves. That is true of every rig, every
+	bundle, and every avatar anyone will ever wear, whatever the joint is
+	called.
+
+	Cached per character, because this walks the descendants and it runs every
+	frame.
+]]
+local joints: { [Model]: Motor6D } = setmetatable({}, { __mode = "k" }) :: any
+
 local function rightShoulder(character: Model): Motor6D?
+	local cached = joints[character]
+	if cached and cached.Parent then
+		return cached
+	end
+
+	local arm = character:FindFirstChild("RightUpperArm") or character:FindFirstChild("Right Arm")
+	if not arm then
+		return nil
+	end
+
 	for _, d in character:GetDescendants() do
-		if d:IsA("Motor6D") and (d.Name == "RightShoulder" or d.Name == "Right Shoulder") then
+		if d:IsA("Motor6D") and d.Part1 == arm then
+			joints[character] = d
 			return d
 		end
 	end
@@ -170,7 +197,15 @@ local function restOf(joint: Motor6D): CFrame
 	return cached
 end
 
-local warned = false
+--[[
+	The warning is throttled, not latched.
+
+	The first version set a flag and never warned again — so a joint that was
+	simply not loaded yet at spawn produced one message that looked permanent,
+	and a joint that never appeared produced the same one message. Those are
+	different problems and they have to sound different.
+]]
+local lastWarn = 0
 
 local function update(dt: number)
 	for player, state in states do
@@ -205,9 +240,9 @@ local function update(dt: number)
 					breathes and the legs move.
 				]]
 				joint.C0 = restOf(joint) * state.blend
-			elseif not warned then
-				warned = true
-				log:warn(("no right shoulder on %s's character — nothing to pose"):format(player.Name))
+			elseif os.clock() - lastWarn > 5 then
+				lastWarn = os.clock()
+				log:warn(("still no right arm joint on %s — nothing to pose"):format(player.Name))
 			end
 		end
 	end

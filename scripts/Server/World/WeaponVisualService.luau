@@ -100,10 +100,18 @@ local GRIP = CFrame.new(0, -0.55, 0) * CFrame.Angles(math.rad(-50), math.rad(90)
 ]]
 local SHEATH_LEAN = math.rad(38)
 
+--[[
+	POSITIVE Z, which is the correction.
+
+	With -Z the point came out FORWARD, so this rig's thigh has its local +Z
+	pointing behind the character rather than in front of it. Rather than
+	assume which way a limb faces — twice wrong now — the sign is simply the one
+	that was observed to put the tip where a scabbard's tip goes.
+]]
 local SHEATH = CFrame.fromMatrix(
 	Vector3.new(0.62, 0.35, 0.1),
 	Vector3.new(1, 0, 0),
-	Vector3.new(0, -math.cos(SHEATH_LEAN), -math.sin(SHEATH_LEAN))
+	Vector3.new(0, -math.cos(SHEATH_LEAN), math.sin(SHEATH_LEAN))
 )
 
 --==========================================================================
