@@ -19,6 +19,7 @@
 local Players = game:GetService("Players")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Theme = require(script.Parent.Theme)
@@ -35,6 +36,7 @@ export type Script = {
 local cfg: any = nil
 local typeSound: Sound? = nil
 local voice: Sound? = nil
+local synthVoice: AudioTextToSpeech? = nil
 
 local panel: Frame? = nil
 local titleLabel: TextLabel? = nil
@@ -75,17 +77,43 @@ local function soundOf(entry: any): string?
 	return if type(id) == "string" and id ~= "" then id else nil
 end
 
+-- Reads a line aloud with the built-in text-to-speech and reports how long it
+-- runs, or 0 if it could not be made. This is the stand-in voice: it only ever
+-- speaks a line that has no recording of its own.
+local function speakSynth(text: string): number
+	local synth = synthVoice
+	if not synth then
+		return 0
+	end
+	local ok = pcall(function()
+		synth.Text = text
+		synth.TimePosition = 0
+		synth:LoadAsync()
+		synth:Play()
+	end)
+	if not ok then
+		return 0
+	end
+	return synth.TimeLength
+end
+
 -- Starts a recording and reports how long it runs, or 0 if there is none.
 -- TimeLength is zero until the asset arrives, so it is given a moment — but
 -- never more than a moment, because a missing sound must not stall the scene.
-local function speak(id: string?): number
+-- A line with no recording falls back to the synthesised voice, if enabled.
+local function speak(id: string?, text: string): number
 	local player = voice
 	if not player then
 		return 0
 	end
 	player:Stop()
+	if synthVoice then
+		pcall(function()
+			(synthVoice :: AudioTextToSpeech):Pause()
+		end)
+	end
 	if not id then
-		return 0
+		return speakSynth(text)
 	end
 
 	player.SoundId = id
@@ -117,7 +145,11 @@ local function typeLine(entry: any)
 	-- If this line has a recording, the recording sets the pace: the words are
 	-- spread across it so they land together, rather than the text racing ahead
 	-- of the voice or trailing behind it.
-	local spoken = speak(soundOf(entry))
+	local spoken = speak(soundOf(entry), text)
+	if token ~= typeToken then
+		-- The player moved on while the voice was loading.
+		return
+	end
 	local characters = utf8.len(text) or #text
 	local rate = cfg.CharactersPerSecond
 	if spoken > 0.2 and characters > 0 then
@@ -326,6 +358,33 @@ function DialogueUI.mount()
 	speaker.Parent = SoundService
 	voice = speaker
 
+	-- The stand-in voice. Played to the listener directly (no 3D emitter): the
+	-- storyteller is speaking to the player in a panel, not across the camp.
+	local synthCfg = cfg.Voice
+	if synthCfg and synthCfg.Enabled then
+		local ok = pcall(function()
+			local synth = Instance.new("AudioTextToSpeech")
+			synth.Name = "DialogueSynth"
+			synth.VoiceId = synthCfg.VoiceId
+			synth.Pitch = synthCfg.Pitch
+			synth.Speed = synthCfg.Speed
+			synth.Parent = SoundService
+
+			local output = Instance.new("AudioDeviceOutput")
+			output.Name = "DialogueOutput"
+			output.Parent = SoundService
+
+			local wire = Instance.new("Wire")
+			wire.SourceInstance = synth
+			wire.TargetInstance = output
+			wire.Parent = synth
+			synthVoice = synth
+		end)
+		if not ok then
+			warn("[DialogueUI] Text-to-speech is not available; dialogue stays silent.")
+		end
+	end
+
 	-- Only built if a sound has actually been uploaded. A missing asset id would
 	-- otherwise mean a silent Sound object ticking away for nothing.
 	if cfg.TypeSoundId ~= "" then
@@ -371,6 +430,28 @@ function DialogueUI.open(script_: Script, closed: (() -> ())?)
 	scale.Scale = 0.94
 	TweenService:Create(scale, Theme.Motion.Enter, { Scale = 1 }):Play()
 
+	-- Fetch every recording while the first line plays, so the next sentence
+	-- starts the moment the last one ends instead of waiting on a download.
+	task.spawn(function()
+		local pending: { Instance } = {}
+		for _, entry in lines do
+			local id = soundOf(entry)
+			if id then
+				local sound = Instance.new("Sound")
+				sound.SoundId = id
+				table.insert(pending, sound)
+			end
+		end
+		if #pending > 0 then
+			pcall(function()
+				ContentProvider:PreloadAsync(pending)
+			end)
+		end
+		for _, sound in pending do
+			sound:Destroy()
+		end
+	end)
+
 	showLine(1)
 end
 
@@ -379,6 +460,11 @@ function DialogueUI.close()
 	-- Walking away from someone stops them talking.
 	if voice then
 		voice:Stop()
+	end
+	if synthVoice then
+		pcall(function()
+			(synthVoice :: AudioTextToSpeech):Pause()
+		end)
 	end
 	if panel then
 		panel.Visible = false

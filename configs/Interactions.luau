@@ -35,8 +35,8 @@ local Interactions = {
 	-- there for anyone who would rather set their own pace.
 	Dialogue = {
 		CharactersPerSecond = 46,
-		FirstHoldSeconds = 5, -- the opening line gets longer to land
-		HoldSeconds = 3, -- every line after it
+		FirstHoldSeconds = 2.5, -- the opening line gets longer to land
+		HoldSeconds = 1.2, -- every line after it (sentences are short)
 		AutoAdvance = true,
 
 		-- Long lines need longer on screen than short ones, so the hold grows
@@ -51,6 +51,18 @@ local Interactions = {
 		TypeSoundId = "",
 		TypeSoundEvery = 3, -- characters between ticks
 		TypeSoundVolume = 0.25,
+
+		-- Roblox's built-in text-to-speech, used for any line that has no
+		-- recording of its own. It is the stand-in until real takes are uploaded:
+		-- a line with a `Sound` always wins. VoiceId is a string ("1", "2", …);
+		-- Pitch is in semitones (-12..12), Speed 0.5..2. Lower and slower reads
+		-- older. Set Enabled = false to go back to silence plus typing ticks.
+		Voice = {
+			Enabled = true,
+			VoiceId = "1",
+			Pitch = -4,
+			Speed = 0.88,
+		},
 	},
 
 	-- Each point: an object in `workspace.Lobby.<Folder>.<Name>` and the screen
@@ -86,23 +98,19 @@ local Interactions = {
 					Record, upload at create.roblox.com/dashboard → Audio, wait for
 					moderation, then paste the id below as "rbxassetid://123…".
 				]]
+				-- One sentence per entry: the veteran speaks in short breaths, and each
+				-- one replaces the last on screen instead of piling up.
 				Lines = {
-					{
-						Text = "Forty years we held that line. Forty years of a war that was never ours.",
-						Sound = "",
-					},
-					{
-						Text = "Word came in the spring. The kingdom has gone dark — and they say the king is no longer a king.",
-						Sound = "",
-					},
-					{
-						Text = "I am too old for the road. You are not.",
-						Sound = "",
-					},
-					{
-						Text = "Take a wagon. Take whoever will stand beside you. Go home, and see what is left of it.",
-						Sound = "",
-					},
+					{ Text = "Forty years we held that line.", Sound = "rbxassetid://101107232381129" },
+					{ Text = "Forty years of a war that was never ours.", Sound = "rbxassetid://136732612922129" },
+					{ Text = "Word came in the spring.", Sound = "rbxassetid://115869856350611" },
+					{ Text = "The kingdom has gone dark.", Sound = "rbxassetid://82737517940359" },
+					{ Text = "And they say the king is no longer a king.", Sound = "rbxassetid://134608808928336" },
+					{ Text = "I am too old for the road.", Sound = "rbxassetid://128155524035302" },
+					{ Text = "You are not.", Sound = "rbxassetid://96383892343545" },
+					{ Text = "Take a wagon.", Sound = "rbxassetid://92324325489643" },
+					{ Text = "Take whoever will stand beside you.", Sound = "rbxassetid://74395856335429" },
+					{ Text = "Go home, and see what is left of it.", Sound = "rbxassetid://108572114741903" },
 				},
 			},
 		},
