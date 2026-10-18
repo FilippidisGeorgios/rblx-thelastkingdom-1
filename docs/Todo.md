@@ -53,6 +53,47 @@
 - [ ] Animations, ragdoll, and aggro/hit feedback.
 - [ ] Multiplayer AI throttling / optimisation.
 
+## Art Direction pass (alongside the gameplay phases)
+- [x] A/B look test; **Look A "Dark Realistic" locked** (`docs/systems/Presentation.md`, `configs/Look.luau`).
+- [x] Hub ground repainted: paving roads, mud, grass (`tools/PaintGround.luau`).
+- [ ] Replace the train wagons — four flat beige blocks, the loudest placeholder in the Hub.
+- [x] Hub boundary: an invisible 50-stud wall along the fence and round the train, closed and
+      verified (`tools/BuildBoundary.luau`). The chain-link stays; a palisade was tried and rejected.
+- [x] Chain-link collision: left as it is (decided 2026-10-17). The boundary stops the player on its
+      own; the opaque chain-link still pushes the camera in on the three fence sides. Revisit only
+      if that bothers play-testing.
+- [ ] Walk the boundary in a real client (the playtest ran with Studio not rendering, so the camera
+      itself was never seen moving): zoom out against the fence, the north shoulders and the train.
+- [ ] The horizon is flat and repeats one dead tree. Vary the trees; add far silhouettes (hills, ruins).
+- [ ] Eight `Lantern Posts` are parked outside the south fence at x ≈ −40, z 143–170, stacked two high
+      (y 9 and 18) — most likely a storage row. Place them or remove them.
+- [ ] The lantern posts (blocky, marble plinth) do not match the Tudor buildings. Restyle or replace.
+- [ ] The roads read narrower than the old sand did (paving blends less). Widen the road voxels if play needs it.
+- [ ] Set dressing that tells the siege story: barricades, boarded windows, scorch marks, torn banners, carts, hay.
+- [ ] Light & VFX: fires, smoke, embers, window glow — with a mobile budget.
+- [ ] Decide whether the runtime lamp values (`configs/Hub.luau → Lights`) are baked into the place, or
+      whether `tools/PreviewRuntimeLights.luau` stays the way to judge it. Studio lamps are 2–3× too strong.
+- [x] Forgotten Lands: the same look family at a darker hour (`ForgottenDusk`), the land outside the walls
+      (`tools/BuildLand.luau`), the moat, bridge and surroundings (`tools/BuildSurroundings.luau`).
+- [x] Forgotten Lands arrival scene (IntroService / IntroController / IntroUI, `configs/Intro.luau`).
+- [x] Looked at it and tuned it from screenshots (2026-10-18): haze, clouds, exposure, water, shots, fires.
+- [ ] Watch the intro once with real avatars in a playtest (the framing used stand-in figures), on a phone too.
+- [ ] The red light in the last tower does not read from the hill: make the King's tower visible as the goal.
+- [x] The castle itself: chambers furnished (`BuildChambers`) and lit (`LightCastle`), throne room in 9.
+- [ ] The fallen tower in chamber 8 reads as a box from some angles; give the barrel more drums.
+- [ ] Some houses' timber frames float a little off the ground where the yard is not flat; check up close.
+- [ ] Performance: Forgotten Lands is ~29k parts, 164 lights, 214 emitters, StreamingEnabled off. Measure
+      on a phone; `BuildChambers` DETAIL 3 → 2 is the first lever (~100 parts less per house).
+- [ ] The torchlight is strong orange near the walls; if it reads too warm in play, drop the torches'
+      brightness in `LightCastle` (2.8 → 2.2).
+- [ ] Try Look B's moon, stars and violet horizon glow on top of Look A (try, do not lock).
+- [ ] Compare the terrain with `MaterialService.Use2022Materials` on (set by hand in Properties).
+- [ ] Align `scripts/Client/UI/Theme.luau` with the Style Bible palette.
+- [ ] The Storyteller's real voice: ten clips uploaded and wired (`Interactions.luau → Lines[].Sound`).
+      In both places and published (2026-10-18). Still to do: walk up to the Storyteller in a playtest and listen. Tune the holds
+      (`Dialogue.HoldSeconds`) and, if a sentence sounds wrong, regenerate that one clip. The built-in
+      TTS (`Dialogue.Voice`) only speaks lines that have no `Sound`; turn it off once all are voiced.
+
 ## Chapter 1 — Vertical Slice (integration milestone)
 - [x] `ChapterOneSliceService` orchestrator over existing public APIs (no rewrites).
 - [x] Story Intro (start-once per player; survives respawn).

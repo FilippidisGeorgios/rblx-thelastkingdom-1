@@ -1,5 +1,180 @@
 # Changelog
 
+## Version 0.19.1 — Both places caught up, and published for testers
+
+Both places were brought level with the repo and **published** (2026-10-18) so testers can play.
+
+- **Kingdom Hub**: 20 shared scripts were behind the repo — 12 stale (Net, Scaling, Encounters, Enemies,
+  Difficulty, Missions, Look, EnemyBrain, CombatController, MissionController, Mission.Types, the
+  EnemyBrain spec) and 8 missing (Intro, IntroController, IntroUI, AreaController, AreaHud, ObjectiveHud,
+  WeaponAnimController, Shared.Anim.SwordAnims). Now 120 of 120 match disk.
+- **Hub bug fixed**: `StarterPlayerScripts.Client` held a second, older `Core`, `Controllers` and `UI`
+  folder (left by an old sync), so two `Bootstrap`s ran and every client controller booted twice.
+  The stale copies are gone; one Bootstrap runs.
+- **Forgotten Lands**: `Interactions` and `DialogueUI` were older than disk (no voiced lines) and
+  `Look` was missing. Now 134 of 134 match disk.
+- The Studio edit camera was left `Scriptable` by the screenshot work in both places (only selecting
+  worked); it is back to `Fixed`.
+- Verified: `rojo build` clean for both projects; a playtest of each place boots with no script errors
+  (Hub: 18 server / 13 client modules; Forgotten Lands: intro → area 1 → wave 1).
+
+## Version 0.19.0 — A castle with people's things in it, and fire
+
+The nine chambers were bare yards with no light in them at all — not one Light instance inside the
+walls.
+
+**The chambers are furnished again** (`tools/BuildChambers.luau`, `Battleground.Decorations`, ~4.2k parts):
+the guardhouse and barracks of the Outer Ward, the stables and farrier's, the bakehouse and ovens, the
+chapel and its graves, two forges and the smith's house, the Great Hall, seven houses in the Rows, the
+fallen tower in the Inner Ward. The tool was reused, with four changes:
+- the stone road is NOT drawn (`DRAW_PATH = false`; two parts roads were taken back in Aug 2026). The
+  route is still computed, and every building keeps off it;
+- the markers are READ from each chamber (spawns, objectives, Checkpoint, Storyteller) instead of the old
+  assumed positions, plus the arrival pad, the winch, and the throne room;
+- every footprint is tested against the towers and walls, so nothing is built through a tower;
+- big buildings are placed as rectangles (`placeRect`) on a grid search: as circles the Great Hall, the
+  fallen tower and three of the Rows never fitted beside the road. The hall is 64 x 44 now (was 64 x 90),
+  the fallen tower 70 long, and the house plaster darker (it read as fresh whitewash).
+
+**Light** (`tools/LightCastle.luau`, `Battleground.Lighting`, ~2k parts, 150+ lights, none with shadows):
+- torches on the walls (cast at the stone, so each bracket sits on it), a torch either side of every
+  passage so the way on is the brightest thing in a room, four braziers per chamber off the centre;
+- ~22% of the towers' window openings glow ember (`MODE = "undo"` puts them back);
+- a fire inside half the houses, a fire pit and two chandeliers in the Great Hall, candles on the altar;
+- torn banners on the walls, ash falling through every room, and battle clutter — bones, blades,
+  arrows, shields, helms, scorch marks — more of it the deeper you go;
+- chamber 9 is the throne room: a dais against the back wall, an empty throne, a red carpet, two kings
+  in stone, fires burning red and the back wall washed red.
+
+Checked: nothing solid stands on any enemy spawn; a Studio playtest runs intro → skip → area 1 →
+barricade → wave 1 (15 enemies) with no new errors. The place is now ~29k parts, 164 lights.
+
+**Tooling**: tools are no longer pasted into Studio. A tiny local server (node, 127.0.0.1 only) serves
+the repo's text files and the command bar loads them with `HttpService:GetAsync` + `loadstring`, with
+`HttpEnabled` switched on only for that one call and straight back off.
+
+## Version 0.18.0 — The Forgotten Lands get a horizon, and an arrival
+
+The castle stood on a flat plate of earth that ended 900 studs out, under a red sky, ringed by a thin
+turquoise ditch. It now sits in a land.
+
+**Look** — new preset `ForgottenDusk` (`configs/Look.luau`): Look A an hour later. Cold blue-grey haze,
+a heavy cloud deck, a moon, and only a bruise of red where the sky meets the hills. Water is black and
+still. `ForgottenBaseline` is the exact old look, kept as the undo. `tools/ApplyLook.luau` now also sets
+the terrain's water (`Water` section).
+
+**Land** (`tools/BuildLand.luau`, terrain only, nothing inside the moat touched):
+- The moat is rebuilt as one ring, 80 wide (was 44): mud bank, a shallow shelf, deep black water at y −6.
+- Ground out to 4.8k × 6.3k studs. Flat by the moat, rolling hills from 100 out, mountains 1.3k–1.9k out
+  all the way round, so the world ends in rock and haze. Rock and slate on the heights, dead grass, earth
+  and mud patches below.
+- A hill 800 studs in front of the gate, with a clear sight line to it, and a paved road down to the bridge.
+
+**Surroundings** (`tools/BuildSurroundings.luau`, `Workspace.Gameplay.Surroundings`, ~5,000 parts, none
+collide — it is all behind the castle wall):
+- Moat: stone revetment with coping, buttresses and a green waterline; reeds; sharpened stakes on the far
+  bank; a sunk cart, a half-sunk boat, a fallen tree, floating planks and barrels; mist lying on the water.
+- Bridge: stone, two arches on cutwater piers, then the drawbridge left down, planks missing, chains
+  running up into the gatehouse. Two braziers at its foot and two torches at the gate: the first warm
+  light in the world.
+- Outside: a burnt village (seven cottages, a well, two still smouldering), an old battlefield (rows of
+  graves, weapons left standing in the earth, a trebuchet that never fired, torn banners), a gallows,
+  ~240 dead trees in patches, rails ending at a broken buffer stop, and a wayside shrine whose candles
+  are still lit.
+- Smoke rising inside the walls, and one red light in the highest tower of the last chamber.
+
+**The arrival scene** — new: `configs/Intro.luau`, `Server/World/IntroService`,
+`Client/Controllers/IntroController`, `Client/UI/IntroUI`; remotes `IntroEvent`, `RequestIntroSkip`.
+- On arrival the party stands on the hill and sees the castle: title card, letterbox, six shots from
+  camera marks (`Surroundings.Intro.Cam1..6`, movable in Studio), and six lines. Each line is said by a
+  player in the party, shown by their display name on a gold plate above the text; the order is shuffled
+  per run, and alone the one player says them all.
+- Skip is a vote (more than half; alone, one press). Sized for a thumb (48 px), text scales with the
+  screen.
+- Then black, everyone is on the arrival pad, and the run starts. Bodies are taken up the hill the moment
+  they appear, so chamber 1's barricade and waves only arm once the scene is over. `ChapterService` now
+  waits on `IntroService.whenFinished`.
+- Verified in a Studio playtest (solo): scene starts, lines show under the player's display name, the
+  camera changes shots, the scene ends on time, then area 1 → waves → chapter start, in that order.
+- First look with screenshots (`assets/Images/Reference/forgotten-lands-exterior_2026-10-18.jpg`), and
+  what it changed: the haze hid the castle from the hill entirely (density 0.44 → 0.3, haze 2.4 → 1.5);
+  the cloud deck sat on the mountains like a lid (cover 0.74 → 0.6); the ground and moat went pure black
+  (outdoor ambient and exposure lifted); the water now reflects the sky. The talking shots were turned
+  round — from the front the castle is behind the camera — to over-the-shoulder shots, with a cold moon
+  fill on the party. The braziers were too small to read: bigger, brighter, shadowless.
+
+## Version 0.17.2 — The veteran speaks in short breaths
+
+- The Storyteller's speech is now ten single sentences (`configs/Interactions.luau`), each replacing
+  the last on screen, instead of four long paragraphs. Holds are shorter to match.
+- `DialogueUI` reads any line that has no `Sound` aloud with Roblox's built-in text-to-speech
+  (`Dialogue.Voice`: VoiceId, Pitch, Speed; `Enabled = false` turns it off). The text paces itself to the
+  voice. A line with its own recording still wins. Verified in Studio that the voice loads
+  (2.4 s for the first sentence); how it *sounds* is not verified.
+- The built-in voices are a stand-in. The intended voice — an old British veteran — is now recorded:
+  ten clips (`assets/Audio/Storyteller/veteran_01..10.mp3`, ElevenLabs voice "Veterans Voice, Rblx",
+  model eleven_v4, one file per sentence, in the order of `Lines`). Uploaded through the Asset Manager
+  (creator = the experience's group) and wired into each line's `Sound` in `configs/Interactions.luau`.
+  All ten load in Studio with the expected lengths. How they sound in the scene is not verified yet.
+
+## Version 0.17.1 — The camp is closed
+
+Nothing stopped a player leaving the Hub. The chain-link fence is 9.6 studs tall (a jump and a
+stack of crates clears it), and on the north side there was no fence at all, only the railway
+and a plain a thousand studs wide. Nothing here touches gameplay code, and the fence itself is
+untouched.
+
+- **`tools/BuildBoundary.luau`**: an invisible wall, 50 studs high and 4 thick, in
+  `Lobby.Invisible.Boundary`, on one closed outline read from what is already there: the fence's
+  three sides on the fence's own lines; the gaps beside the train on the north, closed at the
+  fence's ends; and a pocket round the train and the four wagons, 6 studs (about 1.7 m) outside
+  them, so the rake stays in the playable area and a player can still walk round its ends. The
+  walls stand outside the outline, so nothing sticks into the camp. 35 pieces, about 1,000 studs
+  of wall. `preview`, `build`, `verify` and `remove`; move the fence or the train, run `build`
+  again, and the outline follows.
+- **The wall does not touch the camera.** It is `Transparency 1` and `CanQuery false`: Roblox's
+  default camera only pulls in for opaque, collidable parts it can raycast to, so the player can
+  zoom out past the wall. Only the character is stopped. The chain-link's own parts are opaque and
+  collidable, so on the three fence sides the *fence* still pushes the camera in, as it always did
+  (left as it is, on purpose).
+- **Checked three ways.** `verify` samples 12,880 points along the outline: no gap, nothing
+  protruding into the camp, every piece invisible, collidable, not queryable and anchored. In a
+  real playtest a character was ordered to walk out through every side, the corners and both ends
+  of the train pocket, and to keep jumping the whole way: all 13 stopped inside, and the two bare
+  north shoulders (no fence there) show the barrier stops a body on its own.
+- **A palisade was tried and rejected.** A wall of sharpened logs (1,781 parts) replaced the
+  chain-link briefly. It was too tall and not wanted, so the chain-link was put back exactly (82
+  segments, same positions, checked) and the tool was deleted.
+- **Not verified:** the camera in a running client. The Studio window was not rendering during
+  the playtest, so the camera never moved; only Roblox's rule for it was checked.
+
+## Version 0.17.0 — The Hub gets a look
+
+The game was playable and looked like a prototype: a pale sand "road" across a flat plain,
+under a flat blue sky, in lamplight that did not exist in play. Nothing here touches gameplay.
+
+- **`configs/Look.luau` + `tools/ApplyLook.luau`**: how a place looks — lighting, atmosphere,
+  sky, clouds, post-processing, the colour of each terrain material — is now **data** with
+  named presets, baked into a place at edit time. Zero cost while the game runs. `Baseline` is
+  the Hub as it was; `DarkRealistic` is the locked base look; `StylizedDarkFantasy` is kept as
+  a reference. `Lighting.Technology` cannot be touched by a script and is left alone.
+- **Look A locked** after an A/B test on four fixed cameras. Overcast, cold, desaturated; warm
+  light only from fire. The doubled Bloom is gone. The rules, palette and ground vocabulary are
+  the Style Bible in `docs/systems/Presentation.md`.
+- **`tools/PaintGround.luau`**: the terrain was a flat slab of `Ground` with the roads as one
+  layer of `Sand`, whose rippled texture read as desert whatever colour it was given. Colour
+  cannot fix a texture, so it changes the *material* of the top layer: paving on the roads
+  (285 of their 308 voxels), mud at lane edges and shores, weeds along the fence, patches of
+  grass and stone beyond it. Heights and the authored road shape are never touched. It has
+  `preview`, `apply` and an **exact `restore`** (the road positions are recorded on the
+  terrain).
+- **`tools/PreviewRuntimeLights.luau`**: the lamps are hand-placed at stock strength
+  (lantern posts 2.4, range 24) and `LightService` retunes them only when the game runs
+  (0.8, range 40), so the Studio view overstates every lamp two to three times. The tool
+  stamps the runtime values on for judging and restores the originals exactly on `off`.
+- **Not done, on purpose:** the placeholders (train wagons, chain-link fence, flat horizon),
+  set dressing, VFX, and the Forgotten Lands look. They are in `docs/Todo.md`.
+
 ## Version 0.16.0 — A sword you can see
 
 - **`Server/World/WeaponVisualService`**: the player was punching. Combat has been

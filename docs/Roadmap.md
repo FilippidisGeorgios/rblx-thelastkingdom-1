@@ -43,6 +43,16 @@ Integration Milestone
 Phase 6
 - Multiplayer ⬜
 
+Art Direction pass (alongside the gameplay phases, ahead of Polish)
+- Look locked ✅ — "Dark Realistic" (`configs/Look.luau`); the rules are the Style Bible in
+  `docs/systems/Presentation.md`
+- Hub ground ✅ — paving, mud and grass painted over the old sand (`tools/PaintGround.luau`)
+- Hub boundary ✅ — an invisible wall along the fence and round the train (`tools/BuildBoundary.luau`)
+- Hub placeholders, set dressing, light & VFX 🚧 — see Todo
+- Forgotten Lands look ✅ — dusk look, moat and land outside the walls, arrival scene, castle
+  furnished and lit (Changelog 0.18.0–0.19.0)
+- First tester build published (both places) ✅ — 2026-10-18
+
 Phase 7
 - Polish ⬜
 
