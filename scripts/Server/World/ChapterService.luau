@@ -19,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Server = script.Parent.Parent
 local GameService = require(Server.Services.GameService)
 local MissionRuntimeService = require(script.Parent.MissionRuntimeService)
+local IntroService = require(script.Parent.IntroService)
 local Net = require(ReplicatedStorage.Shared.Net)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -100,13 +101,17 @@ function ChapterService.Start()
 		end
 	end
 
-	Players.PlayerAdded:Connect(function()
-		task.wait(START_DELAY)
-		tryStart()
+	-- Nothing starts while the party is still on the hill watching the castle:
+	-- the arrival scene (IntroService) goes first, then the run.
+	IntroService.whenFinished(function()
+		Players.PlayerAdded:Connect(function()
+			task.wait(START_DELAY)
+			tryStart()
+		end)
+		if #Players:GetPlayers() > 0 then
+			task.delay(START_DELAY, tryStart)
+		end
 	end)
-	if #Players:GetPlayers() > 0 then
-		task.delay(START_DELAY, tryStart)
-	end
 
 	-- Play Again after a run-over: restart the remembered chapter (once, if idle).
 	Net.getEvent("RequestPlayAgain").OnServerEvent:Connect(function()

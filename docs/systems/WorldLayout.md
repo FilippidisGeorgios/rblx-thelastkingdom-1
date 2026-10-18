@@ -51,6 +51,27 @@ Story first, then fighting.
    the story keeps arriving instead of being front-loaded.
 4. **Chamber 9** — the last of the story, and where it ends.
 
+## Outside the walls
+
+Scenery only: nothing out here can be reached in play, so nothing collides. It has two audiences — the
+arrival scene, shot from the hill, and a player inside looking at the skyline over the battlements.
+
+- **Moat**: one ring, 80 wide, inner edge 40 off the curtain wall (x ±190, z 60 / −1796), outer edge at
+  x ±270, z 140 / −1876. Water at y −6. Built by `tools/BuildLand.luau` (terrain) and
+  `tools/BuildSurroundings.luau` (stone face, reeds, debris, mist).
+- **Bridge**: x ±15 from the gate (z 66) to the far bank (z 148). Drawbridge z 66–92, stone beyond.
+- **The hill**: centred on (−40, 820), top at y ≈ 44, 800 studs in front of the gate, with the sight
+  line to the gate kept clear. The party stands at `Surroundings.Intro.Stand1..6`.
+- **Land**: flat for 100 studs past the moat, hills beyond, mountains 1.3k–1.9k out on every side.
+- **What it says**: rails ending at a buffer stop, a lit shrine, a burnt village (left of the road), an
+  old battlefield with its graves (right), a gallows, dead woods — and smoke inside the walls, and one
+  red light in the last tower.
+
+## Arrival
+
+`IntroService` runs the scene once per server: the party on the hill, six lines said by the players
+(by display name), then black, then the arrival pad. See `configs/Intro.luau`.
+
 ## Towers
 
 The towers are generated with full medieval anatomy — batter, machicolations,

@@ -45,6 +45,8 @@ local EVENT_NAMES: { string } = {
 	"ObjectiveHint", -- server -> client: the one line at the top saying what to do now
 	"RequestToggleWeapon", -- client -> server: draw the weapon, or put it away
 	"WeaponState", -- server -> client: who has their weapon out, so arms can be posed
+	"IntroEvent", -- server -> client: the arrival scene (start / votes / end / arrived)
+	"RequestIntroSkip", -- client -> server: this player votes to skip the arrival scene
 }
 local FUNCTION_NAMES: { string } = {}
 

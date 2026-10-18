@@ -47,6 +47,14 @@ local PASSAGE_X = 115 -- alternates sign; +odd, -even
 local PATH_W = 13
 
 --[[
+	The stone road itself is NOT drawn. Two parts roads were tried and taken back
+	(dfcc00c, Aug 2026); the castle reads better with its own ground. The route
+	is still computed, because every building steers clear of it — the road that
+	was never laid is still where people walk.
+]]
+local DRAW_PATH = false
+
+--[[
 	How far down to go on the small stuff. The houses are detailed enough now
 	that this is a real lever, not a formality — a house is roughly 350 parts at
 	3 and roughly 250 at 2.
@@ -77,7 +85,9 @@ local C = {
 	wood = Color3.fromRGB(66, 49, 34),
 	woodDark = Color3.fromRGB(44, 32, 22),
 	woodPale = Color3.fromRGB(92, 72, 50),
-	plaster = Color3.fromRGB(122, 116, 102),
+	-- Toned down from 122/116/102: under the Forgotten Lands' exposure the old
+	-- value read as fresh whitewash, the brightest thing in a ruined castle.
+	plaster = Color3.fromRGB(96, 90, 80),
 	thatch = Color3.fromRGB(78, 68, 44),
 	iron = Color3.fromRGB(56, 48, 44),
 	rust = Color3.fromRGB(92, 54, 34),
@@ -126,7 +136,22 @@ end
 
 local pathFolder = Instance.new("Folder")
 pathFolder.Name = "Path"
-pathFolder.Parent = battleground
+pathFolder.Parent = if DRAW_PATH then battleground else nil
+
+-- Everything that was here before this tool: the walls, the towers, the gate,
+-- and the markers in each chamber. A building's footprint is tested against all
+-- of it, so nothing is ever built through a tower that leans into the yard.
+local structureParams = OverlapParams.new()
+structureParams.FilterType = Enum.RaycastFilterType.Include
+do
+	local list = {}
+	for _, child in battleground:GetChildren() do
+		if child.Name ~= "Decorations" and child.Name ~= "Path" then
+			table.insert(list, child)
+		end
+	end
+	structureParams.FilterDescendantsInstances = list
+end
 
 local decorRoot = Instance.new("Folder")
 decorRoot.Name = "Decorations"
@@ -273,7 +298,7 @@ local function distanceToPath(x: number, z: number): number
 	return best
 end
 
-do
+if DRAW_PATH then
 	local flags = folder(pathFolder, "Flagstones")
 	local kerbs = folder(pathFolder, "Kerbs")
 
@@ -340,6 +365,20 @@ end
 --==========================================================================
 local taken: { { x: number, z: number, r: number } } = {}
 
+-- Rectangles claimed by placeRect (big buildings), alongside the circles above.
+local rects: { { x: number, z: number, hw: number, hd: number } } = {}
+
+local function clearOfRects(x: number, z: number, radius: number): boolean
+	for _, r in rects do
+		local dx = math.max(math.abs(x - r.x) - r.hw, 0)
+		local dz = math.max(math.abs(z - r.z) - r.hd, 0)
+		if math.sqrt(dx * dx + dz * dz) < radius + 6 then
+			return false
+		end
+	end
+	return true
+end
+
 local function free(x: number, z: number, radius: number): boolean
 	if math.abs(x) + radius > INNER then
 		return false
@@ -352,6 +391,14 @@ local function free(x: number, z: number, radius: number): boolean
 			return false
 		end
 	end
+	if not clearOfRects(x, z, radius) then
+		return false
+	end
+	-- Not through a tower, a cross wall, or a marker.
+	local box = Vector3.new(radius * 2, 28, radius * 2)
+	if #workspace:GetPartBoundsInBox(CFrame.new(x, GROUND + 15, z), box, structureParams) > 0 then
+		return false
+	end
 	return true
 end
 
@@ -361,12 +408,40 @@ end
 
 -- Enemy spawns and the objective marker are kept clear: a building on a spawn
 -- drops zombies inside a wall.
+--[[
+	The markers are READ from the chamber, not assumed: they have moved since this
+	tool was first written (the spawns are at ±88 and ±115 now, not ±110), and a
+	house on a spawn is a zombie inside a wall.
+]]
 local function reserveMarkers(index: number)
 	local zNear = Z_START - (index - 1) * CHAMBER_D
-	claim(0, zNear - CHAMBER_D + 30, 26) -- north spawn
-	claim(110, zNear - 100, 22)
-	claim(-110, zNear - 100, 22)
-	claim(0, zNear - 100, 18) -- objective
+	claim(0, zNear - 100, 20) -- the centre: objectives, and room to fight
+	local chamber = battleground:FindFirstChild(("Chamber%d"):format(index))
+	if chamber then
+		for _, d in chamber:GetDescendants() do
+			if d:IsA("BasePart") then
+				local role = d.Parent and d.Parent.Name
+				if role == "Spawns" then
+					claim(d.Position.X, d.Position.Z, 22)
+				elseif role == "Objectives" then
+					claim(d.Position.X, d.Position.Z, 20)
+				elseif d.Name == "Checkpoint" or d.Name == "Storyteller" then
+					claim(d.Position.X, d.Position.Z, 14)
+				end
+			end
+		end
+	end
+	if index == 1 then
+		claim(0, -40, 40) -- the arrival pad, where the party lands after the scene
+	elseif index == 2 then
+		claim(-88, -364, 20) -- WinchService's winch and its rope
+		claim(-95, -330, 16)
+	elseif index == 9 then
+		-- The throne room (tools/LightCastle.luau): the dais against the back
+		-- wall, and the carpet and the statues in front of it.
+		claim(0, zNear - CHAMBER_D + 34, 34)
+		claim(0, zNear - CHAMBER_D + 90, 22)
+	end
 end
 
 -- Which way the road is, from any point. Doors are turned to face it.
@@ -1330,6 +1405,13 @@ end
 	the road — and "nothing on the path" is one of the three rules this tool is
 	not allowed to break.
 ]]
+-- The same thing as a rectangle, for placeRect: the lean-to stands off a SIDE
+-- wall (local X), the jetty overhangs all round, and the door wants a step.
+local function houseRect(opts): (number, number)
+	local out = if opts.jetty then 6 else 0
+	return opts.w + out + (if opts.lean then LEAN_DEPTH else 0), opts.d + out + 8
+end
+
 local function houseFootprint(opts): number
 	local out = if opts.jetty then 3 else 0
 	local w, d = opts.w + out * 2, opts.d + out * 2
@@ -1706,6 +1788,79 @@ local function place(index: number, radius: number, build: (Vector3, number) -> 
 end
 
 --[[
+	Big buildings are placed as RECTANGLES, not circles.
+
+	A circle round a 60 x 30 building claims a 67-stud disc, and once the road
+	runs corner to corner through a chamber, what is left either side of it is
+	two long strips about 45 deep — no 67-stud disc fits in either, so the Great
+	Hall, the fallen tower and half the Rows never got built. A rectangle fits a
+	strip.
+
+	The whole chamber is searched on a grid, both ways round, and the spot kept
+	is the one that sits BESIDE the road (about a building's half-depth plus a
+	dozen studs off it): a street, not a building hiding in a corner. The front
+	then turns to face the road.
+]]
+local function freeRect(x: number, z: number, hw: number, hd: number): boolean
+	if math.abs(x) + hw > INNER then
+		return false
+	end
+	for sx = -1, 1, 0.5 do
+		for sz = -1, 1, 0.5 do
+			if distanceToPath(x + sx * hw, z + sz * hd) < PATH_W / 2 + 5 then
+				return false
+			end
+		end
+	end
+	for _, t in taken do
+		local dx = math.max(math.abs(t.x - x) - hw, 0)
+		local dz = math.max(math.abs(t.z - z) - hd, 0)
+		if math.sqrt(dx * dx + dz * dz) < t.r + 6 then
+			return false
+		end
+	end
+	for _, r in rects do
+		if math.abs(r.x - x) < r.hw + hw + 6 and math.abs(r.z - z) < r.hd + hd + 6 then
+			return false
+		end
+	end
+	return #workspace:GetPartBoundsInBox(CFrame.new(x, GROUND + 15, z), Vector3.new(hw * 2, 28, hd * 2), structureParams) == 0
+end
+
+local function placeRect(index: number, w: number, d: number, build: (Vector3, number) -> ()): boolean
+	local zA, zB = chamberBounds(index)
+	local zLo, zHi = math.min(zA, zB), math.max(zA, zB)
+	local best = nil
+	for _, turn in { 0, 90 } do
+		local hw = (if turn == 0 then w else d) / 2
+		local hd = (if turn == 0 then d else w) / 2
+		for x = -INNER + hw, INNER - hw, 4 do
+			for z = zLo + hd, zHi - hd, 4 do
+				local beside = math.abs(distanceToPath(x, z) - (math.min(hw, hd) + 12))
+				if (not best or beside < best.score) and freeRect(x, z, hw, hd) then
+					best = { x = x, z = z, hw = hw, hd = hd, turn = turn, score = beside }
+				end
+			end
+		end
+	end
+	if not best then
+		warn(("[Chambers] Area%d: no room for a %d x %d building — skipped."):format(index, w, d))
+		return false
+	end
+	table.insert(rects, { x = best.x, z = best.z, hw = best.hw, hd = best.hd })
+	-- The front (local +Z) toward the road, the long side along the strip.
+	local face = math.rad(facingPath(best.x, best.z))
+	local angle
+	if best.turn == 0 then
+		angle = if math.cos(face) >= 0 then 0 else 180
+	else
+		angle = if math.sin(face) >= 0 then 90 else 270
+	end
+	build(Vector3.new(best.x, GROUND, best.z), angle)
+	return true
+end
+
+--[[
 	What each chamber is called, for the build log.
 
 	The FOLDERS stay Area1..9 — plain, ASCII, and safe to reference from code.
@@ -1747,13 +1902,16 @@ for index = 1, CHAMBERS do
 			damage = "corner",
 			door = "hanging",
 		}
-		place(index, houseFootprint(guardhouse), function(at, a)
-			house(f, at, a, guardhouse)
-		end)
-		place(index, 20, function(at, a)
+		do
+			local w, d = houseRect(guardhouse)
+			placeRect(index, w, d, function(at, a)
+				house(f, at, a, guardhouse)
+			end)
+		end
+		placeRect(index, 48, 24, function(at, a)
 			longBuilding(f, at, 44, 20, 16, a, decay, 3)
 		end)
-		place(index, 16, function(at, a)
+		placeRect(index, 28, 24, function(at, a)
 			ruinShell(f, at, 24, 20, 16, a)
 		end)
 		for _ = 1, 4 do
@@ -1771,10 +1929,10 @@ for index = 1, CHAMBERS do
 			end)
 		end
 	elseif index == 2 then
-		place(index, 26, function(at, a)
+		placeRect(index, 60, 28, function(at, a)
 			longBuilding(f, at, 56, 24, 18, a, decay, 4)
 		end)
-		place(index, 22, function(at, a)
+		placeRect(index, 68, 26, function(at, a)
 			stallRow(f, at, a, 5)
 		end)
 		-- The farrier's, beside the stalls: a working building, so it gets the
@@ -1792,9 +1950,12 @@ for index = 1, CHAMBERS do
 			lean = pick({ -1, 1 }),
 			door = "fallen",
 		}
-		place(index, houseFootprint(farrier), function(at, a)
-			house(f, at, a, farrier)
-		end)
+		do
+			local w, d = houseRect(farrier)
+			placeRect(index, w, d, function(at, a)
+				house(f, at, a, farrier)
+			end)
+		end
 		place(index, 12, function(at, a)
 			cart(f, at, a)
 		end)
@@ -1813,7 +1974,7 @@ for index = 1, CHAMBERS do
 		place(index, 16, function(at, a)
 			bakeOven(f, at, a + 20)
 		end)
-		place(index, 24, function(at, a)
+		placeRect(index, 50, 26, function(at, a)
 			longBuilding(f, at, 46, 22, 17, a, decay, 3)
 		end)
 		-- The bakehouse. Half-hipped, tiled (a kitchen roof was the one they kept
@@ -1830,9 +1991,12 @@ for index = 1, CHAMBERS do
 			trade = "baker",
 			door = "fallen",
 		}
-		place(index, houseFootprint(bakehouse), function(at, a)
-			house(f, at, a, bakehouse)
-		end)
+		do
+			local w, d = houseRect(bakehouse)
+			placeRect(index, w, d, function(at, a)
+				house(f, at, a, bakehouse)
+			end)
+		end
 		for _ = 1, 9 do
 			place(index, 6, function(at)
 				if chance(0.6) then
@@ -1843,7 +2007,7 @@ for index = 1, CHAMBERS do
 			end)
 		end
 	elseif index == 4 then
-		place(index, 30, function(at, a)
+		placeRect(index, 46, 58, function(at, a)
 			chapelRuin(f, at, a)
 		end)
 		place(index, 14, function(at, a)
@@ -1876,7 +2040,7 @@ for index = 1, CHAMBERS do
 		place(index, 20, function(at, a)
 			forge(f, at, a + 180)
 		end)
-		place(index, 24, function(at, a)
+		placeRect(index, 52, 26, function(at, a)
 			longBuilding(f, at, 48, 22, 18, a, decay, 3)
 		end)
 		-- The smith's own house, over the shop: jettied, so the street below the
@@ -1894,9 +2058,12 @@ for index = 1, CHAMBERS do
 			trade = "smith",
 			door = "hanging",
 		}
-		place(index, houseFootprint(smithHouse), function(at, a)
-			house(f, at, a, smithHouse)
-		end)
+		do
+			local w, d = houseRect(smithHouse)
+			placeRect(index, w, d, function(at, a)
+				house(f, at, a, smithHouse)
+			end)
+		end
 		for _ = 1, 7 do
 			place(index, 6, function(at)
 				crate(f, at, rng:NextNumber(4, 7), rng:NextNumber(0, 360))
@@ -1904,9 +2071,11 @@ for index = 1, CHAMBERS do
 		end
 	elseif index == 6 then
 		-- The Great Hall: one big thing, and space around it to be seen.
-		place(index, 40, function(at, a)
+		-- Long side along the strip: 64 x 44 fits beside the road where 64 x 90
+		-- never fitted anywhere.
+		placeRect(index, 76, 56, function(at, a)
 			local m = model(f, "GreatHall")
-			local w, d, h = 64, 90, 34
+			local w, d, h = 64, 44, 30
 			local base = CFrame.new(at) * CFrame.Angles(0, math.rad(a), 0)
 			plinth(m, at, w, d, a)
 			local y = at.Y + 4.2
@@ -1920,30 +2089,35 @@ for index = 1, CHAMBERS do
 			courseWall(m, p3, p4, h * 0.85, 6, { { 0.3, 0.5, 0 } }, C.stonePale, M.stone)
 			courseWall(m, p4, p1, h, 6, { { 0.2, 0.34, 0.45 } }, C.stonePale, M.stone)
 			doorway(m, base * CFrame.new(0, 4.2, d / 2), 12, 18, "fallen")
+			-- Windows down the long walls (local X), buttresses between them.
 			for i = -2, 2 do
 				for side = -1, 1, 2 do
-					window(m, base * CFrame.new(side * (w / 2), 4.2 + h * 0.6, i * 16) * CFrame.Angles(0, math.rad(90 * side), 0), 5, 13, true, false)
-					if i ~= 0 then
-						mass(m, "Buttress", Vector3.new(6, h * 0.68, 8), base * CFrame.new(side * (w / 2 + 3.5), 4.2 + h * 0.34, i * 16 + 8), C.stonePale, M.stone)
+					window(m, base * CFrame.new(i * 12, 4.2 + h * 0.6, side * (d / 2)) * CFrame.Angles(0, if side > 0 then 0 else math.pi, 0), 5, 12, true, false)
+					if i ~= 2 then
+						mass(m, "Buttress", Vector3.new(6, h * 0.68, 6), base * CFrame.new(i * 12 + 6, 4.2 + h * 0.34, side * (d / 2 + 3)), C.stonePale, M.stone)
 					end
 				end
 			end
 			-- The columns, the high table, and the benches nobody stacked.
+			-- Two rows of columns down the long axis, and the long table between them.
 			for i = -2, 2 do
 				for side = -1, 1, 2 do
-					drum(m, "Column", 3.4, 26, (base * CFrame.new(side * 20, 0, i * 17)).Position + Vector3.new(0, y + 13 - at.Y, 0), C.stonePale, M.stone, true)
-					block(m, "Capital", Vector3.new(8, 1.6, 8), base * CFrame.new(side * 20, y + 26.8 - at.Y, i * 17), C.stoneDark, M.stone)
+					drum(m, "Column", 3, 22, (base * CFrame.new(i * 12, 0, side * 11)).Position + Vector3.new(0, y + 11 - at.Y, 0), C.stonePale, M.stone, true)
+					block(m, "Capital", Vector3.new(7, 1.6, 7), base * CFrame.new(i * 12, y + 22.8 - at.Y, side * 11), C.stoneDark, M.stone)
 				end
 			end
-			block(m, "HighTable", Vector3.new(38, 1.6, 6), base * CFrame.new(0, y + 5 - at.Y, -d / 2 + 12), C.woodDark, M.wood)
+			block(m, "HighTable", Vector3.new(6, 1.6, 22), base * CFrame.new(-w / 2 + 9, y + 5 - at.Y, 0), C.woodDark, M.wood)
 			for side = -1, 1, 2 do
-				block(m, "TableLeg", Vector3.new(2.4, 5, 5), base * CFrame.new(side * 16, y + 2.5 - at.Y, -d / 2 + 12), C.woodDark, M.log)
+				block(m, "TableLeg", Vector3.new(5, 5, 2.4), base * CFrame.new(-w / 2 + 9, y + 2.5 - at.Y, side * 8), C.woodDark, M.log)
 			end
-			for i = -1, 1 do
-				block(m, "Bench", Vector3.new(6, 1.4, 46), base * CFrame.new(i * 22, y + 3 - at.Y, 6) * CFrame.Angles(0, 0, if chance(0.4) then math.rad(58) else 0), C.woodDark, M.wood)
+			block(m, "LongTable", Vector3.new(40, 1.4, 5), base * CFrame.new(4, y + 4.2 - at.Y, 0), C.wood, M.wood)
+			for side = -1, 1, 2 do
+				block(m, "Bench", Vector3.new(38, 1.2, 2.4), base * CFrame.new(4, y + 2.6 - at.Y, side * 5) * CFrame.Angles(if chance(0.4) then math.rad(side * 70) else 0, 0, 0), C.woodDark, M.wood)
 			end
-			for _, side in { -1, 1 } do
-				block(m, "Banner", Vector3.new(0.4, 22, 7), base * CFrame.new(side * (w / 2 - 4), y + 24 - at.Y, 0), C.cloth, M.cloth)
+			for _, i in { -2, 0, 2 } do
+				for side = -1, 1, 2 do
+					block(m, "Banner", Vector3.new(6, 18, 0.4), base * CFrame.new(i * 12, y + 20 - at.Y, side * (d / 2 - 3.5)), C.cloth, M.cloth)
+				end
 			end
 			roof(m, at + Vector3.new(0, y - at.Y, 0), w, d, a, h, 0.14)
 			rubble(m, at, 34, 26)
@@ -2024,7 +2198,8 @@ for index = 1, CHAMBERS do
 				lean = spec.lean,
 				door = spec.door,
 			}
-			place(index, houseFootprint(opts), function(at, a)
+			local w, d = houseRect(opts)
+			placeRect(index, w, d, function(at, a)
 				house(f, at, a, opts)
 			end)
 		end
@@ -2047,13 +2222,14 @@ for index = 1, CHAMBERS do
 		end
 	elseif index == 8 then
 		-- Inner Ward: the line broke here, and a tower came down across it.
-		place(index, 46, function(at, a)
-			fallenTower(f, at, a + 90, 96, 20)
+		-- The tower lies along the strip: stump, 70 studs of barrel, and the crater.
+		placeRect(index, 140, 44, function(at, a)
+			fallenTower(f, at, a, 70, 16)
 		end)
-		place(index, 18, function(at, a)
+		placeRect(index, 32, 28, function(at, a)
 			ruinShell(f, at, 28, 24, 20, a)
 		end)
-		place(index, 16, function(at, a)
+		placeRect(index, 26, 24, function(at, a)
 			ruinShell(f, at, 22, 20, 18, a)
 		end)
 		-- Two officers' houses caught in the collapse. Rolled rather than written,
@@ -2061,7 +2237,8 @@ for index = 1, CHAMBERS do
 		-- doing the work, not the doorway.
 		for _ = 1, 2 do
 			local opts = rollHouseOpts(decay)
-			place(index, houseFootprint(opts), function(at, a)
+			local w, d = houseRect(opts)
+			placeRect(index, w, d, function(at, a)
 				house(f, at, a, opts)
 			end)
 		end
@@ -2078,7 +2255,7 @@ for index = 1, CHAMBERS do
 	else
 		-- Keep Steps: kept deliberately open. Whatever happens at the end of
 		-- this map needs room, and a crowded last room would swallow it.
-		place(index, 20, function(at, a)
+		placeRect(index, 34, 28, function(at, a)
 			ruinShell(f, at, 30, 24, 22, a)
 		end)
 		place(index, 14, function(at, a)

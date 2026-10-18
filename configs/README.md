@@ -50,6 +50,8 @@ designers edit heavily may migrate to `.json` later (Rojo can sync JSON as a mod
 | `Loot.luau` | Loot & drop tables | Combat / Progression |
 | `Experience.luau` | XP curve & level rewards | Progression |
 | `Settings.luau` | Global timers & feature flags | Ongoing |
+| `Look.luau` | How a place looks: lighting, atmosphere, sky, clouds, post-FX, terrain palette, water. Baked in at edit time by `tools/ApplyLook.luau`, never read at runtime | Art Direction |
+| `Intro.luau` | The Forgotten Lands arrival scene: title, lines, camera beats and timing, skip vote share | Art Direction |
 
 Each file's header comment documents its exact schema. Open the file for the authoritative
 shape.
