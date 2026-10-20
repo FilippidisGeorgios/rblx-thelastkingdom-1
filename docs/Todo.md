@@ -126,6 +126,32 @@
       in chambers 1–6 with landings, steeper stairs and doors swung back (2026-10-20).
 - [x] Saved to Roblox (version "Castle widened 25%, areas 1-3 rebuilt", 2026-10-19). Not published.
 
+## The dead, the arsenal, motion (design 2026-10-20, Changelog 0.24.0) — order set by the developer
+Look and animation first; mechanics after. Each step ends in a playtest and screenshots.
+- [x] Design: `Bestiary.md`, `Arsenal.md`, `Animation.md`.
+- [x] First line-up of seven undead (`tools/BuildUndead.luau`); the sword clip drives the rig.
+- [ ] **Developer decisions** (each doc ends with its questions): Hound yes/no, gore level, working names,
+      the falling-star device, spoils, sword heavy attack, parry, roll, Oaths and mastery now or later.
+- [x] Look pass 2 (v2, round limbs) and v3: the fine kit (`tools/BuildUndeadKit.luau`), 21 sculpted pieces on the bodies.
+- [x] Field version of the kit (voxel x2): 8k–70k triangles a body; it is what the game spawns.
+- [x] The dead in the game (Changelog 0.25.0): bodies cloned from `Assets.Undead`, attacks as windup/strike/recover,
+      the cry of first sight, ZombieAnims + ZombieAnimController, falls on death. Verified in a playtest.
+- [ ] Look at it in a real playtest and say what reads wrong (gaits, the cry, the falls, how long a corpse lies).
+- [ ] Frame rate and memory with a full wave on a phone (the field bodies are 82–118 parts each).
+- [ ] Types still on the plain box: cured villagers (a living look), the King (a placeholder shieldman), the
+      Sexton, Cinder, Hollow Knight, Hound (Bestiary §5.2).
+- [ ] Frost breath, Hollow Light pulse on aggro, death ash, impacts (Animation.md §7), and sound.
+- [ ] Hit-stop and camera shake; the player's verbs (stamina, roll, guard, parry).
+- [ ] Look pass 3: head pool (eight), dressings per chamber, damage states, gait variants, the missing types
+      (Sexton, Cinder, Hollow Knight, King); judge at 40 studs in the real fog.
+- [ ] `Shared/Anim/Clip.luau` (extract the sword file's builders, all joints) and a preview rig.
+- [ ] `ZombieAnimController` + the attribute protocol; the shared and per-type clips.
+- [ ] `EnemyService` clones from `Assets.Undead`; `Windup`/`Recover`, attack tokens, separation in the brain.
+- [ ] Player verbs: stamina, roll, guard, parry, heavy; weapon models for the other weapons.
+- [ ] Hit feedback and effects; sourced sound.
+- [ ] Rebuild chambers 1–3 structures and add things to *do* in areas (Arsenal §8).
+- [ ] Then the per-area mechanics (waves, wave-like events, tasks combined with waves).
+
 ## Chapter 1 — Vertical Slice (integration milestone)
 - [x] `ChapterOneSliceService` orchestrator over existing public APIs (no rewrites).
 - [x] Story Intro (start-once per player; survives respawn).

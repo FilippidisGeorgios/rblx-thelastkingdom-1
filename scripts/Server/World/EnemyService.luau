@@ -13,6 +13,8 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local CollectionService = game:GetService("CollectionService")
 local Workspace = game:GetService("Workspace")
 
 local Server = script.Parent.Parent
@@ -32,6 +34,14 @@ local log = Logger.new("EnemyService")
 
 -- Height (studs) of the placeholder rig; used to rest its feet on the ground.
 local RIG_HEIGHT = 5
+
+-- Tag that the client's ZombieAnimController looks for on a body it should animate.
+local UNDEAD_TAG = "TLK_Undead"
+
+-- How long a fallen body lies before it sinks into the ground, and how long the sinking takes.
+local DEATH_HOLD = 3.2
+local SINK_SECONDS = 2.0
+local SINK_DEPTH = 2.4
 
 local nextId = 0
 local bindings: { [string]: HumanoidAdapter.Binding } = {}
@@ -73,6 +83,43 @@ local function buildRig(color: Color3): (Model, Humanoid)
 	return model, humanoid
 end
 
+--[[
+	A body from ServerStorage.Assets.Undead (tools/BuildUndead), if this unit's
+	config names one (`Body`) and it has been built. One of the listed bodies is
+	picked at random, which is how the same shambler is a guard in one room and a
+	scullion in the next. Returns nil otherwise and the caller falls back to the box.
+
+	The body is a Model of unanchored, massless limbs on an anchored root, so the
+	AI moves it with PivotTo exactly as it moved the box. Its look is animated on
+	each client from the attributes the AI writes (see ZombieAnimController).
+]]
+local function buildBody(def: any): (Model?, Humanoid?)
+	local names = def.Body
+	if typeof(names) ~= "table" or #names == 0 then
+		return nil, nil
+	end
+	local assets = ServerStorage:FindFirstChild("Assets")
+	local store = assets and assets:FindFirstChild("Undead")
+	local master = store and store:FindFirstChild(names[math.random(#names)])
+	if not master then
+		return nil, nil
+	end
+	local model = master:Clone() :: Model
+	model.Name = "SpawnedUnit"
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		model:Destroy()
+		return nil, nil
+	end
+	-- One of three gaits, kept for life, so a crowd has no synchronised footfalls.
+	model:SetAttribute("Variant", math.random(1, 3))
+	model:SetAttribute("HitCount", 0)
+	-- A body arrives whole or not at all (a limb without its torso is worse than nothing).
+	model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
+	CollectionService:AddTag(model, UNDEAD_TAG)
+	return model, humanoid
+end
+
 -- Spawns unit `enemyId` at `position`, registers it as a CombatEntity, and returns
 -- its entity id. Attaches the AI brain only if the def has an `AI` block (so neutral
 -- NPCs are passive). Despawns automatically on death. `healthMult` scales max health
@@ -82,7 +129,13 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	local def = enemies[enemyId]
 	assert(def, "Unknown enemy id: " .. tostring(enemyId))
 
-	local model, humanoid = buildRig(colorForFaction(def.Faction))
+	local bodyModel, bodyHumanoid = buildBody(def)
+	local model: Model, humanoid: Humanoid
+	if bodyModel and bodyHumanoid then
+		model, humanoid = bodyModel, bodyHumanoid
+	else
+		model, humanoid = buildRig(colorForFaction(def.Faction))
+	end
 
 	-- Rest feet on the ground under the spawn XZ (baseplate/terrain), else fall back.
 	local rayParams = RaycastParams.new()
@@ -113,11 +166,69 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	-- AI brain (no-op if the def has no AI block — neutral NPCs stay passive).
 	EnemyAIService.attach(entity, enemyId, spawnPos)
 
+	-- Count the hits it takes, so each client can flinch the body (no per-frame traffic).
+	local lastHealth = entity.health.current
+	entity.health.Changed:connect(function(current: number)
+		if current < lastHealth and model.Parent then
+			model:SetAttribute("HitCount", (model:GetAttribute("HitCount") or 0) + 1)
+		end
+		lastHealth = current
+	end)
+
 	entity.health.Died:connect(function()
-		EnemyService.despawn(id)
+		EnemyService.kill(id)
 	end)
 
 	return id
+end
+
+--[[
+	An enemy has died. A sculpted body is not deleted: it falls (the clients play
+	one of three falls, chosen here), lies a moment, and sinks into the ground.
+	A plain box is simply removed. Either way the entity is gone from the combat
+	registry this instant, so nothing targets it, and the AI drops it.
+]]
+function EnemyService.kill(id: string)
+	local entity = CombatService.getEntity(id)
+	local model = entity and entity.model
+	if not (model and CollectionService:HasTag(model, UNDEAD_TAG)) then
+		EnemyService.despawn(id)
+		return
+	end
+
+	local binding = bindings[id]
+	if binding then
+		binding.disconnect()
+		bindings[id] = nil
+	end
+	CombatService.unregisterEntity(id)
+
+	local m = model :: Model
+	m:SetAttribute("Fall", math.random(1, 3))
+	m:SetAttribute("State", "Death")
+	m:SetAttribute("Seq", (m:GetAttribute("Seq") or 0) + 1)
+	local root = m.PrimaryPart
+	if root then
+		root.CanCollide = false
+		root.CanQuery = false
+	end
+
+	task.delay(DEATH_HOLD, function()
+		if not m.Parent then
+			return
+		end
+		local steps = math.floor(SINK_SECONDS / 0.1)
+		for _ = 1, steps do
+			if not m.Parent then
+				return
+			end
+			m:PivotTo(m:GetPivot() - Vector3.new(0, SINK_DEPTH / steps, 0))
+			task.wait(0.1)
+		end
+		if m.Parent then
+			m:Destroy()
+		end
+	end)
 end
 
 function EnemyService.despawn(id: string)

@@ -125,6 +125,27 @@ local PIVOT_ABOVE_FLOOR = 2.5
 local LEVEL_GAP = 6
 
 --[[
+	AN ATTACK IS A THING THAT HAPPENS OVER TIME
+
+	It used to be instant: the cooldown ran out and the damage landed that same
+	frame, so the only defence was not being near. Now an attack is
+	windup -> strike -> recover (docs/systems/Bestiary.md §7). The windup is what
+	the player sees and answers: the body stops, faces you, and for the first
+	part of it keeps turning to you; it then LOCKS, and the damage lands at the
+	strike on whatever is still in front of it and within reach. Step out and it
+	hits air. The numbers are in each enemy's AI block (Windup, Strike, Recover);
+	absent means instant, as before.
+
+	Every state is also written onto the model (State, Seq, Move) so each client
+	can play the matching clip: nothing is streamed per frame.
+]]
+local STRIKE_LEEWAY = 2.5 -- studs past AttackRange that a strike can still reach
+local STRIKE_CONE = math.cos(math.rad(75)) -- the target must be this far in front
+local FACE_LOCK = 0.65 -- fraction of the windup after which it stops turning
+local AGGRO_SECONDS = 0.9 -- the first time it sees you it stops and cries out
+local RUN_SPEED = 12 -- at or above this a moving body plays Run, not Walk
+
+--[[
 	What a ranged unit fires. Straight off the enemy def's `Ranged` block; nil
 	for everything that has to swing.
 ]]
@@ -147,6 +168,18 @@ type Agent = {
 	attackDamage: number,
 	attackDamageType: string,
 	lastAttack: number,
+
+	-- The attack in progress, if any: windup -> strike -> recover.
+	windup: number,
+	strike: number,
+	recover: number,
+	phase: string?,
+	phaseEnd: number,
+	faceUntil: number,
+	aggroDone: boolean, -- has it already noticed the player this time round
+	aggroUntil: number,
+	visual: string, -- the State last written to the model
+	seq: number,
 
 	-- Ranged units only.
 	ranged: RangedProfile?,
@@ -397,6 +430,16 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 		attackDamage = ai.AttackDamage,
 		attackDamageType = ai.AttackDamageType,
 		lastAttack = 0,
+		windup = ai.Windup or 0,
+		strike = ai.Strike or 0.15,
+		recover = ai.Recover or 0,
+		phase = nil,
+		phaseEnd = 0,
+		faceUntil = 0,
+		aggroDone = false,
+		aggroUntil = 0,
+		visual = "Idle",
+		seq = 0,
 		ranged = ranged,
 		meleeRange = ai.MeleeRange,
 		lastTargetPos = nil,
@@ -412,6 +455,25 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 		repathAt = os.clock() + math.random() * REPATH_SECONDS,
 		computing = false,
 	}
+
+	-- What a client needs to start animating this body.
+	local model = entity.model
+	if model then
+		model:SetAttribute("State", "Idle")
+		model:SetAttribute("Seq", 0)
+		model:SetAttribute("Move", 0)
+	end
+end
+
+-- Writes the animation state onto the model, once per change.
+local function setVisual(model: Instance, agent: Agent, state: string, move: number?)
+	if agent.visual ~= state then
+		agent.visual = state
+		agent.seq += 1
+		model:SetAttribute("State", state)
+		model:SetAttribute("Seq", agent.seq)
+	end
+	model:SetAttribute("Move", move or 0)
 end
 
 --==========================================================================
@@ -614,43 +676,120 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		distanceFromSpawn = (selfPos - agent.spawnPosition).Magnitude,
 		params = agent.params,
 	})
+	local now = os.clock()
+	local States = EnemyBrain.States
 
-	if state == EnemyBrain.States.Chase then
-		if target and target.model then
-			travelTo(entityId, agent, model, selfPos, positionOf(target.model), dt)
-		end
-	elseif state == EnemyBrain.States.Reposition then
-		--[[
-			Backing away — and still shooting. It walks directly away from the
-			target rather than around it: an archer that circles reads as
-			evasive and is miserable to pin down, whereas one that gives ground
-			in a straight line can be cornered against the map, which is what
-			makes the chambers' walls and barricades worth using.
-		]]
-		if target and target.model then
-			local targetPos = positionOf(target.model)
-			local away = selfPos - targetPos
-			if away.Magnitude > 0.1 then
-				moveToward(model, selfPos + away.Unit * 12, agent.moveSpeed, dt)
-			end
-			faceToward(model, targetPos)
-		end
-	elseif state == EnemyBrain.States.Return then
-		travelTo(entityId, agent, model, selfPos, agent.spawnPosition, dt)
+	-- Noticing you is an event, once per time it comes back from rest.
+	if state == States.Idle then
+		agent.aggroDone = false
+	elseif not agent.aggroDone and state ~= States.Dead and state ~= States.Return then
+		agent.aggroDone = true
+		agent.aggroUntil = now + AGGRO_SECONDS
 	end
 
-	-- Attack and Reposition are BOTH firing states — see EnemyBrain.isAttacking.
-	if EnemyBrain.isAttacking(state) and target and target.model and targetDist then
-		if state == EnemyBrain.States.Attack then
+	--[[
+		One thing at a time: a swing in progress, then a cry of first sight, and
+		only then the ordinary walking and attacking. While it is swinging or
+		crying out the body does not move.
+	]]
+	if agent.phase == "windup" then
+		if target and target.model and now < agent.faceUntil then
 			faceToward(model, positionOf(target.model))
 		end
-		local now = os.clock()
-		if now - agent.lastAttack >= agent.attackCooldown then
-			agent.lastAttack = now
-			attack(entityId, agent, target, selfPos, targetDist)
+		setVisual(model, agent, "Windup")
+		if now >= agent.phaseEnd then
+			--[[
+				THE STRIKE. Judged now, not when the swing began: a target that has
+				stepped out of reach, or round behind, takes nothing.
+			]]
+			if target and target.model and targetDist then
+				local toTarget = positionOf(target.model) - selfPos
+				local flatTo = Vector3.new(toTarget.X, 0, toTarget.Z)
+				local look = model:GetPivot().LookVector
+				local meleeNow = agent.ranged == nil or (agent.meleeRange ~= nil and targetDist <= agent.meleeRange)
+				local inFront = flatTo.Magnitude < 0.5 or flatTo.Unit:Dot(Vector3.new(look.X, 0, look.Z).Unit) >= STRIKE_CONE
+				if not meleeNow or (targetDist <= agent.params.AttackRange + STRIKE_LEEWAY and inFront) then
+					attack(entityId, agent, target, selfPos, targetDist)
+				end
+			end
+			agent.phase = "strike"
+			agent.phaseEnd = now + agent.strike
+		end
+	elseif agent.phase == "strike" then
+		setVisual(model, agent, "Strike")
+		if now >= agent.phaseEnd then
+			agent.phase = "recover"
+			agent.phaseEnd = now + agent.recover
+		end
+	elseif agent.phase == "recover" then
+		setVisual(model, agent, "Recover")
+		if now >= agent.phaseEnd then
+			agent.phase = nil
+		end
+	elseif now < agent.aggroUntil then
+		if target and target.model then
+			faceToward(model, positionOf(target.model))
+		end
+		setVisual(model, agent, "Aggro")
+	else
+		local moving = false
+		if state == States.Chase then
+			if target and target.model then
+				travelTo(entityId, agent, model, selfPos, positionOf(target.model), dt)
+				moving = true
+			end
+		elseif state == States.Reposition then
+			--[[
+				Backing away — and still shooting. It walks directly away from the
+				target rather than around it: an archer that circles reads as
+				evasive and is miserable to pin down, whereas one that gives ground
+				in a straight line can be cornered against the map, which is what
+				makes the chambers' walls and barricades worth using.
+			]]
+			if target and target.model then
+				local targetPos = positionOf(target.model)
+				local away = selfPos - targetPos
+				if away.Magnitude > 0.1 then
+					moveToward(model, selfPos + away.Unit * 12, agent.moveSpeed, dt)
+					moving = true
+				end
+				faceToward(model, targetPos)
+			end
+		elseif state == States.Return then
+			travelTo(entityId, agent, model, selfPos, agent.spawnPosition, dt)
+			moving = true
+		end
+
+		-- Attack and Reposition are BOTH firing states — see EnemyBrain.isAttacking.
+		local began = false
+		if EnemyBrain.isAttacking(state) and target and target.model and targetDist then
+			if state == States.Attack then
+				faceToward(model, positionOf(target.model))
+			end
+			if now - agent.lastAttack >= agent.attackCooldown then
+				agent.lastAttack = now
+				began = true
+				if agent.windup <= 0 then
+					attack(entityId, agent, target, selfPos, targetDist)
+					setVisual(model, agent, "Strike")
+				else
+					agent.phase = "windup"
+					agent.phaseEnd = now + agent.windup
+					agent.faceUntil = now + agent.windup * FACE_LOCK
+					setVisual(model, agent, "Windup")
+				end
+			end
+		end
+
+		if not began then
+			if moving then
+				setVisual(model, agent, if agent.moveSpeed >= RUN_SPEED then "Run" else "Walk", agent.moveSpeed)
+			else
+				setVisual(model, agent, "Idle")
+			end
 		end
 	end
-	-- Idle / Dead: no actuation.
+	-- Dead: EnemyService takes the body from here.
 end
 
 function EnemyAIService.Init() end

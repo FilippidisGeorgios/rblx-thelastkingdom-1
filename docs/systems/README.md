@@ -19,6 +19,9 @@ These are the **per-system design documents**. Responsibilities are split three 
 | `Progression.md` | Upgrades, gear progression, retention | §5 | Design only |
 | `Multiplayer.md` | Co-op, party/matchmaking, player-count scaling | §1.2 Pillar 5 | Design only |
 | `Presentation.md` | Art direction, audio, UI/UX | §1.2 Pillar 1 | **Deferred — Tier 3 polish** |
+| `Bestiary.md` | The dead of Asterfall: look, roster, dressings, the King | §1.2 Pillars 1, 2, 4 | **Design (2026-10-20)** — prototype built |
+| `Arsenal.md` | Player movement, weapons, armour, the run and its replay hooks | §1.2 Pillars 4, 5 | **Design (2026-10-20)** |
+| `Animation.md` | Motion, hit feedback, effects, sound, production order | §1.2 Pillar 1 | **Design (2026-10-20)** |
 
 > The **GDD is the source of truth for vision**. These docs must not contradict it. Where a
 > doc adds detail beyond the GDD, that detail is the **design-of-record** for that system.

@@ -1,4 +1,71 @@
-# Changelog
+## Version 0.25.0 — The dead are in the game: bodies, motion, and attacks you can read
+
+Until now no zombie body and no zombie animation had ever been in the game (the unit was a red box).
+Now:
+- **Bodies.** `EnemyService` clones a sculpted body from `ServerStorage.Assets.Undead` when the unit's
+  config names one (`Body` in `configs/Enemies`: the shambler picks a guard or a scullion, the others
+  one each; the King wears the shieldman as a placeholder). Units with no `Body` (the cured villagers,
+  the training dummy) keep the box. The body is tagged `TLK_Undead`, Atomic for streaming, and carries a
+  gait `Variant` 1–3 for life.
+- **Field kit.** The fine kit (80k–420k triangles a body) is too heavy for a wave, so the game uses the
+  same shapes at twice the voxel size (`tools/BuildUndeadKit` `QUALITY = "field"`; 8k–70k triangles a
+  body, 82–118 parts). The fine kit is not kept in the place; rebuild it with `QUALITY = "fine"` for
+  close-ups (it takes several minutes, in batches).
+- **Attacks are windup → strike → recover** (`EnemyAIService`, numbers in each enemy's `AI` block:
+  `Windup`, `Strike`, `Recover`). The body stops and faces you, keeps turning for the first 65% of
+  the windup, then locks; damage lands at the strike on whoever is still within reach and in front.
+  Step out and it hits air. The first time it sees you it stops and cries out (0.9 s) before it chases.
+  Shambler 0.8/0.15/0.6, runner 0.45/0.2/0.5, gravedigger 1.1/0.18/1.3 (stuck), pikeman 0.8/0.14/0.7,
+  archer 0.9/0.1/0.5, King 0.9/0.2/0.8.
+- **State on the model.** The AI writes `State` (Idle, Walk, Run, Aggro, Windup, Strike, Recover,
+  Death), `Seq`, `Move`; `EnemyService` writes `HitCount` and `Fall`. Nothing is sent per frame.
+- **Motion.** `Shared/Anim/ZombieAnims` authors the clips in code (idle, three walks, run, aggro, flinch,
+  three deaths, six attacks built from the unit's own timings) in the same style and angle convention as
+  the sword's; `Client/Controllers/ZombieAnimController` plays them on every tagged body, only within 170
+  studs of the camera.
+- **Death.** A killed body is not deleted: it falls one of three ways, lies 3.2 s and sinks. It leaves the
+  combat registry at once, so nothing targets it.
+
+Checked in a playtest (the real server modules, a harness script that was removed afterwards): spawn,
+Idle → Aggro (0.9 s) → Walk, Windup → Strike → Recover cycles on every type, the player taking damage and
+dying to four shamblers, kills producing the three falls with the body lying on the ground, the sculpted
+spade, spear, bow and shield on the right bodies. Not checked: flinch seen with eyes, frame rate on a phone.
+
+Notes: the dead notice you from further than I assumed (the wave starts from the east side of the
+chamber, x = 157); `DetectionRadius` is unchanged. In the Studio MCP, `require` from `execute_luau` gives a
+SEPARATE copy of every module (its AI never runs); drive the real game from a script placed in the
+place, as the temporary harness did.
+
+## Version 0.24.0 — The dead, the company's arsenal, and how they move: design, and a first line-up
+
+**Design, before code** (the developer's order: look and animation first, mechanics after):
+- `docs/systems/Bestiary.md` — *the dead keep their stations*: every enemy is a person of the fallen castle
+  (cook, sentry, sexton, guard) doing their job wrongly. The curse has three tells (grave-wax skin, the
+  Hollow Light in the eyes, frost breath) and the dead move out of rhythm. Asterfall's device is a falling
+  star on bordeaux and gold. Roster: the five built types kept, five proposed (Shieldman, Sexton, Cinder,
+  Hollow Knight, optional Hound), each asking the player a different question; chamber *dressings* so no
+  two are alike; the King in three phases, ending in a release, not a kill (Story §8).
+- `docs/systems/Arsenal.md` — movement (sprint, roll, kick, stamina), guard/parry/riposte, poise and
+  finishers, damage *styles* (slash/pierce/crush against armour), nine more weapons and shields built
+  around the four that exist, ranged, armour, and the run: forge tempers, spoils of the dead, Oaths,
+  mastery, deeds, records. The sword stays the developer's two cuts and a guard.
+- `docs/systems/Animation.md` — the sword work's rules promoted to house rules, the attribute protocol
+  that drives the dead's clips, the clip catalogue, hit-feedback numbers, effects, sound list, budgets and
+  the order of work with a "done when" for each step.
+
+**Built:** `tools/BuildUndead.luau` builds seven undead masters (104–156 parts each) into
+`ServerStorage.Assets.Undead` and stages a line-up outside the gate for a picture. v2 (the realism pass): round
+limbs and ball joints, a real skull (cheeks, sockets, teeth, hanging jaw), fingers, exposed ribs, veins, decay,
+torn strips for every hem, cloak and tabard, riveted and weathered metal, poses baked into the joints and the
+body grounded on its lowest foot. A playtest proved that the developer's `SwordAnims` clip drives this rig
+unchanged. **Nothing in the game uses these bodies yet:** `EnemyService` still spawns the red box, and no
+zombie animation exists (the only animation in the game is the sword's).
+
+**The fine kit (v3):** `tools/BuildUndeadKit.luau` sculpts 21 pieces from small cubes (0.02–0.03 studs;
+~400k cubes in all) and fuses them by material into UnionOperations that keep every cube's colour: four heads,
+three helmets and a coif, sword, spear, longbow, arrow, kite shield, spade, brigandine, hauberk, pauldrons,
+vambraces, greaves, quiver. The bodies wear them. Heavy in triangles (80k–420k a body): a lighter field
+version is the next step before the dead fight in waves (see `Bestiary.md` §10).
 
 ## Version 0.23.0 — Streaming and detail LOD: the nine chambers fit on a phone
 

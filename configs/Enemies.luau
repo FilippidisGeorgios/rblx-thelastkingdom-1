@@ -21,6 +21,7 @@
 			Resistances = { [damageType: string]: number },
 			Tier        = "Standard" | "Elite" | "Boss",
 			Abilities   = { string },
+			Body        = { string }?, -- OPTIONAL: bodies in ServerStorage.Assets.Undead it may wear; absent = the plain box
 
 			AI = {   -- OPTIONAL; present = this unit uses the AI brain
 				-- Acquire a target within this. READ BEFORE LOWERING ONE: a
@@ -42,6 +43,9 @@
 				ArrivalRadius    = number,
 				MoveSpeed        = number,
 				AttackCooldown   = number,
+				Windup           = number?, -- seconds from the start of a swing to the strike; absent = instant
+				Strike           = number?, -- seconds the strike pose is held (default 0.15)
+				Recover          = number?, -- seconds after it before the next thing; absent = none
 				AttackDamage     = number,
 				AttackDamageType = string,
 			},
@@ -107,6 +111,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Standard",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_shambler", "undead_shambler_scullion" },
 		AI = {
 			DetectionRadius = 110,
 			AttackRange = 6,
@@ -114,6 +120,9 @@ local Enemies = {
 			ArrivalRadius = 3,
 			MoveSpeed = 7,
 			AttackCooldown = 1.6,
+			Windup = 0.8, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.15,
+			Recover = 0.6, -- open to a counter
 			AttackDamage = 8,
 			AttackDamageType = "Physical",
 		},
@@ -134,6 +143,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Standard",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_runner" },
 		AI = {
 			DetectionRadius = 130,
 			AttackRange = 5.5,
@@ -141,6 +152,9 @@ local Enemies = {
 			ArrivalRadius = 3,
 			MoveSpeed = 15,
 			AttackCooldown = 1.1,
+			Windup = 0.45, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.2,
+			Recover = 0.5, -- open to a counter
 			AttackDamage = 6,
 			AttackDamageType = "Physical",
 		},
@@ -163,6 +177,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Elite",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_brute_heavy" },
 		AI = {
 			DetectionRadius = 100,
 			AttackRange = 8,
@@ -170,6 +186,9 @@ local Enemies = {
 			ArrivalRadius = 3,
 			MoveSpeed = 6,
 			AttackCooldown = 2.6,
+			Windup = 1.1, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.18,
+			Recover = 1.3, -- open to a counter
 			AttackDamage = 30,
 			AttackDamageType = "Physical",
 		},
@@ -193,6 +212,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Standard",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_spearman" },
 		AI = {
 			DetectionRadius = 120,
 			AttackRange = 14,
@@ -200,6 +221,9 @@ local Enemies = {
 			ArrivalRadius = 3,
 			MoveSpeed = 7,
 			AttackCooldown = 2.4,
+			Windup = 0.8, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.14,
+			Recover = 0.7, -- open to a counter
 			AttackDamage = 16,
 			AttackDamageType = "Physical",
 		},
@@ -223,6 +247,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Standard",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_archer" },
 		AI = {
 			DetectionRadius = 145,
 			AttackRange = 70, -- it opens fire from here
@@ -231,6 +257,9 @@ local Enemies = {
 			ArrivalRadius = 3,
 			MoveSpeed = 9,
 			AttackCooldown = 2.8,
+			Windup = 0.9, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.1,
+			Recover = 0.5, -- open to a counter
 			AttackDamage = 12, -- unused: the arrow carries the damage
 			AttackDamageType = "Physical",
 		},
@@ -271,6 +300,8 @@ local Enemies = {
 		Resistances = {},
 		Tier = "Boss",
 		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_sentinel" },
 		AI = {
 			DetectionRadius = 200,
 			AttackRange = 80, -- the bow reaches this far
@@ -279,6 +310,9 @@ local Enemies = {
 			ArrivalRadius = 4,
 			MoveSpeed = 11,
 			AttackCooldown = 1.9,
+			Windup = 0.9, -- the telegraph; damage lands at the strike, on whoever is still in front of it
+			Strike = 0.2,
+			Recover = 0.8, -- open to a counter
 			AttackDamage = 45, -- the sword
 			AttackDamageType = "Physical",
 		},
