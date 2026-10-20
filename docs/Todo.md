@@ -94,6 +94,37 @@
       (`Dialogue.HoldSeconds`) and, if a sentence sounds wrong, regenerate that one clip. The built-in
       TTS (`Dialogue.Voice`) only speaks lines that have no `Sound`; turn it off once all are voiced.
 
+## Bigger castle, chambers 1–3 rebuilt (2026-10-19, Changelog 0.20.0)
+- [x] Castle widened 25% both ways (`configs/Castle.luau`, `BuildBattleground` MODE "resize"); moat,
+      land and surroundings moved out; AreaService/WinchService read the config.
+- [x] Chambers 1–3 rebuilt by `tools/BuildWards.luau`: realistic timber/stone/thatch buildings you
+      can enter and climb, generated PBR materials and mesh props, painted roads, lanterns, torches.
+- [x] The dead follow the floor and route up stairs (EnemyAIService); 39/39 raised floors and doors
+      route; a playtest had them climb the watch platform.
+- [ ] Look at it with your own eyes in a playtest and say what reads wrong (scale, colours, density).
+- [x] Chambers 4–6 rebuilt by BuildWards (Graveyard, Smithy, Great Hall; 2026-10-20, Changelog
+      0.21.0). 62/62 stairs and 15/15 upper floors route in chambers 1–6; playtest boots clean.
+- [ ] Look at chambers 4–6 in a playtest and say what reads wrong.
+- [ ] Save to Roblox (not done: only when asked).
+- [x] Chambers 7–9 rebuilt by BuildWards (the Rows, the Inner Ward, the Keep Steps; 2026-10-20,
+      Changelog 0.22.0). All nine chambers: 111/111 stairs and ramps, 29/29 upper floors and decks,
+      27/27 spawns, every chamber's way through; playtest boots clean.
+- [ ] Look at chambers 7–9 in a playtest and say what reads wrong.
+- [ ] Mechanics for areas 4–9 against the named scenery (AreaPlan): the grave braziers, the forge,
+      torch + oil + the door that burns, trees → planks, the hall's four BoardPoints, the prisoner's
+      chair, the buried passage, the sealed keep and the scribe.
+- [ ] Props still to generate (asset quota ran out): Chest, Bucket. The straw dummy and weapon racks
+      were refused by moderation — they are built from parts instead.
+- [ ] Re-texture the pale crate mesh darker (`generate_texture` timed out once).
+- [ ] The intro shots were framed on the old castle; watch the arrival again (the walls are wider).
+- [ ] Performance: ~64k parts and ~490 lights in the place now (the Rows alone ~9.8k). Measure on a
+      phone; StreamingEnabled is the lever (check every client script that reads Workspace first).
+      If it must come down further: shutter straps and thatch spars are the cheapest detail to thin.
+- [x] One of the forge's four open bays did not route: an anvil stood 1.6 inside it (moved, 2026-10-20).
+- [x] Cottage upper floors were not reachable by the dead (the stair ran into the end wall); fixed
+      in chambers 1–6 with landings, steeper stairs and doors swung back (2026-10-20).
+- [x] Saved to Roblox (version "Castle widened 25%, areas 1-3 rebuilt", 2026-10-19). Not published.
+
 ## Chapter 1 — Vertical Slice (integration milestone)
 - [x] `ChapterOneSliceService` orchestrator over existing public APIs (no rewrites).
 - [x] Story Intro (start-once per player; survives respawn).

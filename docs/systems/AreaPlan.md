@@ -127,6 +127,13 @@ section down for good.
 **This is where the game gets harder and more aggressive.** The first zombies
 carrying **heavy weapons** appear here.
 
+**The scenery is built (2026-10-20), the mechanic is not.** Four braziers stand
+laid and unlit, one to each section: two in the churchyard (west, south-east),
+two in the new field (north, south by the pit). Each is
+`Decorations.Area4.GraveBraziers.GraveBrazier` with attributes `Section` (1-4)
+and `Lit` (false), and a `FirePoint` part where its flame belongs. Open graves
+are scattered through every section; the mechanic can raise the dead from them.
+
 ## 5 — Σιδηρουργείο · The spike
 
 The sharpest jump in the game, and the richest.
@@ -157,6 +164,17 @@ tells you what to do with it.
 **Trees and an axe**, also here: chop them for **planks**, which go to the
 backpack and are spent in area 6.
 
+**The scenery is built (2026-10-20), the mechanics are not.** Under
+`Decorations.Area5`: the forge the work is done at is the `ForgeHearth` with
+attribute `Mechanic = "Forge"`, beside it `ForgeBellows` and `ForgeAnvil`
+(the second hearth is lit too, for the look). `TorchRack` holds four
+`UnlitTorch` models, against the smithy's west end. `OilStore` is the lean-to
+on the west wall, full of `OilJar`s. Six `DeadTree`s in the `Woodyard` carry
+`Choppable = true`; the axe (attribute `Axe`) is in a stump; a `PlankStack`
+stands by the saw pit. The mine is in the south-west corner: the adit runs 30
+in from x -124, z -1170 toward the corner, with `GoldVein` parts in its walls.
+Which door "burns open" is still to be decided; nothing blocks the passage yet.
+
 ## 6 — Μεγάλη Αίθουσα · The siege
 
 **Roof the hall.** The castle currently has no ceiling anywhere; this room gets
@@ -168,6 +186,14 @@ throw their spears — melee reach only, or the range balance falls apart.
 Board the doors with the **planks carried from area 5**. There is a short
 cooldown before the mass spawn, which is the window to board.
 
+**The scenery is built (2026-10-20), the mechanic is not.** The hall is a real
+roofed building, 120 × 46, and the road runs through it (in by the north
+porch, across the screens passage, out by the south door). It has four
+doorways, each eight wide and thirteen high, and each holds an invisible
+`GreatHall.BoardPoints.BoardPoint` (attribute `Door` 1-4) the size of the
+opening: 1 south screens door, 2 north screens door, 3 south side door,
+4 west door by the dais. The minstrels' gallery over the passage is climbable.
+
 ## 7 — Τα Σοκάκια · The prisoner
 
 Very hard.
@@ -176,10 +202,24 @@ The villager is **tied to a chair**. Untying takes **20 seconds** of held
 interaction. If they survive to the end of the run alongside the party, the
 whole team gets **+5% gold**.
 
+**The scenery is built (2026-10-20), the mechanic is not.** The chair is in the
+tavern, on the east side of the market square (x 64, z -1606), in the open
+middle of its ground floor where both doors see it:
+`Decorations.Area7.Tavern.PrisonerChair` (attribute `Prisoner`), with the ropes
+on it and a `SeatPoint` part where the villager sits. Reachable from both sides.
+
 ## 8 — Έσω Περίβολος · The line
 
 The passage is buried; clear it under heavy pressure. The fallen tower is the
 only high ground and the dead have to funnel up to it.
+
+**The scenery is built (2026-10-20), the mechanic is not.** The fallen tower lies
+across the south of the ward (its stump at x -78, z -1905; the shaft to x 46),
+its top 16 up, reached only by two slopes of rubble: from the north at the
+stump end and from the east at the crown end. Masonry is heaped either side of
+the passage mouth (`Decorations.Area8.PassageRubble`, attribute `Passage`) but
+nothing blocks it yet: burying it is the mechanic's to do, so the way is not
+shut before something can open it.
 
 This one lives or dies on the AI quality.
 
@@ -191,6 +231,15 @@ this is. He must feel like a real opponent, not a health bar.
 
 **The tower is sealed** until he dies. When he falls it opens, and an arrow
 appears on the ground pointing the way in.
+
+**The scenery is built (2026-10-20), the mechanics are not.** The tower is the
+keep against the back wall (x 0, z -2188; 68 × 56; parapet 72, turrets 84).
+Its door is at the head of the Keep Steps, on a landing 18 up, and it is shut
+and barred: `Decorations.Area9.Keep.KeepDoor` (attribute `Sealed`, collidable,
+the size of the opening). Inside there is a hall floor at the door's level and
+a `ScribeSpot`, and nothing else: no stair, because nothing may reach the
+wall-walk until the ending opens it. The forecourt below the steps is the
+arena.
 
 **Inside**, the door to the roof is **locked**. The scribe NPC gives the key —
 but only after the player has heard the whole dialogue. Then the door opens and

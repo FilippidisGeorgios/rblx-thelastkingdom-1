@@ -1,5 +1,118 @@
 # Changelog
 
+## Version 0.22.0 — The Rows, the Inner Ward and the Keep Steps: all nine chambers built
+
+**Chambers 7–9 rebuilt** by `tools/BuildWards.luau` (sections Area7–Area9). Every chamber of the
+castle is now built by the one tool; see `docs/systems/ChamberThemes.md` for what stands in each.
+- **7 The Rows**: two streets of seventeen houses, each written out by hand and none alike — eaves or
+  gable to the street, one storey or two, jettied or not, thatch or shingles, washed in seven
+  colours — with trade signs on iron brackets, water butts, dead flower boxes and bunting; the
+  market square with its roofed cross, stalls and stocks; the market hall (stone arcade, guild room
+  above) and the tavern, where the villager is tied to a chair; gardens, a privy, a hen house.
+- **8 The Inner Ward**: the last line — palisade, gate, two breaches, a firing step you can climb,
+  stakes, braziers; the field hospital, the command tent and its map, stands of spears, a broken
+  mangonel, a burning cart; the marshal's house with a fighting deck; a pyre; and the tower that
+  came down across the yard, its top the only high ground, reached by two slopes of rubble.
+- **9 The Keep Steps**: the keep (68 × 56, parapet 72, turrets 84) with its door shut and barred at
+  the head of a great flight of steps; kings in stone, a dry fountain, the guard's last ring, the
+  royal carriage on its side; the treasury, the chancery, the guardroom, a knot garden gone brown.
+- The places the area mechanics need are named: `PrisonerChair` (7), `PassageRubble` (8),
+  `KeepDoor` (sealed) and `ScribeSpot` (9). The keep has no stair inside: nothing reaches the
+  wall-walk until the ending opens it.
+- Library: houses take a limewash colour (their gables follow it) and can hang their door on the
+  right post (a door in an end wall must not lie across the stair foot); trade signs, bunting,
+  flower boxes, the market cross, stocks, the prisoner's chair, tankards; palisades, stands of arms,
+  a mangonel, cots, rubble slopes, a fallen tower; statues, a fountain, a knot garden, the keep and
+  its great stair.
+
+**Fixed while building**: a tavern table behind each door made a funnel the pathfinder would not
+pass (the left half of the floor was cut off); a sack at a stair foot; a paving edge 0.12 proud of
+the keep stair's head shut the landing off (the same kind of lip as the gallery's). A rolled drum of
+the fallen tower may sit a little untrue: the walking surface is an invisible deck over it.
+
+**Verified in Studio**, all nine chambers: 111/111 stairs, ramps and door steps and 29/29 upper
+floors and decks route from the yard; 27/27 spawns reach their objective; every chamber's entry →
+passage is open, and in chamber 9 the way up to the keep's landing. A playtest boots clean (32
+server / 13 client modules). Place ~64k parts, ~490 lights.
+
+## Version 0.21.0 — The Graveyard, the Smithy and the Great Hall; the dead get upstairs
+
+**Chambers 4–6 rebuilt** by `tools/BuildWards.luau` (sections Area4–Area6), the same way as 1–3 —
+see `docs/systems/ChamberThemes.md` for what stands in each:
+- **4 Graveyard**: a stone chapel used as a mortuary, its churchyard (broken wall, lychgate, old
+  graves, table tombs, a broken cross, a family vault), the new field of graves dug too close, some
+  open, a pit dug into the terrain with the shrouded dead in it, a burning pyre, the sexton's house
+  and his coffins, a charnel house, a timber belfry you can climb.
+- **5 Smithy**: a stone forge open in six bays with two hearths and two stacks, the armoury with a
+  loft, the smith's house, a mine cut into a rock hill in the terrain (adit on timber sets, rails,
+  tubs, gold in the walls), the oil store, a rack of unlit torches, dead trees with an axe in a
+  stump, a saw pit and sawn planks, a bloomery and a smoking charcoal clamp.
+- **6 Great Hall**: a 120 × 46 stone hall with an open timber roof (arch-braced trusses, slates, a
+  louvre over the hearth). The road runs through its screens passage, under a minstrels' gallery
+  you can climb; dais, high table, cloth of estate, chandeliers, banners, tables thrown over and one
+  still laid. Solar wing, buttery, the court of the last feast under pavilions, the lord's garden.
+- **The places the area mechanics need are built and named** (not the mechanics): four unlit
+  grave braziers, the forge with its bellows and anvil, the torches, the oil, the choppable trees,
+  the planks, and a `BoardPoint` in each of the hall's four doorways (AreaPlan.md lists them).
+- New in the building library: stone walls with double doors, pointed (lancet) heads, open bays,
+  archways and any thickness; stone gables; several chimneys to a roof; buttresses, quoins,
+  flagstones; graves in five states, headstones, coffins, shrouds, tombs, crosses, churchyard walls,
+  a lychgate, a bell, dead trees; forge hearths, a grindstone, a weapon bench, mail on stands, sword
+  and torch racks, oil jars, stumps, mine tubs, rails, timber sets, a bloomery, a charcoal clamp;
+  trestle tables, benches, banners, chandeliers, sconces; terrain dug (a pit) and heaped (a hill).
+
+**The dead can now reach every upper floor, not just the top of the stairs.** A new check stands
+on each upper floor (`UpperProbe` / `DeckProbe`) instead of on the stair head, and it found that in
+every cottage the flight ran into the end wall: whoever climbed it stood on the top step with
+nowhere to go. Fixed in all six areas:
+- house stairs are steeper (43°; the pathfinder climbs 45°, not 48°) and every one now arrives on a
+  landing at least 2.6 wide; the narrow two-storey houses are 2 wider (18→20, stone 22→24), and
+  the builder warns if a house is too short for its stair;
+- door leaves swing right back against the wall (155–165°): a leaf standing square into a room cut
+  a cottage in half; stone doors hang on the inside face;
+- a 0.22 lip at the gallery's stair head, an anvil 1.6 inside a forge bay (the area-2 forge bay that
+  never routed), a barrel rolled in front of a bay and a shelf in a doorway were all removed.
+- Verified in Studio: 62/62 stairs, ramps and door steps and 15/15 upper floors and decks in
+  chambers 1–6 route from the yard; 18/18 spawns reach their objective; entry → passage open in all
+  six chambers. A playtest boots clean (32 server / 13 client modules). Place ~52k parts, 390 lights.
+
+## Version 0.20.0 — A bigger castle, and the first three chambers built to be believed
+
+**The castle is 25% bigger both ways** (300 × 1800 → 376 × 2250; chambers 200 → 250 deep).
+- `configs/Castle.luau` (new) holds the numbers. `tools/BuildBattleground` (new MODE "resize"),
+  `tools/BuildLand`, `tools/BuildSurroundings`, `AreaService` and `WinchService` all read them; no
+  copy of the castle's size is kept anywhere else.
+- Resize keeps everything: walls whose length changed are rebuilt (in runs of ≤1000 — a part longer
+  than 2048 is silently clamped, which left holes the first time), every tower, passage, marker,
+  building and light is moved whole. The moat, reeds, mist and the smoke moved out with it; the old
+  moat inside the new walls is filled (`BuildLand` MODE "castle").
+- The old chamber tools (`BuildChambers`, `LightCastle`, `CleanSlate`) refuse to run on the resized
+  castle instead of building in the wrong place.
+
+**Chambers 1–3 rebuilt** by `tools/BuildWards.luau` (new) — see `docs/systems/ChamberThemes.md`:
+- A building library made the way buildings were made: stone plinths with quoins, timber frames
+  (sill, posts, rail, braces, close studding upstairs), daub panels set back from the frame, jettied
+  upper floors on joists and a bressumer, thatch 2.6 thick with a rolled eave, a sedge ridge and
+  hazel liggers, plank doors on strap hinges, mullioned windows with shutters, rubble-stone walls
+  with dressed jambs and oak lintels, chimneys, fighting decks, lean-tos, open sheds, ruins.
+- Generated PBR materials (`TLK_Thatch2/3`, `TLK_Daub`, `TLK_OakBeam`, `TLK_OldPlanks`, `TLK_Rubble`,
+  `TLK_Charred`, `TLK_Shingles`, `TLK_Hay`, `TLK_Burlap`, `TLK_YardMud`, `TLK_Cobbles`) and textured
+  mesh props (barrel, cart, anvil, sacks, firewood, trough, crate, table, bed, cauldron, shelf, bread
+  basket) in `ServerStorage.Assets.Props`. Mud and cobblestone terrain use the generated textures.
+- New roads painted into the terrain, cobbles with mud verges, grass along the walls; torches on the
+  walls again; braziers, hearths, glowing windows, smoke from chimneys and burnt buildings.
+- Area 1 ~4.5k parts, areas 2 and 3 ~2.7k each. Place total ~39k parts.
+
+**The dead can follow you up.** Every raised floor is reached by a flight whose walking surface is an
+invisible ramp, every doorway has steps with a ramp under them, and:
+- `EnemyAIService` now follows the floor (each step finds the surface under it: up 2.2, down 40), takes
+  a route instead of a straight line when the target is on another level, gathers underneath when
+  there is no route, routes with a 1.0 radius (at 2.4 or 1.6 the pathfinder judged every door and
+  stair impassable), and turns at waypoints within 2 (at 4 bodies met stairs from the side).
+- Verified: all 32 doors, stairs and decks in chambers 1–3 route from the yard; a playtest had four
+  of the dead climb the watch platform and reach the player on it. Every route from the entry to the
+  passage, and from every spawn to every objective, is open.
+
 ## Version 0.19.1 — Both places caught up, and published for testers
 
 Both places were brought level with the repo and **published** (2026-10-18) so testers can play.
