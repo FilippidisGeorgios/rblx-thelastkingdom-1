@@ -117,9 +117,10 @@
       were refused by moderation — they are built from parts instead.
 - [ ] Re-texture the pale crate mesh darker (`generate_texture` timed out once).
 - [ ] The intro shots were framed on the old castle; watch the arrival again (the walls are wider).
-- [ ] Performance: ~64k parts and ~490 lights in the place now (the Rows alone ~9.8k). Measure on a
-      phone; StreamingEnabled is the lever (check every client script that reads Workspace first).
-      If it must come down further: shutter straps and thatch spars are the cheapest detail to thin.
+- [x] Performance pass (2026-10-20, Changelog 0.23.0): StreamingEnabled on, buildings Atomic, shell
+      Persistent, lights/emitters thinned by distance (`OptimiseCastle`, `DetailLodController`).
+      Still to do on a real phone: measure FPS/memory; if it is short, set StreamingTargetRadius by
+      hand (Properties; scripts cannot) to ~600 and thin shutter straps and thatch spars.
 - [x] One of the forge's four open bays did not route: an anvil stood 1.6 inside it (moved, 2026-10-20).
 - [x] Cottage upper floors were not reachable by the dead (the stair ran into the end wall); fixed
       in chambers 1–6 with landings, steeper stairs and doors swung back (2026-10-20).

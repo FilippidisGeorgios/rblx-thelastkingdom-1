@@ -1,5 +1,30 @@
 # Changelog
 
+## Version 0.23.0 — Streaming and detail LOD: the nine chambers fit on a phone
+
+The place was ~64k parts, ~495 lights and ~430 emitters with StreamingEnabled off: every client
+downloaded and drew the whole castle. Measured in a playtest:
+- **Streaming on** (`Workspace.StreamingEnabled`; a script can switch it on but cannot set the
+  radii, so the defaults stand: 128 min / 1024 target, which a phone lowers by itself). A client at
+  the hill held ~15k parts, at the gate ~34k, against 64k. Every building (each direct child Model of
+  `Decorations.AreaN`) is **Atomic**, so a house arrives whole, never a floor without its wall; the
+  Shell and the arrival pad are **Persistent**.
+- **`tools/OptimiseCastle.luau`** sets all of that and tags lights and emitters `TLK_Lod`. Run it
+  again after any build tool (it only sets properties and tags; MODE "undo" reverses it).
+- **`Client/Controllers/DetailLodController`** switches tagged lights (120 studs) and emitters (150
+  studs; x0.7 on a phone) off beyond that distance from the camera. At the gate the client held 262
+  lights, 47 of them lit, and 239 emitters, 53 emitting. Mechanics that light or douse a fire set the
+  attribute `LodWant` on it (see the controller's header). The red light in the last tower and the
+  smoke seen from the hill are under `Surroundings` and are left alone.
+- `IntroService`: when the party is put back at the gate, the body stays anchored until
+  `Player:RequestStreamAroundAsync` says the ground there has reached that client (it was 800
+  studs away a moment before); all players are placed at once.
+
+Checked after the change: 111/111 stairs and ramps, 29/29 upper floors and decks, 27/27 spawns and
+every chamber's way through still route (the server sees the whole world, streaming or not); the
+playtest boots clean (14 client, 32 server modules), the intro runs, area 1 starts its first wave;
+every script in Studio equals the file on disk (136 of 136).
+
 ## Version 0.22.0 — The Rows, the Inner Ward and the Keep Steps: all nine chambers built
 
 **Chambers 7–9 rebuilt** by `tools/BuildWards.luau` (sections Area7–Area9). Every chamber of the

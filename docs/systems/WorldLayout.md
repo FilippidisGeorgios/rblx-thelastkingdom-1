@@ -90,3 +90,11 @@ bartizans, stair turrets, cross loops, garderobes. See
 [TowerAnatomy.md](TowerAnatomy.md) for what each piece is and why it is there.
 No two are alike: heights, ruin, roofs and turret positions vary per chamber, so
 the two flanks never match and the eye has something to follow.
+
+## Performance
+
+~64k parts, ~495 lights, ~430 emitters. `StreamingEnabled` is on: buildings are Atomic, the Shell
+and the arrival pad Persistent, and `DetailLodController` switches lights and emitters off by
+distance. After rebuilding anything with a build tool, run `tools/OptimiseCastle.luau` again (it
+re-tags what the tool made). A script cannot set the streaming radii; they are the defaults.
+Mechanics that light or douse a fire set the attribute `LodWant` on it. See Changelog 0.23.0.

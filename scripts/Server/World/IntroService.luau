@@ -122,6 +122,12 @@ local function standAtGate(player: Player, index: number)
 	local at = base + offset + Vector3.new(0, 3, 0)
 	-- Facing into the castle (away from the gate, which is at +Z).
 	;(player.Character :: Model):PivotTo(CFrame.lookAt(at, at + Vector3.new(0, 0, -1)))
+	-- The body is still anchored from the hill. With streaming on, the ground at the
+	-- gate may not have reached this client yet (it was 800 studs away a moment
+	-- ago): hold the body until it has, or it lands on nothing and falls.
+	pcall(function()
+		player:RequestStreamAroundAsync(at, 6)
+	end)
 	root.Anchored = false
 end
 
@@ -155,10 +161,20 @@ local function endScene(reason: string)
 
 	-- Move everyone while the screen is black, then let the clients fade back in.
 	task.wait(cfg.FadeOutSeconds + 0.1)
+	-- All at once: each one waits on its own client's streaming.
+	local placing = 0
 	for i, player in cast do
 		if player.Parent then
-			standAtGate(player, i)
+			placing += 1
+			task.spawn(function()
+				standAtGate(player, i)
+				placing -= 1
+			end)
 		end
+	end
+	local placeDeadline = os.clock() + 8
+	while placing > 0 and os.clock() < placeDeadline do
+		task.wait(0.1)
 	end
 	for _, player in cast do
 		if player.Parent then
