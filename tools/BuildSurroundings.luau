@@ -46,7 +46,23 @@ local SEED = 1453
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local rng = Random.new(SEED)
 
-local MOAT = { innerX = 190, outerX = 270, frontIn = 60, frontOut = 140, backIn = -1796, backOut = -1876, water = -6 }
+-- The moat follows the castle (configs/Castle.luau): 40 / 120 out from the side
+-- walls, 16 / 96 behind the back wall. Was 190 / 270, -1796 / -1876 before the
+-- 2026-10-19 widening.
+local Castle = require(game:GetService("ReplicatedStorage"):WaitForChild("Config"):WaitForChild("Castle")) :: any
+local MOAT = {
+	innerX = Castle.HalfWidth + 40,
+	outerX = Castle.HalfWidth + 120,
+	frontIn = 60,
+	frontOut = 140,
+	backIn = Castle.zEnd() - 16,
+	backOut = Castle.zEnd() - 96,
+	water = -6,
+}
+-- Where along the castle a z falls, as a fraction of its length (0 = front wall).
+local function alongCastle(t: number): number
+	return Castle.ZStart + (Castle.zEnd() - Castle.ZStart) * t
+end
 local HILL = Vector3.new(-40, 0, 790) -- where the party stands (y is found on the terrain)
 local GATE = Vector3.new(0, 1.2, 66)
 
@@ -400,8 +416,9 @@ local function buildMoat()
 	end
 	-- A dead tree fallen across the east channel.
 	do
-		local a = Vector3.new(274, groundY(274, -980) + 1, -980)
-		local b = Vector3.new(214, W - 1.2, -1000)
+		local ax, az = MOAT.outerX + 4, alongCastle(0.555)
+		local a = Vector3.new(ax, groundY(ax, az) + 1, az)
+		local b = Vector3.new(MOAT.innerX + 24, W - 1.2, az - 20)
 		rod(debris, a, b, 2.6, vary(C.deadWood, 0.1), M.log)
 		rod(debris, a:Lerp(b, 0.4), a:Lerp(b, 0.4) + Vector3.new(-4, 7, 9), 1, C.deadWood, M.log)
 		rod(debris, a:Lerp(b, 0.7), a:Lerp(b, 0.7) + Vector3.new(-3, 5, -8), 0.8, C.deadWood, M.log)
@@ -413,9 +430,9 @@ local function buildMoat()
 		if side == 1 then
 			x, z = rand(-250, 250), rand(70, 120)
 		elseif side == 2 then
-			x, z = rand(200, 250), rand(-1700, 40)
+			x, z = rand(MOAT.innerX + 10, MOAT.outerX - 20), rand(alongCastle(0.95), 40)
 		else
-			x, z = rand(-250, -200), rand(-1700, 40)
+			x, z = rand(-MOAT.outerX + 20, -MOAT.innerX - 10), rand(alongCastle(0.95), 40)
 		end
 		if math.abs(x) > 24 or z < 60 then
 			if rng:NextNumber() < 0.6 then
@@ -909,7 +926,8 @@ local function buildCastleAtmosphere()
 	local f = section("CastleAtmosphere")
 
 	-- Smoke climbing out of the courts: something is still burning in there.
-	for _, z in { -260, -720, -1180, -1560 } do
+	for _, t in { 0.15, 0.4, 0.66, 0.88 } do
+		local z = alongCastle(t)
 		smoke(f, Vector3.new(rand(-60, 60), 70, z), Vector3.new(30, 1, 30), 2.2, 1.6, Color3.fromRGB(46, 44, 48))
 	end
 
@@ -925,7 +943,7 @@ local function buildCastleAtmosphere()
 			end
 		end
 	end
-	local at = if top then top.Position + Vector3.new(0, top.Size.Y / 2 + 6, 0) else Vector3.new(0, 180, -1700)
+	local at = if top then top.Position + Vector3.new(0, top.Size.Y / 2 + 6, 0) else Vector3.new(0, 180, alongCastle(0.95))
 	local beacon = part(f, Vector3.new(1, 1, 1), CFrame.new(at), Color3.fromRGB(150, 30, 30), M.iron, "CurseLight")
 	beacon.Transparency = 1
 	beacon.CastShadow = false

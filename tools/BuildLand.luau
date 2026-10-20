@@ -46,13 +46,17 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 -- Geometry. The castle shell spans x -164..164, z -1794..66 (gatehouse front),
 -- with corner towers standing out into the moat.
 --==========================================================================
+-- The moat follows the castle: 40 out from the side walls' centre lines and 16
+-- behind the back wall (configs/Castle.luau). Before the 2026-10-19 widening
+-- these were 190 / 270 and -1796 / -1876.
+local Castle = require(game:GetService("ReplicatedStorage"):WaitForChild("Config"):WaitForChild("Castle")) :: any
 local MOAT = {
-	innerX = 190, -- the inner edge, on each side (the castle side)
-	outerX = 270, -- the outer edge
+	innerX = Castle.HalfWidth + 40, -- the inner edge, on each side (the castle side)
+	outerX = Castle.HalfWidth + 120, -- the outer edge
 	frontIn = 60, -- in front of the gate (the gatehouse stands 6 studs into the water)
 	frontOut = 140,
-	backIn = -1796,
-	backOut = -1876,
+	backIn = Castle.zEnd() - 16,
+	backOut = Castle.zEnd() - 96,
 	water = -6, -- the surface
 	bed = -26,
 	shelf = 10, -- shallow water along the outer side
@@ -263,6 +267,77 @@ local function buildMoat()
 end
 
 --==========================================================================
+-- MODE castle
+--==========================================================================
+--[[
+	After the castle grows, its old moat is INSIDE the new walls: water and mud
+	where the yard should be. This fills everything inside the moat's inner
+	edge back to plain ground at y = 0 (the castle's floor), with air above —
+	but only where it is not already flat ground, so nothing painted inside the
+	old walls is touched.
+]]
+local function buildCastleGround()
+	local Y0, Y1 = -48, 16
+	local columns = 0
+	for x0 = -MOAT.innerX, MOAT.innerX - 1, CHUNK do
+		for z0 = MOAT.backIn, MOAT.frontIn - 1, CHUNK do
+			local x1 = math.min(x0 + CHUNK, MOAT.innerX)
+			local z1 = math.min(z0 + CHUNK, MOAT.frontIn)
+			local region = Region3.new(Vector3.new(x0, Y0, z0), Vector3.new(x1, Y1, z1)):ExpandToGrid(4)
+			local mats, occ = T:ReadVoxels(region, 4)
+			local origin = region.CFrame.Position - region.Size / 2
+			local size = mats.Size
+			local dirty = false
+			for i = 1, size.X do
+				local x = origin.X + (i - 0.5) * 4
+				for k = 1, size.Z do
+					local z = origin.Z + (k - 0.5) * 4
+					if not inCastle(x, z) then
+						continue
+					end
+					-- Already the castle floor? No water anywhere, the voxel just under
+					-- y = 0 solid, nothing above it: leave it alone (and whatever was
+					-- painted on it). The castle's own ground is only 20 deep, so air
+					-- further down is normal and says nothing.
+					local flat = true
+					for y = 1, size.Y do
+						local b = origin.Y + (y - 1) * 4
+						local m = mats[i][y][k]
+						if m == Enum.Material.Water then
+							flat = false
+						elseif b == -4 and (m == Enum.Material.Air or occ[i][y][k] < 0.99) then
+							flat = false
+						elseif b >= 0 and m ~= Enum.Material.Air then
+							flat = false
+						end
+					end
+					if flat then
+						continue
+					end
+					columns += 1
+					dirty = true
+					for y = 1, size.Y do
+						local b = origin.Y + (y - 1) * 4
+						if b < 0 then
+							mats[i][y][k] = Enum.Material.Ground
+							occ[i][y][k] = 1
+						else
+							mats[i][y][k] = Enum.Material.Air
+							occ[i][y][k] = 0
+						end
+					end
+				end
+			end
+			if dirty then
+				T:WriteVoxels(region, 4, mats, occ)
+			end
+		end
+		task.wait()
+	end
+	print(("[BuildLand] castle: %d columns levelled to the castle floor"):format(columns))
+end
+
+--==========================================================================
 -- MODE relief
 --==========================================================================
 local function buildRelief()
@@ -397,6 +472,8 @@ function Tool.run(mode: string)
 	local a, b
 	if mode == "slab" then
 		buildSlab()
+	elseif mode == "castle" then
+		buildCastleGround()
 	elseif mode == "moat" then
 		buildMoat()
 	elseif mode == "relief" then

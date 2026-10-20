@@ -68,6 +68,7 @@ local GameService = require(Server.Services.GameService)
 local AreaService = require(script.Parent.AreaService)
 local Net = require(ReplicatedStorage.Shared.Net)
 local Constants = require(ReplicatedStorage.Shared.Constants)
+local Config = require(ReplicatedStorage.Shared.Config)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
 local WinchService = {}
@@ -80,24 +81,33 @@ local log = Logger.new("WinchService")
 local AREA = 2
 
 --[[
-	The winch site, from tools/SurveyArea2.
+	The winch site, measured FROM THE PASSAGE (configs/Castle.luau), so it
+	follows the castle when it is resized.
 
-	x = -88, z = -364. The passage is at x = -115 in the cross wall at z = -380;
-	PassageTowerB stands at x = -70 with a radius of 18, so its footprint at
-	this z reaches x = -78, and the measured road through this slice spans
-	x -123.8 .. -106.2. This spot is clear of both with room to fight in.
+	27 in from the passage centre and 16 out from the cross wall: between the
+	opening and PassageTowerB (which stands 45 in, radius 18, so its footprint
+	at this depth reaches 29 in). First surveyed by tools/SurveyArea2 at
+	x = -88, z = -364 when the passage was at x = -115 in a wall at z = -380 —
+	the same spot relative to the gate.
 ]]
-local WINCH = Vector3.new(-88, 2, -364)
-local GATE_TOP = Vector3.new(-115, 48, -378) -- where the rope disappears into the arch
+local Castle = Config.get("Castle")
+local _, AREA_FAR = Castle.chamberBounds(AREA)
+local AREA_GAP_X: number = Castle.gapX(AREA)
+local INWARD = -math.sign(AREA_GAP_X) -- from the passage toward the middle of the room
+local WINCH = Vector3.new(AREA_GAP_X + INWARD * 27, Castle.GroundY, AREA_FAR + 16)
+local GATE_TOP = Vector3.new(AREA_GAP_X, 48, AREA_FAR + 2) -- where the rope disappears into the arch
 
 --[[
-	Where the handle can be hidden: the ground around the stables, east of the
-	road all the way down this end of the chamber. The measured road maximum in
-	these z slices is x = -67 at worst, so the whole zone is clear of it — and
-	every candidate is still checked against the world before it is used.
+	Where the handle can be hidden: the ground around the stables, toward the
+	middle of the room from the winch, in the back half of the chamber. Every
+	candidate is still checked against the world (roofs, the road, other
+	pieces) before it is used, so the zone only has to be roughly right.
 ]]
-local ZONE_X = { -8, 104 }
-local ZONE_Z = { -364, -298 }
+local ZONE_X = { AREA_GAP_X + INWARD * 95, AREA_GAP_X + INWARD * 280 }
+if ZONE_X[1] > ZONE_X[2] then
+	ZONE_X = { ZONE_X[2], ZONE_X[1] }
+end
+local ZONE_Z = { AREA_FAR + 45, AREA_FAR + 127 }
 
 local SEARCH_POINTS = 9
 local MIN_APART = 17

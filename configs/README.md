@@ -52,6 +52,7 @@ designers edit heavily may migrate to `.json` later (Rojo can sync JSON as a mod
 | `Settings.luau` | Global timers & feature flags | Ongoing |
 | `Look.luau` | How a place looks: lighting, atmosphere, sky, clouds, post-FX, terrain palette, water. Baked in at edit time by `tools/ApplyLook.luau`, never read at runtime | Art Direction |
 | `Intro.luau` | The Forgotten Lands arrival scene: title, lines, camera beats and timing, skip vote share | Art Direction |
+| `Castle.luau` | The castle's size: half width, chamber depth, wall and gap numbers, with helpers for chamber bounds and passage positions. Read by `tools/BuildBattleground`, `tools/BuildLand`, `tools/BuildSurroundings`, `tools/BuildWards`, `AreaService` and `WinchService` | World |
 
 Each file's header comment documents its exact schema. Open the file for the authoritative
 shape.

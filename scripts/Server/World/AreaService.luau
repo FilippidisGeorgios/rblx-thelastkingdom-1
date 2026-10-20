@@ -48,6 +48,7 @@ local Server = script.Parent.Parent
 local GameService = require(Server.Services.GameService)
 local Net = require(ReplicatedStorage.Shared.Net)
 local Constants = require(ReplicatedStorage.Shared.Constants)
+local Config = require(ReplicatedStorage.Shared.Config)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
 local AreaService = {}
@@ -63,10 +64,11 @@ local DEV_OPEN_ALL = false
 --==========================================================================
 -- THE CASTLE'S NUMBERS
 --
--- Every value below is copied from tools/BuildBattleground. The castle is
--- built by a tool and gated by a service, and the ONLY thing tying the two
--- together is that these agree — so they are grouped here, named the same, and
--- derived the same way rather than being re-measured by eye.
+-- Read from configs/Castle.luau, which tools/BuildBattleground reads too. The
+-- castle is built by a tool and gated by a service; until 2026-10-19 each kept
+-- its own copy of these and the only thing tying them together was that the
+-- copies agreed. Now there is one copy, so a resize cannot leave the gates
+-- standing where the walls used to be.
 --
 -- From the tool:
 --     gapX  = HALF_W - GAP_W / 2 - 12        (odd chambers east, even west)
@@ -75,13 +77,14 @@ local DEV_OPEN_ALL = false
 --     Span (the mass over the arch) sits at y = 55, 14 tall  ->  48 .. 62
 --     terrain is filled to y = 0
 --==========================================================================
-local HALF_W = 150
-local Z_START = 20
-local CHAMBERS = 9
-local CHAMBER_D = 200
-local GAP_W = 46 -- the opening in each cross-wall
-local GAP_INSET = 12 -- how far the opening sits in from the curtain
-local WALL_T = 14
+local Castle = Config.get("Castle")
+local HALF_W: number = Castle.HalfWidth
+local Z_START: number = Castle.ZStart
+local CHAMBERS: number = Castle.Chambers
+local CHAMBER_D: number = Castle.ChamberDepth
+local GAP_W: number = Castle.GapWidth -- the opening in each cross-wall
+local GAP_INSET: number = Castle.GapInset -- how far the opening sits in from the curtain
+local WALL_T: number = Castle.WallThickness
 
 local FLOOR_Y = 0
 local SPRING_Y = 26 -- where the arch starts curving

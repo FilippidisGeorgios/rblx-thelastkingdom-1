@@ -42,6 +42,19 @@ local INNER = 122
 local Z_START = 20
 local CHAMBER_D = 200
 local CHAMBERS = 9
+
+-- SIZE GUARD (2026-10-19). These numbers are the castle before it was widened
+-- to 376 x 2250 (configs/Castle.luau). Run against the resized castle, this
+-- tool would put everything in the wrong place, and chambers 1-3 are now built
+-- by tools/BuildWards.luau. It refuses rather than guess.
+do
+	local bgGuard = workspace:FindFirstChild("Gameplay") and workspace.Gameplay:FindFirstChild("Battleground")
+	local depth = bgGuard and bgGuard:GetAttribute("ChamberDepth")
+	if depth and depth ~= CHAMBER_D then
+		warn(("[%s] this castle has %d-stud chambers; this tool was written for %d. Not running."):format(script and script.Name or "tool", depth, CHAMBER_D))
+		return
+	end
+end
 local PASSAGE_X = 115 -- alternates sign; +odd, -even
 
 local PATH_W = 13

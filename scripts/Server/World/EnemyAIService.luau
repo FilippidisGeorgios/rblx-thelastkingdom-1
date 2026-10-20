@@ -75,7 +75,12 @@ local MUZZLE_HEIGHT = 2.5
 
 -- How wide and tall the pathfinder should assume a body is. Slightly generous:
 -- a route that scrapes a doorway looks like clipping even when it is legal.
-local AGENT_RADIUS = 2.4
+-- 1.0 (2 across, a rig's root) since the buildings became enterable: at 2.4,
+-- and even at 1.6, the pathfinder judged every 4-stud door and stair
+-- impassable (it rounds clearance up), so a player in a loft was unreachable.
+-- Measured with tools/BuildWards: at 1.0 all 32 doors, stairs and decks in
+-- chambers 1-3 route; at 1.6 almost none did.
+local AGENT_RADIUS = 1.0
 local AGENT_HEIGHT = 6
 
 -- How often one agent re-asks for a route, and how far its target may drift
@@ -87,13 +92,37 @@ local GOAL_DRIFT = 10
 -- Globally, per frame. Thirty agents will not all recompute together.
 local MAX_COMPUTES_PER_FRAME = 3
 
--- Close enough to a waypoint to start walking to the next one.
-local WAYPOINT_RADIUS = 4
+-- Close enough to a waypoint to start walking to the next one. Was 4; on a
+-- 4-wide flight that cut the corner at the foot, the body met the ramp from the
+-- side (too high to step onto) and stood there. 2 keeps it in line.
+local WAYPOINT_RADIUS = 2
 
 -- The step-blocking ray leaves from chest height, not the pivot: a ray along
 -- the floor catches every kerb, doorstep and flagstone in the castle and would
 -- have the dead refuse to walk down the road.
 local PROBE_HEIGHT = 1.6
+
+--[[
+	FOLLOWING THE FLOOR
+
+	Movement used to be flat: a body kept the height it spawned at forever. In
+	a yard that is invisible, but it made every roof, loft and stair a place the
+	dead could never reach — stand on a hayloft and you were safe, which is the
+	opposite of the game. So every step now finds the floor under where it lands:
+	up a riser or a ramp of at most STEP_UP, down any drop of at most MAX_DROP
+	(the dead do not mind jumping off a roof). No floor within that — the edge
+	of the moat — and the step is refused like a wall.
+
+	PIVOT_ABOVE_FLOOR is where EnemyService stands a rig: its root is RIG_HEIGHT
+	(5) tall and pivoted at its centre.
+]]
+local STEP_UP = 2.2
+local MAX_DROP = 40
+local PIVOT_ABOVE_FLOOR = 2.5
+
+-- Further apart than this vertically, the target is on another level (a roof,
+-- a loft): walking straight at it ends underneath it, so take a route instead.
+local LEVEL_GAP = 6
 
 --[[
 	What a ranged unit fires. Straight off the enemy def's `Ranged` block; nil
@@ -239,6 +268,36 @@ local function obstacleBetween(me: Instance, from: Vector3, to: Vector3): BasePa
 	return nil
 end
 
+--[[
+	The height of the floor under `at`, searched from STEP_UP above the floor
+	the body stands on now down to MAX_DROP below it. Characters are skipped the
+	same way obstacleBetween skips them, so the dead do not climb each other.
+
+	Returns nil when there is no floor in that range.
+]]
+local function floorUnder(me: Instance, at: Vector3, currentFloor: number): number?
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { me }
+	params.IgnoreWater = true
+
+	local origin = Vector3.new(at.X, currentFloor + STEP_UP + 0.25, at.Z)
+	local delta = Vector3.new(0, -(STEP_UP + 0.25 + MAX_DROP), 0)
+	for _ = 1, 3 do
+		local hit = Workspace:Raycast(origin, delta, params)
+		if not hit then
+			return nil
+		end
+		if not isCharacter(hit.Instance) and hit.Instance.CanCollide then
+			return hit.Position.Y
+		end
+		local skipped = table.clone(params.FilterDescendantsInstances)
+		table.insert(skipped, hit.Instance)
+		params.FilterDescendantsInstances = skipped
+	end
+	return nil
+end
+
 --==========================================================================
 -- Moving
 --==========================================================================
@@ -276,7 +335,15 @@ local function moveToward(model: Instance, targetPos: Vector3, speed: number, dt
 		return false
 	end
 
-	model:PivotTo(CFrame.lookAt(nextPos, flat))
+	-- Stand on whatever floor is under the step: a stair, a ramp, a roof.
+	local floor = floorUnder(model, nextPos, cur.Y - PIVOT_ABOVE_FLOOR)
+	if not floor then
+		model:PivotTo(CFrame.lookAt(cur, flat))
+		return false
+	end
+	nextPos = Vector3.new(nextPos.X, floor + PIVOT_ABOVE_FLOOR, nextPos.Z)
+
+	model:PivotTo(CFrame.lookAt(nextPos, Vector3.new(flat.X, nextPos.Y, flat.Z)))
 	return true
 end
 
@@ -417,7 +484,9 @@ end
 	raycast is a thousandth of the cost of a route.
 ]]
 local function travelTo(entityId: string, agent: Agent, model: Instance, selfPos: Vector3, goal: Vector3, dt: number)
-	if not obstacleBetween(model, selfPos, goal) then
+	-- On another level the straight line only leads underneath it.
+	local sameLevel = math.abs(goal.Y - selfPos.Y) <= LEVEL_GAP
+	if sameLevel and not obstacleBetween(model, selfPos, goal) then
 		agent.waypoints = {}
 		agent.pathGoal = nil
 		moveToward(model, goal, agent.moveSpeed, dt)
@@ -435,7 +504,16 @@ local function travelTo(entityId: string, agent: Agent, model: Instance, selfPos
 
 	local point = agent.waypoints[agent.waypointIndex]
 	if not point then
-		return -- nothing to follow yet; the probe keeps it honest either way
+		--[[
+			Nothing to follow. If the target is up on another level and the way
+			to the spot beneath it is open, walk there: when there is no route
+			up (or none found yet), the dead gather underneath and wait, which
+			is both what they would do and what makes coming down dangerous.
+		]]
+		if not sameLevel and not obstacleBetween(model, selfPos, goal) then
+			moveToward(model, goal, agent.moveSpeed, dt)
+		end
+		return -- otherwise nothing to follow yet; the probe keeps it honest either way
 	end
 
 	local flat = Vector3.new(point.X - selfPos.X, 0, point.Z - selfPos.Z)

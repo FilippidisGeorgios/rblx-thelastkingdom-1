@@ -29,15 +29,33 @@
 ]]
 
 --==========================================================================
--- Shape of the world
+-- What to do
 --==========================================================================
-local HALF_W = 150 -- 300 wide
-local Z_START = 20 -- behind the gate
-local CHAMBERS = 9
-local CHAMBER_D = 200 -- 9 x 200 = 1800 long
-local WALL_H = 62
-local WALL_T = 14
-local GAP_W = 46 -- the opening in each cross-wall
+--[[
+	"build"  — the original: DESTROYS Workspace.Gameplay.Battleground and
+	           everything in it (decorations, lights, markers moved by hand) and
+	           builds a bare castle. Only for a fresh place.
+	"resize" — changes the size of the castle that is ALREADY there, keeping
+	           everything in it. Reads the size it is resizing FROM off the
+	           Battleground's attributes (or the original 300 x 1800 if it has
+	           none) and the size TO from configs/Castle.luau. See the RESIZE
+	           section for what moves, what stretches and what is rebuilt.
+]]
+local MODE = "resize"
+
+--==========================================================================
+-- Shape of the world — from configs/Castle.luau, so the tool and AreaService
+-- can never disagree about where a wall is.
+--==========================================================================
+local Castle = require(game:GetService("ReplicatedStorage"):WaitForChild("Config"):WaitForChild("Castle")) :: any
+local HALF_W = Castle.HalfWidth
+local Z_START = Castle.ZStart -- behind the gate
+local CHAMBERS = Castle.Chambers
+local CHAMBER_D = Castle.ChamberDepth
+local WALL_H = Castle.WallHeight
+local WALL_T = Castle.WallThickness
+local GAP_W = Castle.GapWidth -- the opening in each cross-wall
+local GAP_INSET = Castle.GapInset
 
 -- 1 = masses only. 2 = the architecture. 3 = every detail in the anatomy notes.
 local DETAIL = 3
@@ -618,17 +636,27 @@ local function curtain(parent, name: string, from: Vector3, to: Vector3, opts)
 		return if alongX then Vector3.new(len, height, thick) else Vector3.new(thick, height, len)
 	end
 
-	-- Batter at the foot of the whole run.
-	for i = 0, 4 do
-		local ti = i / 5
-		mass(model, "Batter", sizeFor(length, 3, t + 5 * (1 - ti)), CFrame.new(mid.X, from.Y + 1.5 + i * 3, mid.Z), C.stoneWarm, M.stone)
-	end
-	mass(model, "Wall", sizeFor(length, h - 15, t), CFrame.new(mid.X, from.Y + 15 + (h - 15) / 2, mid.Z), C.stone, M.stone)
+	-- A part can be at most 2048 studs long, and the side walls are longer than
+	-- that (2250 since the widening): a longer size is silently CLAMPED, which
+	-- left a hundred-stud hole at each end of the wall. So the long masses are
+	-- laid in runs of at most 1000.
+	local runs = math.max(1, math.ceil(length / 1000))
+	local runLen = length / runs
+	for r = 0, runs - 1 do
+		local runMid = from + dir * (runLen * (r + 0.5))
 
-	-- String course, and the wall-walk behind.
-	block(model, "StringCourse", sizeFor(length, 2, t + 2.2), CFrame.new(mid.X, from.Y + h * 0.62, mid.Z), C.stoneDark, M.stone)
-	local walkCentre = mid + inward * (t / 2 + 5)
-	block(model, "Allure", sizeFor(length, 2, 10), CFrame.new(walkCentre.X, from.Y + h - 1, walkCentre.Z), C.stone, M.stone)
+		-- Batter at the foot of the whole run.
+		for i = 0, 4 do
+			local ti = i / 5
+			mass(model, "Batter", sizeFor(runLen, 3, t + 5 * (1 - ti)), CFrame.new(runMid.X, from.Y + 1.5 + i * 3, runMid.Z), C.stoneWarm, M.stone)
+		end
+		mass(model, "Wall", sizeFor(runLen, h - 15, t), CFrame.new(runMid.X, from.Y + 15 + (h - 15) / 2, runMid.Z), C.stone, M.stone)
+
+		-- String course, and the wall-walk behind.
+		block(model, "StringCourse", sizeFor(runLen, 2, t + 2.2), CFrame.new(runMid.X, from.Y + h * 0.62, runMid.Z), C.stoneDark, M.stone)
+		local walkCentre = runMid + inward * (t / 2 + 5)
+		block(model, "Allure", sizeFor(runLen, 2, 10), CFrame.new(walkCentre.X, from.Y + h - 1, walkCentre.Z), C.stone, M.stone)
+	end
 
 	-- Machicolated overhang along the outer face, then the battlements.
 	local count = math.max(3, math.floor(length / 16))
@@ -729,6 +757,218 @@ local function gatehouse(parent, at: Vector3)
 end
 
 --==========================================================================
+-- RESIZE — change the size of the castle that is already standing
+--==========================================================================
+--[[
+	Built for the 2026-10-19 widening (300 x 1800 -> 376 x 2250), written so it
+	can run again for any other pair of sizes.
+
+	WHAT HAPPENS TO EACH THING
+	  - Walls whose LENGTH changes are rebuilt with curtain(): the two side
+	    walls, the back wall, the two halves of the front wall, and every
+	    cross-wall. Stretching them would stretch every merlon with them.
+	  - Everything with a fixed shape MOVES, whole: corner towers, side towers,
+	    passage towers, the arched passages, every building, every light, every
+	    marker. Nothing is rebuilt that someone may have adjusted by hand.
+	  - The gatehouse, the spawn pad and anything in front of the castle do not
+	    move at all: the arrival and the intro are framed on them.
+
+	WHERE A THING MOVES TO
+	  Depth: each chamber stretches on its own. A thing 40% of the way into
+	  chamber 3 is 40% of the way into the new chamber 3.
+	  Width: anything against a side wall moves out with the wall; anything at a
+	  passage moves with the passage (it stays against the side, 35 in); the
+	  rest of the floor spreads evenly from the centre line.
+]]
+if MODE == "resize" then
+	local bg = root:FindFirstChild("Battleground")
+	assert(bg, "[Resize] no Workspace.Gameplay.Battleground to resize")
+
+	local OLD_HALF_W = bg:GetAttribute("HalfWidth") or 150
+	local OLD_D = bg:GetAttribute("ChamberDepth") or 200
+	if OLD_HALF_W == HALF_W and OLD_D == CHAMBER_D then
+		-- Same size: only re-lay the two side walls (the first resize built them
+		-- before curtain() split runs over 2048 studs, so they had holes).
+		local Z_END0 = Z_START - CHAMBERS * CHAMBER_D
+		local shell0 = bg:FindFirstChild("Shell") :: Model
+		for _, side in { -1, 1 } do
+			local name = if side < 0 then "WestWall" else "EastWall"
+			local old = shell0:FindFirstChild(name)
+			if old then
+				old:Destroy()
+			end
+			curtain(shell0, name, Vector3.new(side * HALF_W, 0, Z_START), Vector3.new(side * HALF_W, 0, Z_END0), { inward = Vector3.new(-side, 0, 0), ruin = 0.12, torches = true })
+			task.wait()
+		end
+		print(("[Resize] already %d wide with %d-stud chambers — side walls re-laid."):format(HALF_W * 2, CHAMBER_D))
+		return
+	end
+
+	local INNER_OFF = Castle.WallInnerOffset
+	local DX = HALF_W - OLD_HALF_W
+	local OLD_INNER, NEW_INNER = OLD_HALF_W - INNER_OFF, HALF_W - INNER_OFF
+	local XS = NEW_INNER / OLD_INNER
+	local DS = CHAMBER_D / OLD_D
+	local Z_END = Z_START - CHAMBERS * CHAMBER_D
+	local OLD_Z_END = Z_START - CHAMBERS * OLD_D
+
+	local function oldChamber(z: number): number
+		return math.clamp(math.floor((Z_START - z) / OLD_D) + 1, 1, CHAMBERS)
+	end
+	local function oldGapX(index: number): number
+		local x = OLD_HALF_W - GAP_W / 2 - GAP_INSET
+		return if index % 2 == 1 then x else -x
+	end
+	local function mapZ(z: number): number
+		if z > Z_START then
+			return z
+		elseif z < OLD_Z_END then
+			return z + (Z_END - OLD_Z_END)
+		end
+		local k = oldChamber(z)
+		local depth = (Z_START - (k - 1) * OLD_D) - z
+		return (Z_START - (k - 1) * CHAMBER_D) - depth * DS
+	end
+	local function mapX(x: number, z: number): number
+		if math.abs(x) >= OLD_INNER - 2 then
+			return x + math.sign(x) * DX
+		end
+		if z <= Z_START and z >= OLD_Z_END then
+			local k = oldChamber(z)
+			local depth = (Z_START - (k - 1) * OLD_D) - z
+			if k < CHAMBERS and depth > OLD_D - 45 and math.abs(x - oldGapX(k)) < 70 then
+				return x + math.sign(oldGapX(k)) * DX
+			end
+			if k > 1 and depth < 45 and math.abs(x - oldGapX(k - 1)) < 70 then
+				return x + math.sign(oldGapX(k - 1)) * DX
+			end
+		end
+		return x * XS
+	end
+	local function mapPoint(p: Vector3): Vector3
+		return Vector3.new(mapX(p.X, p.Z), p.Y, mapZ(p.Z))
+	end
+
+	local moved = 0
+	local function shift(inst: Instance, by: Vector3)
+		if inst:IsA("Model") or inst:IsA("BasePart") then
+			(inst :: any):PivotTo((inst :: any):GetPivot() + by)
+			moved += 1
+		end
+	end
+	local function relocate(inst: Instance)
+		if inst:IsA("Model") or inst:IsA("BasePart") then
+			local pivot = (inst :: any):GetPivot()
+			shift(inst, mapPoint(pivot.Position) - pivot.Position)
+		elseif inst:IsA("Folder") then
+			for _, child in inst:GetChildren() do
+				relocate(child)
+			end
+		end
+	end
+	local function rebuild(old: Instance?, build: () -> ())
+		if old then
+			old:Destroy()
+		end
+		build()
+		task.wait()
+	end
+
+	print(("[Resize] %d x %d (chambers of %d)  ->  %d x %d (chambers of %d)"):format(OLD_HALF_W * 2, CHAMBERS * OLD_D, OLD_D, HALF_W * 2, CHAMBERS * CHAMBER_D, CHAMBER_D))
+
+	-- 1. The shell.
+	local shell = bg:FindFirstChild("Shell") :: Model
+	assert(shell, "[Resize] no Shell")
+	rebuild(shell:FindFirstChild("WestWall"), function()
+		curtain(shell, "WestWall", Vector3.new(-HALF_W, 0, Z_START), Vector3.new(-HALF_W, 0, Z_END), { inward = Vector3.new(1, 0, 0), ruin = 0.12, torches = true })
+	end)
+	rebuild(shell:FindFirstChild("EastWall"), function()
+		curtain(shell, "EastWall", Vector3.new(HALF_W, 0, Z_START), Vector3.new(HALF_W, 0, Z_END), { inward = Vector3.new(-1, 0, 0), ruin = 0.12, torches = true })
+	end)
+	rebuild(shell:FindFirstChild("BackWall"), function()
+		curtain(shell, "BackWall", Vector3.new(-HALF_W, 0, Z_END), Vector3.new(HALF_W, 0, Z_END), { inward = Vector3.new(0, 0, 1), ruin = 0.08 })
+	end)
+	rebuild(shell:FindFirstChild("FrontWallW"), function()
+		curtain(shell, "FrontWallW", Vector3.new(-HALF_W, 0, Z_START), Vector3.new(-54, 0, Z_START), { inward = Vector3.new(0, 0, -1), ruin = 0.1 })
+	end)
+	rebuild(shell:FindFirstChild("FrontWallE"), function()
+		curtain(shell, "FrontWallE", Vector3.new(54, 0, Z_START), Vector3.new(HALF_W, 0, Z_START), { inward = Vector3.new(0, 0, -1), ruin = 0.1 })
+	end)
+	for name, by in {
+		CornerNW = Vector3.new(-DX, 0, 0),
+		CornerNE = Vector3.new(DX, 0, 0),
+		CornerSW = Vector3.new(-DX, 0, Z_END - OLD_Z_END),
+		CornerSE = Vector3.new(DX, 0, Z_END - OLD_Z_END),
+	} do
+		local corner = shell:FindFirstChild(name)
+		if corner then
+			shift(corner, by)
+		end
+	end
+	print("[Resize] shell: side, back and front walls rebuilt; corners moved")
+
+	-- 2. The chambers.
+	for index = 1, CHAMBERS do
+		local node = bg:FindFirstChild(("Chamber%d"):format(index))
+		if not node then
+			continue
+		end
+		local oldNear = Z_START - (index - 1) * OLD_D
+		local oldFar, oldMid = oldNear - OLD_D, oldNear - OLD_D / 2
+		local zNear = Z_START - (index - 1) * CHAMBER_D
+		local zFar, zMid = zNear - CHAMBER_D, zNear - CHAMBER_D / 2
+		local openEast = (index % 2 == 1)
+		local gapX = if openEast then HALF_W - GAP_W / 2 - GAP_INSET else -HALF_W + GAP_W / 2 + GAP_INSET
+		local gapSide = if openEast then 1 else -1
+
+		local structure = node:FindFirstChild("Structure")
+		if structure then
+			for _, child in structure:GetChildren() do
+				local n = child.Name
+				if n == "CrossWallA" or n == "CrossWallB" then
+					child:Destroy()
+				elseif n == "Passage" or n == "PassageTowerA" or n == "PassageTowerB" then
+					shift(child, Vector3.new(gapSide * DX, 0, zFar - oldFar))
+				elseif n == "SideTowerW" then
+					shift(child, Vector3.new(-DX, 0, zMid - oldMid))
+				elseif n == "SideTowerE" then
+					shift(child, Vector3.new(DX, 0, zMid - oldMid))
+				else
+					relocate(child)
+				end
+			end
+			if index < CHAMBERS then
+				curtain(structure, "CrossWallA", Vector3.new(-HALF_W, 0, zFar), Vector3.new(gapX - GAP_W / 2, 0, zFar), { inward = Vector3.new(0, 0, 1), ruin = 0.18, height = 48 })
+				curtain(structure, "CrossWallB", Vector3.new(gapX + GAP_W / 2, 0, zFar), Vector3.new(HALF_W, 0, zFar), { inward = Vector3.new(0, 0, 1), ruin = 0.18, height = 48 })
+			end
+		end
+		-- Markers, and anything else loose in the chamber's folder.
+		for _, child in node:GetChildren() do
+			if child ~= structure then
+				relocate(child)
+			end
+		end
+		task.wait()
+		print(("[Resize] chamber %d  z %d..%d  passage at x %d"):format(index, zNear, zFar, gapX))
+	end
+
+	-- 3. What was built inside: the houses and props, and their lights.
+	for _, name in { "Decorations", "Lighting" } do
+		local f = bg:FindFirstChild(name)
+		if f then
+			relocate(f)
+			task.wait()
+		end
+	end
+
+	bg:SetAttribute("HalfWidth", HALF_W)
+	bg:SetAttribute("ChamberDepth", CHAMBER_D)
+	print(("[Resize] DONE — %d things moved, walls rebuilt. The castle is %d x %d."):format(moved, HALF_W * 2, CHAMBERS * CHAMBER_D))
+	print("[Resize] NEXT: tools/BuildLand (moat, slab), tools/BuildSurroundings — the moat sat where the walls now are.")
+	return
+end
+
+--==========================================================================
 -- LAYOUT — the serpentine
 --==========================================================================
 -- Anything left by the old road-to-the-castle builder. Its Area5_Castle sat at
@@ -799,7 +1039,7 @@ for index = 1, CHAMBERS do
 	-- The wall closing this chamber, with its single gap. Odd chambers open on
 	-- the east, even on the west.
 	local openEast = (index % 2 == 1)
-	local gapX = if openEast then HALF_W - GAP_W / 2 - 12 else -HALF_W + GAP_W / 2 + 12
+	local gapX = if openEast then HALF_W - GAP_W / 2 - GAP_INSET else -HALF_W + GAP_W / 2 + GAP_INSET
 	local gapFrom, gapTo = gapX - GAP_W / 2, gapX + GAP_W / 2
 
 	if index < CHAMBERS then
