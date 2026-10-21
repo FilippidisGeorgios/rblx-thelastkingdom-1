@@ -10,6 +10,9 @@ pipeline (currency + XP into the persistent profile) exist (Changelog 0.9.0, see
 
 ---
 
+> **2026-10-21:** loot, materials and the backpack are now designed in `Spoils.md` (what drops, ranks, pity,
+> what a heap is for) and the first slice is built. The open questions below stay open.
+
 ## 1. Resources & gathering
 
 - Resources are gathered in the **Forgotten Lands** (harvest nodes, loot, drops).

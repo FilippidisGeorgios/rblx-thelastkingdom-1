@@ -152,6 +152,7 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	end
 	local spawnPos = Vector3.new(position.X, groundY + RIG_HEIGHT / 2, position.Z)
 	model:PivotTo(CFrame.new(spawnPos))
+	model:SetAttribute("EnemyId", enemyId) -- LootService reads which table to roll
 	model.Parent = Workspace
 
 	local id = generateId()

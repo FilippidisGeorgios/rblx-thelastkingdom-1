@@ -152,6 +152,25 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Rebuild chambers 1–3 structures and add things to *do* in areas (Arsenal §8).
 - [ ] Then the per-area mechanics (waves, wave-like events, tasks combined with waves).
 
+## Trials and spoils (design 2026-10-21, Changelog 0.26.0) — chambers ask, the dead pay
+- [x] Design: `Trials.md` (verbs, pressure, the nine chambers), `Spoils.md` (ranks, items, the backpack, co-op).
+- [x] Items + Loot configs, `LootTable` (pity), `Backpack`, `BackpackService`, `LootService`, `BackpackHud`.
+- [x] `TrialRun`, `TrialService`, verbs `light` and `toll`, pressure `rising`; chamber 4 runs as data.
+- [ ] **Developer decisions** (end of each doc): the camp, chamber 3's five-or-three, deeds shown or hidden,
+      the torch as a weapon, wipe penalty, the Tithe, personal loot, the shards, one charm or two.
+- [ ] Look at chamber 4 with your own eyes: the graves opening, the torch in the hand, the flame, how long
+      25 s feels, whether six graves a section is too many.
+- [ ] Banking at the end of a won run: gold → profile currency, materials/relics/shards → `profile.stash`
+      (ProfileSchema v3); the wiped-run rule.
+- [ ] Pickup sound and a better pickup look; pickups rotate/bob (client only).
+- [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
+- [ ] The camp (bench: bandage, arrows, oil pot, torch); the Hub's Tithe, Reliquary, Shard Altar, Journal.
+- [ ] Chamber 3 (recipe, ingredients, cauldron, five), 5 (forge, torch + oil door, trees → planks), 6 (boards),
+      7 (prisoner), 8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
+      `wait`, `read`, `defend`, `free`, `sequence`, `slay`).
+- [ ] Add the Deeds and the Ambush to chambers 1 and 2 (Trials.md §5).
+- [ ] Player verbs, weapon holding and the animation of the player's own kit (the developer's next topic).
+
 ## Chapter 1 — Vertical Slice (integration milestone)
 - [x] `ChapterOneSliceService` orchestrator over existing public APIs (no rewrites).
 - [x] Story Intro (start-once per player; survives respawn).

@@ -1,3 +1,47 @@
+## Version 0.26.0 — Spoils, the backpack, and the first data-driven trial (the Graveyard)
+
+Design first (`docs/systems/Trials.md`, `docs/systems/Spoils.md`), then the first slice of each, checked in
+a playtest.
+
+**Spoils.**
+- `configs/Items` now holds the catalog of what the dead leave: seven materials, four consumables, six
+  relics, the star shard, the torch; each with a rank (Worn / Sound / Hallowed / Relic), a use line, a
+  flavour line and a pickup look. `configs/Loot` holds the ranks, the rules and the drop tables (the
+  dead by enemy id; containers; deed prizes).
+- `Domain/LootTable` is the roll: gold scaled by depth and party, independent material chances, Sound and
+  Hallowed rolls with **pity** (30 kills without a Sound-or-better drop forces one; 120 without a
+  Hallowed upgrades the next Sound). Simulated 2000 kills: 3.2% Sound, 0.8% Hallowed, longest dry spell 30.
+- `Domain/Backpack` + `BackpackService`: a pack of 16 places per player per run, gold as a counter,
+  quest items carried in the hands (no place, never banked); `bankable()` says what survives a won or a
+  wiped run (banking itself is not wired yet). New remote `BackpackEvent`.
+- `LootService`: every kill is rolled for each player within 70 studs and the drops are **personal**: a
+  part per drop with an `Owner`, hidden by `LootController` on every other client. They pop, lie, slide
+  to the owner at 9 studs and are taken at 3; a full pack leaves them (and says so); they fade after 90 s.
+- `BackpackHud`: the pickup log bottom right (rank-coloured, a Sound find also gets its flavour line),
+  a gold line, and the pack panel (button, or `B`) where every row says what it is for.
+
+**Trials.**
+- `Domain/TrialRun` (pure, spec-tested): phases in order, tasks `all` / `any` / `count`, deeds that never
+  gate. `configs/Trials` is the data; `TrialService` runs it (grace, tasks, pressure, the top line, the
+  gate) and each verb is a module under `Server/World/Trial/`.
+- **Chamber 4, the Graveyard, is the first trial.** Carry fire from the chapel altar to four braziers; a
+  torch burns 25 s (its flame is the clock), lights one brazier and is spent, and a lit brazier is itself a
+  source. Each section's graves keep giving up the dead (`Rising`: six graves a section, a pulse every 9 s,
+  capped, scaled by party and depth, every fourth pulse a Gravedigger) until that section's brazier burns.
+  The deed — toll the belfry bell — brings the hardest hour and pays Grave Silver and a Saint's Medal.
+- Chambers 1 and 2 are untouched (their own services still call `AreaService.clear`).
+
+**Checked in a playtest** (real server modules; a temporary test script, removed): 139 specs pass; a kill
+rolls drops for the player, the magnet and the take work, the log, the gold line and the pack panel draw;
+the real prompts gave a torch (hold E at the altar) and lit brazier 2 (hold E), then the other three; the
+trial completed and the gate rose; the bell brought its answer and its prize fell. No errors in the
+console. **Not checked:** the dead climbing out of graves was seen only in counts, not by eye; the
+torch in the hand and the brazier flame were seen once (the flame was too tall: 13 → 9); phone frame rate
+with a full chamber; the camera keeps losing the player in the dark chapel shot.
+
+Notes: the pickups are server parts with per-client hiding; at 90 pickups the oldest goes. Roblox's
+`Humanoid.Health = 0` does not kill a combat entity: damage it through `CombatService`.
+
 ## Version 0.25.0 — The dead are in the game: bodies, motion, and attacks you can read
 
 Until now no zombie body and no zombie animation had ever been in the game (the unit was a red box).

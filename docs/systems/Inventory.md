@@ -48,7 +48,8 @@ State is **per-player in-memory** for now.
 - **Profile persistence** — serialize inventory/equipment into `ProfileSchema` (needs the real
   DataStore backend; see `../Architecture.md` §6 and `Progression.md`).
 - **Inventory / equipment UI** + loadout interface (Hub).
-- **Loot, crafting, shops, item stacking.**
+- **Crafting, shops.** (Loot, stacking and the run backpack are in `Spoils.md` and built as `BackpackService`;
+  the gear inventory above is separate by design.)
 - Real item content and balance.
 
 ## 4. Related
