@@ -165,7 +165,11 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Pickup sound and a better pickup look; pickups rotate/bob (client only).
 - [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
 - [ ] The camp (bench: bandage, arrows, oil pot, torch); the Hub's Tithe, Reliquary, Shard Altar, Journal.
-- [ ] Chamber 3 (recipe, ingredients, cauldron, five), 5 (forge, torch + oil door, trees → planks), 6 (boards),
+- [x] Chamber 3: recipe, ingredients, the pot (minded), the pen, the five cured followers (Changelog 0.27.0).
+- [ ] Look at chamber 3 by eye; tune: the cured die fast (more health? stay back from the front?), simmer 30 s, tide 7 s.
+- [ ] A proper living head for the cured (now the skin union is tinted whole); their own lines/voices.
+- [ ] Cured villagers should keep following through 4 to 6 and the gates must not trap them (check the portcullis passage).
+- [ ] Chambers 5 (forge, torch + oil door, trees → planks), 6 (boards),
       7 (prisoner), 8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
       `wait`, `read`, `defend`, `free`, `sequence`, `slay`).
 - [ ] Add the Deeds and the Ambush to chambers 1 and 2 (Trials.md §5).

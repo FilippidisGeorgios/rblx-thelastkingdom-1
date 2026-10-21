@@ -1,7 +1,7 @@
 # Trials — what each chamber asks of you (Design)
 
-**Status:** DESIGN written 2026-10-21. **Built (0.26.0): the engine, the verbs `light` and `toll`, the pressure `rising`, and chamber 4
-as data.** The rest is design. Builds on `AreaPlan.md` (what is *in* each
+**Status:** DESIGN written 2026-10-21. **Built: the engine, the verbs `light`, `toll`, `read`, `gather`, `cook` and `feed`, the pressures `rising` and `tide`,
+and chambers 3 and 4 as data (0.26.0, 0.27.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
 chamber), `Encounters.md` (the waves), `Bestiary.md` / `Arsenal.md` (who and with what) and `Spoils.md`
 (what falls out of it all).
 **Serves:** GDD Pillar 3 (exploration is a verb), Pillar 5 (co-op), and the replay goal.
@@ -55,8 +55,9 @@ Each verb is one module (`Server/World/Trial/<Kind>.luau`), driven by data in `c
 | `carry` | Pick up a *burning* or *heavy* thing and take it somewhere before it fails | `item`, `lifetime`, `from`, `to` | **[BUILT]** (the torch) |
 | `use` | Spend items at a station (feed, pour, board, put on the fire) | `station`, `item`, `count`, `hold` | **[BUILT]** |
 | `light` | `use` + a flame that stays: ignite N points | `points`, `fuel` | **[BUILT]** |
+| `cook` / `feed` | The pot that must be minded, and the ladle to each of the penned (chamber 3's own verbs) | see `Trial/Cook`, `Trial/Feed` | **[BUILT]** |
 | `hold` | Hold a prompt for T seconds, optionally slipping back (winch) or banking (lashing) | `seconds`, `slip`, `bank` | [BUILT: Barricade, Winch] |
-| `read` | Open a document; may reveal a clue (an order, a number, a location) | `doc`, `reveals` | **[BUILT]** |
+| `read` | Open a document; may reveal a clue (an order, a number, a location) | `at`, `title`, `lines` / `recipe` | **[BUILT]** |
 | `wait` | Survive T seconds while the world works; the clock is *in the world* (a candle, a bell, a pot) | `seconds`, `show` | **[BUILT]** |
 | `clear` | Kill the wave / N of a type | `encounter` / `enemy`, `count` | [BUILT: AreaWaveService] |
 | `defend` | Keep a thing or person alive (the pot, the prisoner, the boards) | `target`, `seconds` | **[LATER]** |

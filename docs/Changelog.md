@@ -1,3 +1,35 @@
+## Version 0.27.0 — Chamber 3, the Kitchens: the recipe, the pot, the five
+
+The second data-driven trial, and the first that uses most of the verbs.
+
+- **Read.** A parchment glows on the kitchen hall's table. Taking it up opens a page (`DocumentUi`, `DocumentController`,
+  remote `DocumentEvent`): parchment on a dark veil, ink letters, the writer's name; it closes on Esc, E, a click, or
+  the button. The recipe is rolled per run: four of seven ingredients (`Trial/Recipe`), so the same chamber is a
+  different errand each time.
+- **Gather.** Each ingredient is a small prop (sack, ham, herbs, bucket, crate, cask, crock) placed by looking, near the
+  part of the kitchens it belongs to (`Trial/Place`, the winch's floor-and-clearance idea made shared). Carried as quest
+  items: no pack place, never banked.
+- **Cook.** Put them in the pot in the kitchen hall; it then simmers for 30 s **only while a player is within 22 studs**
+  (steam sinks and the clock waits otherwise), and the smell draws the dead (`Trial/Tide`, started by the "simmer"
+  signal, stopped when the phase ends). Then it gives five ladles of broth.
+- **Feed.** A pen of stakes and rails is built at runtime on open ground (a gap faces the pot); five of the dead stand
+  in it as brainless static bodies (`EnemyService.spawnStatic`: no combat entity, so they cannot be killed or chase).
+  A ladle to each cures it: the body is swapped for a real `cured_villager` (or `_bow`) and it speaks.
+- **The cured** look alive: `EnemyService.livingTint` turns the skin to a living tone and hides the curse's marks (eye
+  glow, neck cords, veins, blotches). They are Players-faction, fight the dead, and **follow the party**: a new AI
+  option `Follow` (`EnemyAIService`) makes a unit with nothing to fight walk to the nearest player and stop 9
+  studs short (checked: two archers ran 150 studs to catch up and stood 9-12 studs away).
+- **TrialService** learned: `ctx.shared` (a bag the tasks share), `ctx.hint` (a task's own top line), `ctx.signal`
+  (starts pressure on an event), `untilPhase` (pressure that ends with a phase), `devDone` (a test hook).
+
+**Checked in a playtest** (real prompts held with the keyboard tool; a temporary test script, removed): read → page
+opens; gather four → phase advances; add to the pot → it simmers, enemies stream in; the pot waits while the player is
+dead or away and resumes; five ladles; all five cured; the trial completes and the gate rises; followers catch up. No
+console errors. A bug found by playing: one penned slot named `undead_shambler_scullion`, which is a body, not an enemy id,
+so it had no body and swallowed a ladle: fixed, and a slot with no body now never spends one.
+**Not checked:** the cooked broth's look, the pen in daylight, the cured at close range in the real fog, a second
+player, how fast the cured die (the waves and the tide keep coming; they died in about half the runs).
+
 ## Version 0.26.0 — Spoils, the backpack, and the first data-driven trial (the Graveyard)
 
 Design first (`docs/systems/Trials.md`, `docs/systems/Spoils.md`), then the first slice of each, checked in

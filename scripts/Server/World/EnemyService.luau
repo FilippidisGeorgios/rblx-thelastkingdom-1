@@ -84,6 +84,41 @@ local function buildRig(color: Color3): (Model, Humanoid)
 end
 
 --[[
+	The cured: the same bodies with the Hollow Light put out. Skin goes from
+	stone-grey to a living tone, and the marks of the curse (the glow in the
+	eyes, the veins at the neck, the blotches of decay) are hidden. The cloth
+	stays as it was: they were found in what they died in.
+
+	Skin unions carry their colours per cube, so a tint needs UsePartColor on;
+	the head loses its painted detail and gains a living colour. Good enough
+	to read as "one of us" at game distance; a proper living head is a later
+	art pass (docs/Todo.md).
+]]
+local LIVING_SKIN = {
+	Color3.fromRGB(196, 152, 122),
+	Color3.fromRGB(176, 132, 104),
+	Color3.fromRGB(214, 170, 140),
+}
+local CURSE_MARKS = { HollowLight = true, NeckCord = true, Vein = true, Blotch = true, Tear = true, Hollow = true, Socket = true }
+
+local function livingTint(model: Model)
+	local skin = LIVING_SKIN[math.random(#LIVING_SKIN)]
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			if CURSE_MARKS[d.Name] then
+				d.Transparency = 1
+			elseif d.Material == Enum.Material.Concrete then
+				if d:IsA("UnionOperation") then
+					d.UsePartColor = true
+				end
+				d.Color = skin
+				d.Material = Enum.Material.SmoothPlastic
+			end
+		end
+	end
+end
+
+--[[
 	A body from ServerStorage.Assets.Undead (tools/BuildUndead), if this unit's
 	config names one (`Body`) and it has been built. One of the listed bodies is
 	picked at random, which is how the same shambler is a guard in one room and a
@@ -114,6 +149,9 @@ local function buildBody(def: any): (Model?, Humanoid?)
 	-- One of three gaits, kept for life, so a crowd has no synchronised footfalls.
 	model:SetAttribute("Variant", math.random(1, 3))
 	model:SetAttribute("HitCount", 0)
+	if def.Cured then
+		livingTint(model)
+	end
 	-- A body arrives whole or not at all (a limb without its torso is worse than nothing).
 	model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic
 	CollectionService:AddTag(model, UNDEAD_TAG)
@@ -181,6 +219,40 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	end)
 
 	return id
+end
+
+--[[
+	A body with no brain and no combat entity: it stands where it is put and
+	plays its idle. For the penned dead of the Kitchens, who are waiting to be
+	fed and must neither chase, be targeted nor be killed. Returns nil when
+	`enemyId` has no body. Destroy it (or swap it for a real spawn) to be rid of it.
+]]
+function EnemyService.spawnStatic(enemyId: string, position: Vector3, facing: Vector3?): Model?
+	local def = Config.get("Enemies")[enemyId]
+	if not def then
+		return nil
+	end
+	local model = buildBody(def)
+	if not model then
+		return nil
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { model }
+	local hit = Workspace:Raycast(position + Vector3.new(0, 20, 0), Vector3.new(0, -60, 0), params)
+	local groundY = if hit then hit.Position.Y else position.Y
+	local at = Vector3.new(position.X, groundY + RIG_HEIGHT / 2, position.Z)
+	if facing then
+		model:PivotTo(CFrame.lookAt(at, Vector3.new(facing.X, at.Y, facing.Z)))
+	else
+		model:PivotTo(CFrame.new(at))
+	end
+	model:SetAttribute("EnemyId", enemyId)
+	model:SetAttribute("State", "Idle")
+	model:SetAttribute("Seq", 0)
+	model:SetAttribute("Move", 0)
+	model.Parent = Workspace
+	return model
 end
 
 --[[

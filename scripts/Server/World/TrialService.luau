@@ -61,10 +61,15 @@ local GRACE_SECONDS = 4
 local TASKS: { [string]: any } = {
 	light = require(script.Parent.Trial.Light),
 	toll = require(script.Parent.Trial.Toll),
+	read = require(script.Parent.Trial.Read),
+	gather = require(script.Parent.Trial.Gather),
+	cook = require(script.Parent.Trial.Cook),
+	feed = require(script.Parent.Trial.Feed),
 }
 
 local PRESSURE: { [string]: any } = {
 	rising = require(script.Parent.Trial.Rising),
+	tide = require(script.Parent.Trial.Tide),
 }
 
 type Handle = { start: () -> (), stop: () -> (), progress: (() -> (number, number))? }
@@ -80,6 +85,8 @@ type Live = {
 	pressureStarted: { [string]: boolean },
 	noteToken: number,
 	finished: boolean,
+	shared: { [string]: any }, -- a bag the trial's tasks share (the rolled recipe)
+	hintOverride: string?, -- a task's own line, shown instead of the phase's
 }
 
 local live: { [number]: Live } = {}
@@ -97,6 +104,10 @@ end
 local function refreshHint(trial: Live)
 	if trial.finished then
 		say("trial", nil)
+		return
+	end
+	if trial.hintOverride then
+		say("trial", trial.hintOverride)
 		return
 	end
 	local phase = trial.run:currentPhase()
@@ -190,12 +201,21 @@ end
 
 local function onTaskDone(trial: Live, id: string)
 	local handle = trial.tasks[id]
+	local phaseBefore = trial.run:currentPhase()
 	local change = trial.run:taskDone(id)
 	if handle and change then
 		handle.stop()
 	end
 	if not change then
 		return
+	end
+	if change.phaseDone and phaseBefore then
+		trial.hintOverride = nil
+		for _, p in trial.def.pressure or {} do
+			if p.untilPhase == phaseBefore.id and trial.pressure[p.id] then
+				trial.pressure[p.id].stop()
+			end
+		end
 	end
 	if change.complete then
 		finish(trial)
@@ -226,6 +246,15 @@ startTask = function(trial: Live, id: string)
 	local handle = module.create({
 		area = trial.area,
 		folder = trial.folder,
+		shared = trial.shared,
+		trial = trial.def,
+		hint = function(text: string?)
+			trial.hintOverride = text
+			refreshHint(trial)
+		end,
+		signal = function(name: string)
+			startPressureFor(trial, "signal:" .. name)
+		end,
 		done = function()
 			onTaskDone(trial, id)
 		end,
@@ -301,6 +330,8 @@ local function begin(area: number)
 		pressureStarted = {},
 		noteToken = 0,
 		finished = false,
+		shared = {},
+		hintOverride = nil,
 	}
 	live[area] = trial
 
@@ -316,6 +347,10 @@ local function begin(area: number)
 			startTask(trial, d.id)
 		end
 		startPressureFor(trial, "start")
+		local first = trial.run:currentPhase()
+		if first then
+			startPressureFor(trial, first.id)
+		end
 		refreshHint(trial)
 	end)
 end
@@ -336,6 +371,14 @@ function TrialService.forceComplete(area: number)
 		finish(trial)
 	else
 		AreaService.clear(area)
+	end
+end
+
+-- Development: report task `id` of area `area` done, as if its work had been finished.
+function TrialService.devDone(area: number, id: string)
+	local trial = live[area]
+	if trial then
+		onTaskDone(trial, id)
 	end
 end
 

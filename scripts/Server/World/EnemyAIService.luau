@@ -45,6 +45,7 @@
 	Place: Forgotten Lands ONLY (Server/World). Phase: Enemy AI.
 ]]
 
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local PathfindingService = game:GetService("PathfindingService")
 local Workspace = game:GetService("Workspace")
@@ -144,6 +145,7 @@ local STRIKE_CONE = math.cos(math.rad(75)) -- the target must be this far in fro
 local FACE_LOCK = 0.65 -- fraction of the windup after which it stops turning
 local AGGRO_SECONDS = 0.9 -- the first time it sees you it stops and cries out
 local RUN_SPEED = 12 -- at or above this a moving body plays Run, not Walk
+local FOLLOW_GAP = 9 -- how close a follower comes to the player it follows
 
 --[[
 	What a ranged unit fires. Straight off the enemy def's `Ranged` block; nil
@@ -186,6 +188,7 @@ type Agent = {
 	-- Inside this the unit uses its MELEE attack even though it has a bow.
 	-- Only The King has both; nil means "whatever it has, it always uses".
 	meleeRange: number?,
+	follow: boolean, -- with nothing to fight, walk to the nearest player (the cured)
 
 	-- Last known position of its target, so the shot can lead a moving one.
 	-- Velocity is derived here rather than read off a Humanoid, because the
@@ -422,7 +425,8 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 			DetectionRadius = ai.DetectionRadius,
 			AttackRange = ai.AttackRange,
 			LeashRadius = ai.LeashRadius,
-			ArrivalRadius = ai.ArrivalRadius,
+			-- A follower stops a few strides short of the player, not on top of them.
+			ArrivalRadius = if ai.Follow then math.max(ai.ArrivalRadius, FOLLOW_GAP) else ai.ArrivalRadius,
 			MinRange = ai.MinRange,
 		},
 		moveSpeed = ai.MoveSpeed,
@@ -442,6 +446,7 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 		seq = 0,
 		ranged = ranged,
 		meleeRange = ai.MeleeRange,
+		follow = ai.Follow == true,
 		lastTargetPos = nil,
 		targetVelocity = Vector3.zero,
 		waypoints = {},
@@ -642,6 +647,28 @@ local function attack(entityId: string, agent: Agent, target: CombatEntity.Comba
 	})
 end
 
+--[[
+	The nearest living player's position, for a follower. Followers are the
+	cured villagers: their `spawnPosition` is not a place they go home to, it is
+	wherever the party is, so the brain's leash and Return behave as "keep up".
+]]
+local function nearestPlayerPosition(pos: Vector3): Vector3?
+	local best: Vector3? = nil
+	local bestDist = math.huge
+	for _, player in Players:GetPlayers() do
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if root and root:IsA("BasePart") and humanoid and humanoid.Health > 0 then
+			local d = (root.Position - pos).Magnitude
+			if d < bestDist then
+				best, bestDist = root.Position, d
+			end
+		end
+	end
+	return best
+end
+
 local function stepAgent(entityId: string, agent: Agent, dt: number)
 	local entity = CombatService.getEntity(entityId)
 	if not entity or not entity.model then
@@ -652,6 +679,14 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 	local selfPos = positionOf(model)
 
 	local target, targetDist = nearestHostile(selfPos, entity.faction)
+
+	local followPos: Vector3? = nil
+	if agent.follow then
+		followPos = nearestPlayerPosition(selfPos)
+		if followPos then
+			agent.spawnPosition = followPos
+		end
+	end
 
 	--[[
 		Track how fast the target is moving, so a ranged shot can lead it.
@@ -757,6 +792,10 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 			end
 		elseif state == States.Return then
 			travelTo(entityId, agent, model, selfPos, agent.spawnPosition, dt)
+			moving = true
+		elseif state == States.Idle and followPos and (followPos - selfPos).Magnitude > FOLLOW_GAP + 3 then
+			-- Nothing to fight and the party has walked on.
+			travelTo(entityId, agent, model, selfPos, followPos, dt)
 			moving = true
 		end
 

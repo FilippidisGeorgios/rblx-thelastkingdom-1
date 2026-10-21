@@ -173,6 +173,23 @@ local Items = {
 		Use = "Burns for forty-five seconds.",
 	},
 
+	-- The Kitchens' recipe (docs/systems/Trials.md §5, chamber 3). Carried, never banked.
+	ingredient_flour = { DisplayName = "Flour", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_salted_meat = { DisplayName = "Salted Meat", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_herbs = { DisplayName = "Herbs", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_well_water = { DisplayName = "Well Water", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_turnips = { DisplayName = "Turnips", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_ale = { DisplayName = "Ale", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	ingredient_salt = { DisplayName = "Salt", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	broth = {
+		DisplayName = "A Ladle of Broth",
+		Category = "QuestItem",
+		Stackable = true,
+		MaxStack = 5,
+		Banked = false,
+		Use = "Hold it to the lips of one of the penned.",
+	},
+
 	--======================================================================
 	-- RELICS — one charm slot. The item exists now; the effect comes with the
 	-- stats it changes (Arsenal §6).

@@ -47,6 +47,7 @@ local EVENT_NAMES: { string } = {
 	"WeaponState", -- server -> client: who has their weapon out, so arms can be posed
 	"IntroEvent", -- server -> client: the arrival scene (start / votes / end / arrived)
 	"RequestIntroSkip", -- client -> server: this player votes to skip the arrival scene
+	"DocumentEvent", -- server -> client: open a parchment (a recipe, a letter, a burial roll) for one player
 	"BackpackEvent", -- server -> client: the run backpack (set) and what was just picked up (gain)
 }
 local FUNCTION_NAMES: { string } = {}

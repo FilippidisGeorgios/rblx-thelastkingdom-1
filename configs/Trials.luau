@@ -31,6 +31,103 @@
 
 local Trials = {
 	--======================================================================
+	-- 3 — Kitchens. The recipe, the pot, the five.
+	--
+	-- Read the cook's parchment, fetch what it asks for (four of seven things,
+	-- rolled each run), put it all in the pot in the kitchen hall and MIND it
+	-- while it simmers (the smell draws the dead, and the pot only cooks while
+	-- someone is near it), then take a ladle to each of five penned dead. They
+	-- turn back into villagers and walk with the party through 4 to 6.
+	--======================================================================
+	[3] = {
+		recipe = {
+			title = "Marta's Broth",
+			sign = "Marta, cook of the keep",
+			intro = "If any of them ever come back from the Hollow, this is the broth that brought my sister round the winter the fever took the village. Do not ask me why it works. Bring me:",
+			outro = "All of it into the great pot in the hall. Mind it until it speaks; they come to the smell, so keep your sword by you. Then a ladle to each, and do not be afraid of their eyes.",
+			pick = 4,
+			pool = {
+				{ id = "flour", name = "Flour", line = "Flour, a good fistful, from the granary where the dry sacks were kept.", where = "Decorations.Area3.Granary", prop = "sack" },
+				{ id = "salted_meat", name = "Salted Meat", line = "Salted meat, the oldest hams in the smokehouse.", where = "Decorations.Area3.Smokehouse", prop = "ham" },
+				{ id = "herbs", name = "Herbs", line = "Thyme and sage, from the kitchen garden.", where = "Decorations.Area3.Garden", prop = "herbs" },
+				{ id = "well_water", name = "Well Water", line = "A bucket from the well. The water there never turned.", where = "Decorations.Area3.Well", prop = "bucket" },
+				{ id = "turnips", name = "Turnips", line = "Turnips from the garden, as many as a hand will hold.", where = "Decorations.Area3.Garden", prop = "crate" },
+				{ id = "ale", name = "Ale", line = "A little ale from the dairy cellar, for body.", where = "Decorations.Area3.Dairy", prop = "cask" },
+				{ id = "salt", name = "Salt", line = "A crock of salt from the store.", where = "Decorations.Area3.Store", prop = "crock" },
+			},
+		},
+
+		phases = {
+			{
+				id = "read",
+				hint = "Find the cook's parchment in the kitchen hall",
+				tasks = { { id = "parchment", kind = "read", at = "Decorations.Area3.KitchenHall.Table", title = "Marta's Broth", sign = "Marta, cook of the keep", recipe = true } },
+			},
+			{
+				id = "gather",
+				hint = "Gather what the recipe asks for (%d of %d)",
+				tasks = { { id = "ingredients", kind = "gather" } },
+			},
+			{
+				id = "cook",
+				hint = "Put the ingredients in the pot (%d of %d)",
+				tasks = {
+					{ id = "pot", kind = "cook", pot = "Decorations.Area3.KitchenHall.Cauldron", simmerSeconds = 30, mindRadius = 22, portions = 5 },
+				},
+			},
+			{
+				id = "feed",
+				hint = "Take the broth to the penned (%d of %d)",
+				tasks = {
+					{
+						id = "penned",
+						kind = "feed",
+						near = "Decorations.Area3.Well",
+						radius = 80,
+						gateToward = "Decorations.Area3.KitchenHall.Cauldron",
+						holdSeconds = 2.5,
+						penned = {
+							{ dead = "undead_shambler", cure = "cured_villager" },
+							{ dead = "undead_shambler", cure = "cured_villager" },
+							{ dead = "undead_shambler", cure = "cured_villager" },
+							{ dead = "undead_archer", cure = "cured_villager_bow" },
+							{ dead = "undead_archer", cure = "cured_villager_bow" },
+						},
+						lines = {
+							"\"...Marta? Is that her pot? Gods, the smell of it.\"",
+							"\"I was in the yard. I was in the yard and then I was here.\"",
+							"\"Forty years? That is not possible. My daughter was six.\"",
+							"\"I remember the bell. I remember it did not stop.\"",
+							"\"Give me a bow. I will not stand behind you for this.\"",
+						},
+					},
+				},
+			},
+		},
+
+		pressure = {
+			{
+				id = "smell",
+				kind = "tide",
+				from = "signal:simmer",
+				untilPhase = "cook",
+				spawns = {
+					"Battleground.Chamber3.Spawns.North",
+					"Battleground.Chamber3.Spawns.East",
+					"Battleground.Chamber3.Spawns.West",
+				},
+				interval = 7,
+				burst = 2,
+				cap = 8,
+				enemies = {
+					{ id = "undead_shambler", weight = 3 },
+					{ id = "undead_runner", weight = 1 },
+				},
+			},
+		},
+	},
+
+	--======================================================================
 	-- 4 — Graveyard. Carry the fire.
 	--
 	-- Four braziers, one to each section of the burying ground. A torch burns
