@@ -65,6 +65,10 @@ local TASKS: { [string]: any } = {
 	gather = require(script.Parent.Trial.Gather),
 	cook = require(script.Parent.Trial.Cook),
 	feed = require(script.Parent.Trial.Feed),
+	forge = require(script.Parent.Trial.Forge),
+	burn = require(script.Parent.Trial.Burn),
+	chop = require(script.Parent.Trial.Chop),
+	mine = require(script.Parent.Trial.Mine),
 }
 
 local PRESSURE: { [string]: any } = {

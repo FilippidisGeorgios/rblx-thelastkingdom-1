@@ -188,7 +188,7 @@ pieces that make a *second* run different from the first without ever making the
 
 ### 7.1 Inside a run (randomness the player can read)
 
-- **The forge** (chamber 5, three rounds, the only permanent upgrade *of the run*): choose **one** of
+- **The forge [BUILT, 0.28.0: `Trial/Forge`, `RunModService`]** (chamber 5, three rounds, the only permanent upgrade *of the run*): choose **one** of
   three tempers for your weapon — **Edge** (+damage), **Point** (armour-piercing, +reach), **Weight**
   (+stagger). The choice decides how chamber 8 goes (Hollow Knights) and *is* the reason to replay: a
   mace player and a spear player want opposite tempers.

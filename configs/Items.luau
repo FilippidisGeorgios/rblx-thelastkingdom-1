@@ -181,6 +181,12 @@ local Items = {
 	ingredient_turnips = { DisplayName = "Turnips", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
 	ingredient_ale = { DisplayName = "Ale", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
 	ingredient_salt = { DisplayName = "Salt", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the pot in the kitchen hall." },
+	-- The Smithy (docs/systems/Trials.md §5, chamber 5). Carried, never banked; planks and the pickaxe go on to later chambers.
+	oil_jar = { DisplayName = "Jar of Lamp Oil", Category = "QuestItem", Stackable = true, MaxStack = 2, Banked = false, Use = "Pour it on the door at the end of the yard." },
+	unlit_torch = { DisplayName = "Unlit Torch", Category = "QuestItem", Stackable = false, Banked = false, Use = "Light it at the forge." },
+	axe = { DisplayName = "Woodsman's Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the dead trees in the yard." },
+	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "To board the doors of the Great Hall." },
+	pickaxe = { DisplayName = "Miner's Pickaxe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For rubble. Keep it." },
 	broth = {
 		DisplayName = "A Ladle of Broth",
 		Category = "QuestItem",

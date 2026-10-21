@@ -133,7 +133,7 @@ function Torch.give(player: Player, seconds: number): boolean
 	local fire, light = Util.flame(rag, 7, 18)
 
 	held[player] = { model = stick, fire = fire, light = light, born = os.clock(), lifetime = seconds }
-	BackpackService.clearCarried(player)
+	-- Other things carried (a jar of oil, an unlit torch) stay in the hands.
 	BackpackService.add(player, ITEM, 1, true)
 	ensureLoop()
 	return true

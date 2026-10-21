@@ -25,6 +25,7 @@ local Server = script.Parent.Parent
 local CombatService = require(script.Parent.CombatService)
 local CombatEntity = require(Server.Domain.Combat.CombatEntity)
 local WeaponVisualService = require(script.Parent.WeaponVisualService)
+local RunModService = require(script.Parent.RunModService)
 local EquipmentService = require(Server.Services.EquipmentService)
 local Net = require(ReplicatedStorage.Shared.Net)
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -108,10 +109,18 @@ local function onAttack(player: Player, aim: any)
 	if not weaponId then
 		return -- unarmed
 	end
-	local weapon = resolveWeaponStats(weaponId)
-	if not weapon then
+	local base = resolveWeaponStats(weaponId)
+	if not base then
 		return
 	end
+	-- What this player has become this run (the forge's temper): damage, reach, swing time.
+	local weapon: WeaponStats = {
+		Damage = base.Damage * RunModService.damage(player),
+		Range = base.Range + RunModService.reach(player),
+		Arc = base.Arc,
+		Cooldown = base.Cooldown * RunModService.cooldown(player),
+		DamageType = base.DamageType,
+	}
 
 	--[[
 		A sheathed sword does not cut. Checked HERE and not on the client,

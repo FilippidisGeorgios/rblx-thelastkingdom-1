@@ -128,6 +128,85 @@ local Trials = {
 	},
 
 	--======================================================================
+	-- 5 — Smithy. THE SPIKE. The forge, and the door that is burned.
+	--
+	-- Two jobs, in any order, in a yard full of spears and bows: work the
+	-- forge (three blows at a heat that will not hold, then a temper that
+	-- changes how you fight for the rest of the run), and burn the timber door
+	-- out of the yard (oil from the far west, fire from the forge, the door at
+	-- the far east: the longest carry in the game). Two deeds beside them: the
+	-- woodyard (planks for the Great Hall) and the mine (gold, and the pickaxe
+	-- the Inner Ward will want).
+	--======================================================================
+	[5] = {
+		phases = {
+			{
+				id = "work",
+				hint = "Temper your blade at the forge, and burn the door",
+				mode = "all",
+				tasks = {
+					{
+						id = "forge",
+						kind = "forge",
+						hearth = "Decorations.Area5.Smithy.ForgeHearth",
+						bellows = "Decorations.Area5.Smithy.ForgeBellows",
+						anvil = "Decorations.Area5.Smithy.ForgeAnvil",
+						rounds = 3,
+						decaySeconds = 55,
+						pump = 0.14,
+						pumpHold = 0.45,
+						strikeHold = 1.0,
+						strikeCost = 0.38,
+						thresholds = { 0.70, 0.76, 0.82 },
+						tempers = {
+							edge = { name = "Edge", damage = 1.18, text = "an edge that bites deeper (+18% damage)" },
+							point = { name = "Point", reach = 3, text = "a point that reaches further (+3 studs)" },
+							weight = { name = "Weight", damage = 1.4, cooldown = 1.35, text = "a weight that breaks things (+40% damage, slower swing)" },
+						},
+					},
+					{
+						id = "door",
+						kind = "burn",
+						oilStore = "Decorations.Area5.OilStore",
+						torchRack = "Decorations.Area5.TorchRack",
+						fire = "Decorations.Area5.Smithy.ForgeHearth",
+						jars = 2,
+						torchSeconds = 50,
+						pourHold = 1.2,
+						setHold = 1.4,
+						takeHold = 0.8,
+					},
+				},
+			},
+		},
+
+		pressure = {},
+
+		deeds = {
+			{
+				id = "wood",
+				kind = "chop",
+				woodyard = "Decorations.Area5.Woodyard",
+				trees = "Decorations.Area5",
+				stack = "Decorations.Area5.Woodyard.PlankStack",
+				chopHold = 2.8,
+				perTree = 3,
+				stackPlanks = 4,
+				target = 12,
+				prize = "deed_smithy_planks",
+			},
+			{
+				id = "mine",
+				kind = "mine",
+				veins = "Decorations.Area5.Mine",
+				count = 8,
+				table = "mine_vein",
+				hold = 2.2,
+			},
+		},
+	},
+
+	--======================================================================
 	-- 4 — Graveyard. Carry the fire.
 	--
 	-- Four braziers, one to each section of the burying ground. A torch burns

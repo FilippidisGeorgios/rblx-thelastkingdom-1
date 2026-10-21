@@ -230,9 +230,20 @@ local Loot = {
 			Hallowed = { Chance = 0.05, Pool = { { Item = "hollow_ember", Weight = 1, Min = 1, Max = 1 } } },
 		},
 
+		-- A vein in the Smithy's mine: gold, sometimes iron, rarely silver.
+		mine_vein = {
+			Gold = { Chance = 1.0, Min = 14, Max = 34 },
+			Drops = { { Item = "rusted_iron", Chance = 0.5, Min = 1, Max = 2 } },
+			Sound = { Chance = 0.12, Pool = { { Item = "grave_silver", Weight = 1, Min = 1, Max = 2 } } },
+		},
+
 		--==================================================================
 		-- DEED PRIZES — fixed, no chance (docs/systems/Trials.md)
 		--==================================================================
+		deed_smithy_planks = {
+			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 } },
+			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "hearty_dish", Weight = 1, Min = 1, Max = 1 } } },
+		},
 		deed_graveyard_bell = {
 			Always = {
 				{ Item = "grave_silver", Min = 3, Max = 5 },

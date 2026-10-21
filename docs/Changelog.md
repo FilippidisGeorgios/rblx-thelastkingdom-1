@@ -1,3 +1,37 @@
+## Version 0.28.0 — Chamber 5, the Smithy: the forge, the door that is burned, the woodyard, the mine
+
+The third data-driven trial and the one the design calls the spike. Two jobs in any order, two deeds.
+
+- **The forge (`Trial/Forge`).** Pump the bellows (hold E, again and again) to raise the hearth's heat; it bleeds away
+  from full to cold in 55 s. Above the round's line (.70, .76, .82) the anvil takes a blow (hold 1 s); each blow costs
+  38% heat. Three blows, then a **temper** at one of three stations, one per player: **Edge** +18% damage,
+  **Point** +3 studs of reach, **Weight** +40% damage and a 35% slower swing. The coals brighten and the flame and
+  light rise and fall with the heat, so the fire is the gauge (no number on screen).
+- **`RunModService`** is new: per-player damage / reach / swing-time multipliers for the run, set by `set(player,
+  source, mods)`, read by `MeleeCombatService` (the only edit to combat: three numbers around the weapon stats). The
+  temper is its first source; relics and oaths will be others.
+- **The door (`Trial/Burn`).** A timber door (16 planks, three iron straps, bracing) is built across the passage in
+  front of the portcullis. Oil jars from the oil store (far west; two fit in your hands) are poured on it; an unlit torch
+  from the rack is lit at the forge and burns 50 s (the carry to the far east is the clock, through the dead); held to the
+  soaked door it catches, burns plank by plank and falls, and the gate rises.
+- **Deeds.** `Trial/Chop`: the axe in the stump, six dead trees that fall over and give planks (the stack gives four more);
+  12 planks pays a Sound-tier prize and the planks are carried to the Great Hall. `Trial/Mine`: eight veins in the
+  adit, each rolled for whoever prises it (gold, iron, rarely silver); one hides the **pickaxe**, carried to the Inner Ward.
+- New items (all carried, never banked): oil jar, unlit torch, axe, plank, pickaxe. `Torch.give` no longer empties
+  your hands (a jar of oil stays when you take fire).
+
+**Checked in a playtest** (real prompts, the keyboard tool): the forge through three rounds, the temper (Point: reach +3
+confirmed in `RunModService`), oil jars, the torch from the rack, lighting it, soaking the door, the door catching and
+falling, the axe, four trees and the planks deed with its prize, a vein opening and paying gold; the trial then completed.
+Bugs found by playing, all fixed: (1) the forge's prompt text was rewritten every frame with the heat, which cancelled the
+player's hold (a long hold needs a still prompt); (2) the anvil prompt was withdrawn the moment the heat crossed the line,
+cancelling a blow already going down (now a 10% hysteresis); (3) the temper stations stood on top of the torch-lighting
+prompt and the nearest prompt won; (4) the door's straps and braces did not fall with its planks.
+**Not checked:** the pickaxe turning up (it is one of eight veins); a tree's fall seen by eye; the door burning seen
+mid-burn (the capture came after); a second player; how the 55 s decay and the 50 s torch feel with real spearmen and
+archers on you. Note: a ProximityPrompt's distance is measured from the player's camera in this engine build as well as
+the character; keep MaxActivationDistance generous (>= 10) or a default camera will lose the prompt.
+
 ## Version 0.27.0 — Chamber 3, the Kitchens: the recipe, the pot, the five
 
 The second data-driven trial, and the first that uses most of the verbs.

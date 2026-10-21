@@ -169,7 +169,11 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Look at chamber 3 by eye; tune: the cured die fast (more health? stay back from the front?), simmer 30 s, tide 7 s.
 - [ ] A proper living head for the cured (now the skin union is tinted whole); their own lines/voices.
 - [ ] Cured villagers should keep following through 4 to 6 and the gates must not trap them (check the portcullis passage).
-- [ ] Chambers 5 (forge, torch + oil door, trees → planks), 6 (boards),
+- [x] Chamber 5: the forge and its tempers, the burned door, the woodyard and the mine (Changelog 0.28.0).
+- [ ] Look at chamber 5 by eye; tune the forge (decay 55 s, pump .14, lines .70/.76/.82), the torch (50 s), the tempers.
+- [ ] The pickaxe: open the veins in a real run and see it; a tree falling; the door mid-burn.
+- [ ] Tempers for Point/Weight need the things they are for: armour (Arsenal §6) and stagger (poise).
+- [ ] Chambers 6 (boards),
       7 (prisoner), 8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
       `wait`, `read`, `defend`, `free`, `sequence`, `slay`).
 - [ ] Add the Deeds and the Ambush to chambers 1 and 2 (Trials.md §5).
