@@ -71,6 +71,8 @@ local TASKS: { [string]: any } = {
 	mine = require(script.Parent.Trial.Mine),
 	board = require(script.Parent.Trial.Board),
 	siege = require(script.Parent.Trial.Siege),
+	rescue = require(script.Parent.Trial.Rescue),
+	letters = require(script.Parent.Trial.Letters),
 }
 
 local PRESSURE: { [string]: any } = {

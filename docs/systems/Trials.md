@@ -1,7 +1,7 @@
 # Trials — what each chamber asks of you (Design)
 
 **Status:** DESIGN written 2026-10-21. **Built: the engine, the verbs `light`, `toll`, `read`, `gather`, `cook` and `feed`, the pressures `rising` and `tide`,
-and chambers 3, 4, 5 and 6 as data (0.26.0 to 0.29.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
+and chambers 3 to 7 as data (0.26.0 to 0.30.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
 chamber), `Encounters.md` (the waves), `Bestiary.md` / `Arsenal.md` (who and with what) and `Spoils.md`
 (what falls out of it all).
 **Serves:** GDD Pillar 3 (exploration is a verb), Pillar 5 (co-op), and the replay goal.
@@ -56,6 +56,7 @@ Each verb is one module (`Server/World/Trial/<Kind>.luau`), driven by data in `c
 | `use` | Spend items at a station (feed, pour, board, put on the fire) | `station`, `item`, `count`, `hold` | **[BUILT]** |
 | `light` | `use` + a flame that stays: ignite N points | `points`, `fuel` | **[BUILT]** |
 | `forge` / `burn` / `chop` / `mine` | The smithy's verbs: the heat you hold, the door you burn, the trees, the veins | see `Trial/Forge`, `Burn`, `Chop`, `Mine` | **[BUILT]** |
+| `rescue` / `letters` | The long hold on a bound person and the walk to the gate; pages across several houses | see `Trial/Rescue`, `Trial/Letters` | **[BUILT]** |
 | `board` / `siege` | Nail doorways shut; the pause, the horn and the waves that break them (the Great Hall) | see `Trial/Board`, `Trial/Siege` | **[BUILT]** |
 | `cook` / `feed` | The pot that must be minded, and the ladle to each of the penned (chamber 3's own verbs) | see `Trial/Cook`, `Trial/Feed` | **[BUILT]** |
 | `hold` | Hold a prompt for T seconds, optionally slipping back (winch) or banking (lashing) | `seconds`, `slip`, `bank` | [BUILT: Barricade, Winch] |

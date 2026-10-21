@@ -146,6 +146,16 @@ local FACE_LOCK = 0.65 -- fraction of the windup after which it stops turning
 local AGGRO_SECONDS = 0.9 -- the first time it sees you it stops and cries out
 local RUN_SPEED = 12 -- at or above this a moving body plays Run, not Walk
 local FOLLOW_GAP = 9 -- how close a follower comes to the player it follows
+--[[
+	A follower left far behind (stuck on a ledge, shut out by a door that closed,
+	just slow) is put back beside the party after a while, out of sight. Every
+	companion game does this, because a companion that is lost is worse than
+	one that pops: the cured and the prisoner are only worth having if they are
+	WITH you. Only when far enough that nobody is looking at them.
+]]
+local FOLLOW_TELEPORT_DIST = 80
+local FOLLOW_TELEPORT_AFTER = 9
+local FOLLOW_STUCK_AFTER = 6 -- seconds of wanting to walk and not moving, with nothing to fight
 
 --[[
 	What a ranged unit fires. Straight off the enemy def's `Ranged` block; nil
@@ -189,6 +199,10 @@ type Agent = {
 	-- Only The King has both; nil means "whatever it has, it always uses".
 	meleeRange: number?,
 	follow: boolean, -- with nothing to fight, walk to the nearest player (the cured)
+	farTime: number, -- seconds a follower has been further than FOLLOW_TELEPORT_DIST
+	stuckSeconds: number,
+	followCheckAt: number,
+	followCheckPos: Vector3?,
 
 	-- Last known position of its target, so the shot can lead a moving one.
 	-- Velocity is derived here rather than read off a Humanoid, because the
@@ -465,6 +479,10 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 		ranged = ranged,
 		meleeRange = ai.MeleeRange,
 		follow = ai.Follow == true,
+		farTime = 0,
+		stuckSeconds = 0,
+		followCheckAt = 0,
+		followCheckPos = nil,
 		lastTargetPos = nil,
 		targetVelocity = Vector3.zero,
 		waypoints = {},
@@ -703,6 +721,41 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		followPos = nearestPlayerPosition(selfPos)
 		if followPos then
 			agent.spawnPosition = followPos
+			local gap = (followPos - selfPos).Magnitude
+
+			-- Lost: far away for a while, or wanting to come and not getting anywhere.
+			if gap > FOLLOW_TELEPORT_DIST then
+				agent.farTime += dt
+			else
+				agent.farTime = 0
+			end
+			local clock = os.clock()
+			if clock - agent.followCheckAt >= 1 then
+				local still = agent.followCheckPos ~= nil and (selfPos - agent.followCheckPos).Magnitude < 0.4
+				if still and target == nil and agent.phase == nil and gap > FOLLOW_GAP + 6 then
+					agent.stuckSeconds += 1
+				else
+					agent.stuckSeconds = 0
+				end
+				agent.followCheckPos = selfPos
+				agent.followCheckAt = clock
+			end
+			if agent.farTime >= FOLLOW_TELEPORT_AFTER or agent.stuckSeconds >= FOLLOW_STUCK_AFTER then
+				agent.farTime = 0
+				agent.stuckSeconds = 0
+				for i = 0, 5 do
+					local a = i * math.pi / 3
+					local spot = followPos + Vector3.new(math.cos(a) * 8, 0, math.sin(a) * 8)
+					local floor = floorUnder(model, spot, followPos.Y - PIVOT_ABOVE_FLOOR - 2.5)
+					if floor then
+						model:PivotTo(CFrame.new(spot.X, floor + PIVOT_ABOVE_FLOOR, spot.Z))
+						agent.waypoints = {}
+						agent.pathGoal = nil
+						selfPos = positionOf(model)
+						break
+					end
+				end
+			end
 		end
 	end
 

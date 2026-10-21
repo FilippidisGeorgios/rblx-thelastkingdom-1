@@ -78,8 +78,24 @@ function RunModService.has(player: Player, source: string): boolean
 	return entry(player).sources[source] ~= nil
 end
 
+--[[
+	PARTY FLAGS: facts about the run that are not one player's: "the prisoner of
+	the Rows is alive" (the whole team earns +5% gold if it is still true when the
+	run is won). Set by trials, read by whatever settles the run's rewards.
+]]
+local flags: { [string]: any } = {}
+
+function RunModService.setFlag(name: string, value: any)
+	flags[name] = value
+end
+
+function RunModService.getFlag(name: string): any
+	return flags[name]
+end
+
 function RunModService.resetAll()
 	applied = {}
+	flags = {}
 end
 
 function RunModService.Init() end

@@ -176,8 +176,11 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [x] Chamber 6: the pause, boarding with planks, the siege against barricades (Changelog 0.29.0).
 - [ ] Look at chamber 6 by eye; tune: the 75 s pause, 150 health a plank, the wave sizes (113 dead for one player).
 - [ ] Boards as a repair loop: a broken door in the middle of a wave, planks from the racks, a cooldown on rebuilding.
+- [x] Chamber 7: the prisoner (held 20 s, retries), the walk to the gate, three letters (Changelog 0.30.0).
+- [ ] A sitting pose for the bound prisoner (and a living idle); his voice; the death branch seen once.
+- [ ] Settle the run: pay the prisoner bonus (+5% gold) and bank (see the banking item above).
 - [ ] Chambers
-      7 (prisoner), 8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
+      8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
       `wait`, `read`, `defend`, `free`, `sequence`, `slay`).
 - [ ] Add the Deeds and the Ambush to chambers 1 and 2 (Trials.md §5).
 - [ ] Player verbs, weapon holding and the animation of the player's own kit (the developer's next topic).

@@ -246,6 +246,86 @@ local Trials = {
 	},
 
 	--======================================================================
+	-- 7 — The Rows. The prisoner.
+	--
+	-- A villager is tied to a chair in the tavern. Untie him (a held twenty
+	-- seconds, kept if you break off) and bring him to the gate alive, through
+	-- the maze of lanes, with the chamber's waves on you and the dead going for
+	-- him as much as for you. If he dies a second is found, and a third; if he
+	-- lives to the end of the run the whole team earns more gold. Three letters
+	-- in three houses are the deed.
+	--======================================================================
+	[7] = {
+		phases = {
+			{
+				id = "rescue",
+				hint = "Free the prisoner in the tavern, and bring him to the gate",
+				tasks = {
+					{
+						id = "prisoner",
+						kind = "rescue",
+						chair = "Decorations.Area7.Tavern.PrisonerChair",
+						enemy = "prisoner_villager",
+						seconds = 20,
+						reach = 28,
+						retries = 2,
+						respawnDelay = 18,
+						lines = {
+							"\"The gate road. Is it still there? Take me to it. Please.\"",
+							"\"They kept me for the bell. I never learned what the bell wanted.\"",
+							"\"Keep walking. I will be behind you and I will not stop.\"",
+						},
+					},
+				},
+			},
+		},
+
+		pressure = {},
+
+		deeds = {
+			{
+				id = "letters",
+				kind = "letters",
+				prize = "deed_rows_letters",
+				letters = {
+					{
+						at = "Decorations.Area7.ClerksHouse.Table",
+						title = "The Clerk's Last Entry",
+						sign = "Hobb Tarrow, clerk of the Rows",
+						lines = {
+							"Muster of the Rows, the fourth winter after the Company marched. Households answering: nineteen of sixty-one.",
+							"The king's heralds still ride the road each new moon, reading the names of the absent out of the great book. They read them very loud. I think he believes they can hear.",
+							"No grain from the keep since Candlemas. The bells ring the hours and the hours are wrong.",
+							"If this is found: the Company's names are in the third drawer, under the star. Whoever comes home should have them back.",
+						},
+					},
+					{
+						at = "Decorations.Area7.WidowsHouse.Table",
+						title = "To Edric, in the north",
+						sign = "Your Maud",
+						lines = {
+							"The boy asks every night whether the road is open. I say it is, and he sleeps.",
+							"They say the king went down under the keep to bring something up. They say the bells did not stop for nine days. I have shut the south shutters and I do not look at the keep any more.",
+							"The dead stand in the lane in the mornings now and they do not seem to know why. Old Pell is among them. I put out his boots.",
+							"Come home. Come home before the winter, if there is still a home.",
+						},
+					},
+					{
+						at = "Decorations.Area7.Cottage.Table",
+						title = "A Child's Drawing",
+						sign = "charcoal, on the back of a bill of lading",
+						lines = {
+							"A tall house with a red light at the top. A great star falling on it, gold where the child had a gold stub to use.",
+							"Under it a stick figure in a crown, and a smaller figure holding its hand. Letters, uneven: PAPA SAYS THE KING IS SAD.",
+							"At the bottom, in a grown hand: Do not let her draw it again.",
+						},
+					},
+				},
+			},
+		},
+	},
+
+	--======================================================================
 	-- 4 — Graveyard. Carry the fire.
 	--
 	-- Four braziers, one to each section of the burying ground. A torch burns

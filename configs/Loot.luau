@@ -240,6 +240,10 @@ local Loot = {
 		--==================================================================
 		-- DEED PRIZES — fixed, no chance (docs/systems/Trials.md)
 		--==================================================================
+		-- The three letters of the Rows: the first of the nine star shards, and a veil.
+		deed_rows_letters = {
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "mourners_veil", Min = 1, Max = 1 } },
+		},
 		deed_smithy_planks = {
 			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "hearty_dish", Weight = 1, Min = 1, Max = 1 } } },

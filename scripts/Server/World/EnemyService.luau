@@ -162,7 +162,7 @@ end
 -- its entity id. Attaches the AI brain only if the def has an `AI` block (so neutral
 -- NPCs are passive). Despawns automatically on death. `healthMult` scales max health
 -- (difficulty scaling); defaults to 1.
-function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: number?): string
+function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: number?, floorY: number?): string
 	local enemies = Config.get("Enemies")
 	local def = enemies[enemyId]
 	assert(def, "Unknown enemy id: " .. tostring(enemyId))
@@ -180,12 +180,15 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	rayParams.FilterDescendantsInstances = { model }
 	local groundY = position.Y
-	local hit = Workspace:Raycast(
+	-- `floorY` is for INDOORS (a villager untied in a tavern): the ray below would land on the roof.
+	local hit = if floorY then nil else Workspace:Raycast(
 		Vector3.new(position.X, position.Y + 200, position.Z),
 		Vector3.new(0, -400, 0),
 		rayParams
 	)
-	if hit then
+	if floorY then
+		groundY = floorY
+	elseif hit then
 		groundY = hit.Position.Y
 	end
 	local spawnPos = Vector3.new(position.X, groundY + RIG_HEIGHT / 2, position.Z)
@@ -227,7 +230,7 @@ end
 	fed and must neither chase, be targeted nor be killed. Returns nil when
 	`enemyId` has no body. Destroy it (or swap it for a real spawn) to be rid of it.
 ]]
-function EnemyService.spawnStatic(enemyId: string, position: Vector3, facing: Vector3?): Model?
+function EnemyService.spawnStatic(enemyId: string, position: Vector3, facing: Vector3?, floorY: number?): Model?
 	local def = Config.get("Enemies")[enemyId]
 	if not def then
 		return nil
@@ -239,8 +242,9 @@ function EnemyService.spawnStatic(enemyId: string, position: Vector3, facing: Ve
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { model }
-	local hit = Workspace:Raycast(position + Vector3.new(0, 20, 0), Vector3.new(0, -60, 0), params)
-	local groundY = if hit then hit.Position.Y else position.Y
+	-- `floorY` is for INDOORS: a ray dropped from above a room lands on its roof.
+	local hit = if floorY then nil else Workspace:Raycast(position + Vector3.new(0, 20, 0), Vector3.new(0, -60, 0), params)
+	local groundY = floorY or (if hit then hit.Position.Y else position.Y)
 	local at = Vector3.new(position.X, groundY + RIG_HEIGHT / 2, position.Z)
 	if facing then
 		model:PivotTo(CFrame.lookAt(at, Vector3.new(facing.X, at.Y, facing.Z)))

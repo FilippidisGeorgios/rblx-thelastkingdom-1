@@ -1,3 +1,27 @@
+## Version 0.30.0 — Chamber 7, the Rows: the prisoner, and three letters
+
+- **The rescue (`Trial/Rescue`).** A villager is bound to the chair in the tavern (a living body, three coils of rope round
+  him). Untie him with a held 20 seconds, **banked** across breaks and summed across players (two untie him twice as fast), the
+  ropes falling away third by third, the prompt's ring always set to the time that remains. He is then a real unit
+  (`prisoner_villager`: Players side, 90 health, does not fight) that follows the party; the task is done when he stands within 28
+  studs of the passage out, alive. If he dies a second prisoner is found tied to the chair after 18 s, and a third; when those are
+  spent the way opens and the bonus is lost. `RunModService` has **party flags** now: `prisonerAlive` is the +5% gold for the
+  whole team at the end of the run (nothing settles the run yet, so the bonus is recorded, not paid).
+- **The letters (`Trial/Letters`, a deed).** Three parchments in three houses (the clerk's last entry, a widow's letter to a man in
+  the north, a child's drawing of the falling star), each opening as a page; all three read pays a Star Shard and a Mourner's Veil.
+  `Read.place` is now the shared piece that lays a readable page on a table.
+- **Followers cannot be lost (`EnemyAIService`).** A unit with `Follow` that is more than 80 studs from every player for 9 s, or that
+  has wanted to walk and not moved for 6 s with nothing to fight, is put back beside the party. The test that found it: the freed
+  prisoner stepped out of the tavern and stood on a stone corner block from which there was no route.
+- **Indoors.** `EnemyService.spawn` and `spawnStatic` take an optional `floorY`: a ray dropped from above a room lands on its roof
+  (the prisoner appeared eleven studs up in the first test).
+
+**Checked in a playtest** (real prompts and keys): the chair with its ropes and the bound prisoner, the 20 s hold, his freeing,
+the walk to the gate (after the fixes: he was put back beside the player when lost, and the trial completed with the flag
+set); all three letters read and the prize in the pack. **Not checked:** the ropes falling away mid-hold by eye; the
+death-and-second-prisoner branch; two players untying together; the dead going for him in a real fight; the new stuck rule
+(only the far-away rule ran). The bound figure stands (there is no sitting clip yet) and shows the zombie idle.
+
 ## Version 0.29.0 — Chamber 6, the Great Hall: a pause, the doors, and the siege
 
 - **The pause and the horn (`Trial/Siege`).** Walking into the hall no longer starts a wave. The trial gives 75 s (with a

@@ -77,10 +77,44 @@ local function glow(adornee: Instance): Highlight
 	return h
 end
 
-function Read.create(ctx: any, def: any)
+--[[
+	Lays a parchment on the scenery at `path` and makes it readable: it sits on the
+	top of whatever it lies on, glows softly, and opens as a page on the screen of
+	whoever takes it up. `onRead(player)` runs each time. Returns the prompt, or nil
+	(after warning) when there is nothing at `path`. Shared by `read` (one page) and
+	`letters` (several).
+]]
+function Read.place(ctx: any, path: string, title: string?, sign: string?, lines: () -> { string }, onRead: (Player) -> ()): ProximityPrompt?
 	local documentEvent = Net.getEvent("DocumentEvent")
-	local connection: RBXScriptConnection? = nil
-	local model: Model? = nil
+	local scenery = Util.find(path)
+	if not scenery then
+		ctx.warn("read: nothing at " .. tostring(path))
+		return nil
+	end
+	local cf, size
+	if scenery:IsA("Model") then
+		cf, size = scenery:GetBoundingBox()
+	else
+		cf, size = (scenery :: BasePart).CFrame, (scenery :: BasePart).Size
+	end
+	local top = Vector3.new(cf.Position.X, cf.Position.Y + size.Y / 2, cf.Position.Z)
+	local scroll = buildScroll(ctx.folder, CFrame.new(top) * CFrame.Angles(0, math.rad(22), 0))
+	glow(scroll)
+
+	local prompt = Util.prompt(ctx.folder, top + Vector3.new(0, 1.4, 0), "ReadPrompt", "Read", title or "Parchment", 0.4, 11)
+	prompt.Triggered:Connect(function(player: Player)
+		documentEvent:FireClient(player, {
+			kind = "open",
+			title = title,
+			sign = sign,
+			lines = lines(),
+		})
+		onRead(player)
+	end)
+	return prompt
+end
+
+function Read.create(ctx: any, def: any)
 	local done = false
 
 	local function linesFor(): { string }
@@ -92,30 +126,7 @@ function Read.create(ctx: any, def: any)
 
 	return {
 		start = function()
-			local scenery = Util.find(def.at)
-			if not scenery then
-				ctx.warn("read: nothing at " .. tostring(def.at))
-				return
-			end
-			local cf, size
-			if scenery:IsA("Model") then
-				cf, size = scenery:GetBoundingBox()
-			else
-				cf, size = (scenery :: BasePart).CFrame, (scenery :: BasePart).Size
-			end
-			local top = Vector3.new(cf.Position.X, cf.Position.Y + size.Y / 2, cf.Position.Z)
-			local scroll = buildScroll(ctx.folder, CFrame.new(top) * CFrame.Angles(0, math.rad(22), 0))
-			model = scroll
-			glow(scroll)
-
-			local prompt = Util.prompt(ctx.folder, top + Vector3.new(0, 1.4, 0), "ReadPrompt", "Read", def.title or "Parchment", 0.4, 11)
-			connection = prompt.Triggered:Connect(function(player: Player)
-				documentEvent:FireClient(player, {
-					kind = "open",
-					title = def.title,
-					sign = def.sign,
-					lines = linesFor(),
-				})
+			Read.place(ctx, def.at, def.title, def.sign, linesFor, function()
 				if not done then
 					done = true
 					ctx.done()

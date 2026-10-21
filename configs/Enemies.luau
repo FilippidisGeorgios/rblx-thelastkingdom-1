@@ -368,6 +368,38 @@ local Enemies = {
 		},
 	},
 
+	--[[
+		The prisoner of the Rows (chamber 7). A living villager tied to a chair in
+		the tavern; when he is untied he walks with the party to the gate and,
+		if he lives to the end of the run, the whole team earns more gold. He does
+		not fight (DetectionRadius 0: he never takes a target), he only keeps up, and
+		the dead go for him because he is on the players' side.
+	]]
+	prisoner_villager = {
+		DisplayName = "Prisoner",
+		Faction = "Players",
+		Archetype = "Npc",
+		Body = { "undead_shambler_scullion" },
+		Cured = true,
+		MaxHealth = 90,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Standard",
+		Abilities = {},
+		AI = {
+			DetectionRadius = 0,
+			AttackRange = 0,
+			LeashRadius = 300,
+			ArrivalRadius = 4,
+			Follow = true,
+			MoveSpeed = 11,
+			AttackCooldown = 999,
+			AttackDamage = 0,
+			AttackDamageType = "Physical",
+		},
+	},
+
 	cured_villager_bow = {
 		DisplayName = "Villager (bow)",
 		Faction = "Players",
