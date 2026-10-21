@@ -241,6 +241,24 @@ local function nearestHostile(pos: Vector3, myFaction: string): (CombatEntity.Co
 	return best, bestDist
 end
 
+--[[
+	Where to walk to reach `model` — usually the model itself. A barricade is the
+	exception: it is a wall, so a unit that tried to walk to its middle would be
+	walking into it and its route would never exist. Such a model carries two
+	attributes, `ApproachA` and `ApproachB`, the standing places on either side of
+	it, and a unit goes to whichever is nearer to it. It is what lets the dead
+	besiege a door (docs/systems/Trials.md §5, chamber 6) instead of standing at
+	a distance from it forever.
+]]
+local function approachPoint(model: Instance, from: Vector3): Vector3
+	local a = model:GetAttribute("ApproachA")
+	local b = model:GetAttribute("ApproachB")
+	if typeof(a) == "Vector3" and typeof(b) == "Vector3" then
+		return if (a - from).Magnitude <= (b - from).Magnitude then a else b
+	end
+	return positionOf(model)
+end
+
 --==========================================================================
 -- Seeing
 --==========================================================================
@@ -770,7 +788,7 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		local moving = false
 		if state == States.Chase then
 			if target and target.model then
-				travelTo(entityId, agent, model, selfPos, positionOf(target.model), dt)
+				travelTo(entityId, agent, model, selfPos, approachPoint(target.model, selfPos), dt)
 				moving = true
 			end
 		elseif state == States.Reposition then

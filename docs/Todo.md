@@ -173,7 +173,10 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Look at chamber 5 by eye; tune the forge (decay 55 s, pump .14, lines .70/.76/.82), the torch (50 s), the tempers.
 - [ ] The pickaxe: open the veins in a real run and see it; a tree falling; the door mid-burn.
 - [ ] Tempers for Point/Weight need the things they are for: armour (Arsenal §6) and stagger (poise).
-- [ ] Chambers 6 (boards),
+- [x] Chamber 6: the pause, boarding with planks, the siege against barricades (Changelog 0.29.0).
+- [ ] Look at chamber 6 by eye; tune: the 75 s pause, 150 health a plank, the wave sizes (113 dead for one player).
+- [ ] Boards as a repair loop: a broken door in the middle of a wave, planks from the racks, a cooldown on rebuilding.
+- [ ] Chambers
       7 (prisoner), 8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
       `wait`, `read`, `defend`, `free`, `sequence`, `slay`).
 - [ ] Add the Deeds and the Ambush to chambers 1 and 2 (Trials.md §5).

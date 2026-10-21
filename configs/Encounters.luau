@@ -203,37 +203,37 @@ local Encounters = {
 	}),
 
 	--======================================================================
-	-- 6 — Great Hall. Under a roof you built yourself, so the archers matter
-	-- less and the press at the doors matters more.
+	-- 6 — Great Hall. THE SIEGE. Not started when you walk in: the Great Hall's
+	-- trial (configs/Trials[6], `ownsWaves`) starts it after a pause, when the
+	-- doors have had their chance to be boarded. Three waves that come to the
+	-- DOORS and break them: spearmen and archers in numbers, because behind a
+	-- plank wall their reach and their arrows are what matter, with the heavy
+	-- ones to put a shoulder to the boards.
 	--======================================================================
 	area_6 = chamber(6, {
 		{
 			id = "w1",
 			groups = {
-				{ enemyId = "undead_shambler", count = 7, spawnPoint = "north", spread = 12 },
-				{ enemyId = "undead_runner", count = 4, spawnPoint = "east", spread = 10 },
+				{ enemyId = "undead_shambler", count = 6, spawnPoint = "north", spread = 12 },
+				{ enemyId = "undead_spearman", count = 4, spawnPoint = "west", spread = 10 },
+				{ enemyId = "undead_archer", count = 2, spawnPoint = "east", spread = 10 },
 			},
 		},
 		{
 			id = "w2",
 			groups = {
-				{ enemyId = "undead_spearman", count = 4, spawnPoint = "west", spread = 10 },
-				{ enemyId = "undead_brute_heavy", count = 1, spawnPoint = "north" },
+				{ enemyId = "undead_spearman", count = 6, spawnPoint = "east", spread = 10 },
+				{ enemyId = "undead_archer", count = 4, spawnPoint = "north", spread = 12 },
+				{ enemyId = "undead_brute_heavy", count = 1, spawnPoint = "west" },
 			},
 		},
 		{
 			id = "w3",
 			groups = {
-				{ enemyId = "undead_runner", count = 7, spawnPoint = "east", spread = 12 },
-				{ enemyId = "undead_archer", count = 3, spawnPoint = "west", spread = 12 },
-			},
-		},
-		{
-			id = "w4",
-			groups = {
-				{ enemyId = "undead_brute_heavy", count = 2, spawnPoint = "west", spread = 8 },
-				{ enemyId = "undead_shambler", count = 6, spawnPoint = "north", spread = 12 },
-				{ enemyId = "undead_spearman", count = 3, spawnPoint = "east", spread = 8 },
+				{ enemyId = "undead_runner", count = 6, spawnPoint = "west", spread = 12 },
+				{ enemyId = "undead_archer", count = 5, spawnPoint = "east", spread = 12 },
+				{ enemyId = "undead_spearman", count = 5, spawnPoint = "north", spread = 10 },
+				{ enemyId = "undead_brute_heavy", count = 2, spawnPoint = "north", spread = 8 },
 			},
 		},
 	}),

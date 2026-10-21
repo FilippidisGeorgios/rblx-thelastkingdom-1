@@ -85,6 +85,12 @@ local function start(index: number)
 		return
 	end
 
+	-- A chamber whose trial runs its own waves (the Great Hall's siege) starts none here.
+	local trial = Config.get("Trials")[index]
+	if trial and trial.ownsWaves then
+		return
+	end
+
 	local encounterId = ("area_%d"):format(index)
 	if not Config.get("Encounters")[encounterId] then
 		log:info(("no encounter '%s' — area %d stays quiet"):format(encounterId, index))

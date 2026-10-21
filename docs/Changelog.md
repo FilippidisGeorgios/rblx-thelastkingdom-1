@@ -1,3 +1,25 @@
+## Version 0.29.0 — Chamber 6, the Great Hall: a pause, the doors, and the siege
+
+- **The pause and the horn (`Trial/Siege`).** Walking into the hall no longer starts a wave. The trial gives 75 s (with a
+  warning at thirty and at ten, in the world's terms: torches gathering, then moving), then a horn, then the chamber's
+  encounter: three waves of spearmen, archers and the heavy ones (`configs/Encounters` `area_6`, rewritten for it).
+  `ownsWaves` in the trial tells `AreaWaveService` not to start the old entry wave for this chamber.
+- **Boarding (`Trial/Board`).** The hall's four `BoardPoint` doorways each take up to six planks, one per hold, built up
+  from the sill; four seal a door. Planks are the ones carried from the woodyard (chamber 5); two racks of eight stand in
+  the hall for a player who skipped it. Boarding is a deed (nothing waits on it); the gate rises when the siege is cleared.
+- **A barricade is something the dead attack.** Each is a combat entity on the players' side with 150 health a plank (600
+  sealed). The dead's rule is "go for the nearest thing that is not one of us", so they go for it: spearmen thrust, archers
+  shoot, the heavy ones lean on it; when its health is gone it breaks (planks fly) and can be rebuilt. New in
+  `EnemyAIService`: `approachPoint`: a model with `ApproachA` / `ApproachB` attributes is walked to by a standing place
+  on one of its faces, not by its middle (a wall has no route to its middle), so the dead can besiege a door.
+
+**Checked in a playtest** (real prompts, the keyboard tool): the racks and nail prompts, four planks sealing a door (600
+health), all four doors sealed; at the horn 33 enemies came and the west door took 300 damage in about six seconds and broke
+while the others held; the siege cleared in three waves (33, 31, 49 dead for one player) and the trial completed.
+**Not checked:** the dead pouring through a broken door and the fight inside the hall by eye; arrows on boards; a second
+player; whether 75 s is enough to fetch planks from the yard and nail four doors (probably not all four: that is the
+intended pressure, and the racks make two possible); whether 113 dead for one player is too many.
+
 ## Version 0.28.0 — Chamber 5, the Smithy: the forge, the door that is burned, the woodyard, the mine
 
 The third data-driven trial and the one the design calls the spike. Two jobs in any order, two deeds.
