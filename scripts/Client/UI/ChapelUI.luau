@@ -18,14 +18,19 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
+local ItemArt = require(script.Parent.ItemArt)
+local ItemCard = require(script.Parent.ItemCard)
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local ChapelUI = {}
 
 export type Need = { id: string, name: string, need: number, have: number }
 
-local TABS = { "Tithe", "Reliquary", "Altar", "Journal" }
+local TABS = { "Stash", "Tithe", "Reliquary", "Altar", "Journal" }
 
 local onAction: ((action: string, id: string?) -> ())? = nil
 
@@ -35,7 +40,7 @@ local stashLabel: TextLabel? = nil
 local noticeLabel: TextLabel? = nil
 local tabButtons: { [string]: TextButton } = {}
 
-local activeTab = "Tithe"
+local activeTab = "Stash"
 local lastState: any = nil
 local reading: string? = nil -- the journal page that is open
 
@@ -84,7 +89,7 @@ local function heading(order: number, body: string)
 end
 
 -- A row: the thing on the left, the one decision on the right.
-local function row(order: number): (Frame, Frame)
+local function row(order: number, itemId: string?, dim: boolean?): (Frame, Frame)
 	local frame = Components.panel({
 		Name = "Row",
 		Size = UDim2.new(1, 0, 0, 0),
@@ -101,7 +106,27 @@ local function row(order: number): (Frame, Frame)
 	columns.Padding = UDim.new(0, 12)
 	columns.Parent = frame
 
-	local details = Components.group({ Name = "Details", Size = UDim2.new(1, -210, 0, 0), LayoutOrder = 1, Parent = frame })
+	if itemId then
+		local picture = Instance.new("Frame")
+		picture.Name = "Picture"
+		picture.Size = UDim2.fromOffset(72, 72)
+		picture.BackgroundColor3 = Theme.Color.Void
+		picture.BorderSizePixel = 0
+		picture.LayoutOrder = 0
+		picture.ZIndex = 3
+		picture.Parent = frame
+		Theme.corner(picture, Theme.Size.CornerSmall)
+		Theme.surface(picture, Theme.Color.Navy, Theme.Color.Void)
+		local pictureStroke = Instance.new("UIStroke")
+		pictureStroke.Color = Theme.Color.GoldDim
+		pictureStroke.Thickness = 1.2
+		pictureStroke.Parent = picture
+		local art = ItemArt.mount(itemId, { Parent = picture, Size = UDim2.fromScale(1, 1) })
+		if dim then
+			art.ImageColor3 = Color3.fromRGB(90, 80, 70)
+		end
+	end
+	local details = Components.group({ Name = "Details", Size = UDim2.new(1, if itemId then -294 else -210, 0, 0), LayoutOrder = 1, Parent = frame })
 	details.AutomaticSize = Enum.AutomaticSize.Y
 	Components.list(details, 2, Enum.HorizontalAlignment.Left)
 
@@ -159,7 +184,7 @@ local function drawTithe(state: any)
 		Theme.Color.Parchment
 	)
 	for i, entry in tithe.shelf do
-		local details, action = row(2 + i)
+		local details, action = row(2 + i, entry.id)
 		text(details, 1, ("%s   x%d"):format(entry.name:upper(), entry.count), Theme.TextSize.Small, RANK_COLOUR[entry.rank] or Theme.Color.Parchment, Theme.Role.Heading)
 		if entry.flavour then
 			text(details, 2, entry.flavour, Theme.TextSize.Micro, Theme.Color.SteelLight)
@@ -171,7 +196,7 @@ local function drawTithe(state: any)
 			Theme.TextSize.Micro,
 			Theme.Color.Muted
 		)
-		button(action, "TAKE", "gold", tithe.can, function()
+		button(action, "TAKE", "green", tithe.can, function()
 			request("tithe", entry.id)
 		end)
 	end
@@ -199,7 +224,7 @@ local function drawReliquary(state: any)
 	for _, charm in rel.charms do
 		anyCharm = true
 		order += 1
-		local details, action = row(order)
+		local details, action = row(order, charm.id, not charm.owned)
 		text(
 			details,
 			1,
@@ -249,7 +274,7 @@ local function drawReliquary(state: any)
 		if recipe.waiting then
 			button(action, "WAITING", "ghost", false, nil)
 		else
-			button(action, "MAKE", "gold", recipe.can, function()
+			button(action, "MAKE", "green", recipe.can, function()
 				request("forge", recipe.id)
 			end)
 		end
@@ -274,9 +299,54 @@ local function drawAltar(state: any)
 	if altar.raised then
 		button(action, "RAISED", "ghost", false, nil)
 	else
-		button(action, "LAY A SHARD", "gold", altar.shards > 0, function()
+		button(action, "LAY A SHARD", "green", altar.shards > 0, function()
 			request("offer", nil)
 		end)
+	end
+end
+
+local function drawStash(state: any)
+	heading(1, "THE STASH")
+	local list = state.stashList or {}
+	text(
+		listFrame :: Instance,
+		2,
+		if #list == 0
+			then "Nothing has come home yet. What a run carries out of the castle is kept here."
+			else "What your runs brought home. Press the small arrow on a card to see what a thing is for.",
+		Theme.TextSize.Micro,
+		Theme.Color.Parchment
+	)
+	local items = Config.get("Items")
+	local ranks = Config.get("Loot").Ranks
+	-- two cards across, wrapping
+	local grid = Instance.new("Frame")
+	grid.Name = "Grid"
+	grid.Size = UDim2.new(1, 0, 0, 0)
+	grid.AutomaticSize = Enum.AutomaticSize.Y
+	grid.BackgroundTransparency = 1
+	grid.LayoutOrder = 3
+	grid.Parent = listFrame
+	local wrap = Instance.new("UIListLayout")
+	wrap.FillDirection = Enum.FillDirection.Horizontal
+	wrap.Wraps = true
+	wrap.SortOrder = Enum.SortOrder.LayoutOrder
+	wrap.Padding = UDim.new(0, 8)
+	wrap.VerticalAlignment = Enum.VerticalAlignment.Top
+	wrap.Parent = grid
+	for i, entry in list do
+		local def = items[entry.id]
+		local rank = if def and def.Rank then def.Rank else "Worn"
+		local colour = if ranks[rank] then ranks[rank].Colour else Theme.Color.Parchment
+		ItemCard.create({
+			Parent = grid,
+			ItemId = entry.id,
+			Def = def,
+			Count = entry.count,
+			RankColour = colour,
+			LayoutOrder = i,
+			Width = UDim.new(0.5, -4),
+		})
 	end
 end
 
@@ -319,7 +389,7 @@ local function drawJournal(state: any)
 	end
 end
 
-local DRAW = { Tithe = drawTithe, Reliquary = drawReliquary, Altar = drawAltar, Journal = drawJournal }
+local DRAW = { Stash = drawStash, Tithe = drawTithe, Reliquary = drawReliquary, Altar = drawAltar, Journal = drawJournal }
 
 --============================================================================
 -- Build
@@ -355,7 +425,7 @@ local function build(parent: ScreenGui)
 	Components.list(root, 10)
 	Theme.shadow(root)
 
-	Components.label({
+	local title = Components.label({
 		Name = "Title",
 		Text = Components.spaced("THE CHAPEL"),
 		Role = Theme.Role.Logo,
@@ -364,6 +434,9 @@ local function build(parent: ScreenGui)
 		LayoutOrder = 1,
 		Parent = root,
 	})
+	Components.closeButton(title, function()
+		ChapelUI.close()
+	end)
 
 	stashLabel = Components.label({
 		Name = "Stash",
@@ -385,7 +458,7 @@ local function build(parent: ScreenGui)
 			Text = name:upper(),
 			Variant = "ghost",
 			TextSize = Theme.TextSize.Small,
-			Size = UDim2.fromOffset(170, 42),
+			Size = UDim2.fromOffset(136, 42),
 			LayoutOrder = index,
 			Parent = tabs,
 		})
@@ -398,7 +471,7 @@ local function build(parent: ScreenGui)
 	local scroller = Instance.new("ScrollingFrame")
 	scroller.Name = "Content"
 	-- what is left under the title, the tabs, the notice and the close button
-	scroller.Size = UDim2.new(1, 0, 1, -300)
+	scroller.Size = UDim2.new(1, 0, 1, -200)
 	scroller.BackgroundTransparency = 1
 	scroller.BorderSizePixel = 0
 	scroller.ScrollBarThickness = 4
@@ -420,19 +493,6 @@ local function build(parent: ScreenGui)
 		Parent = root,
 	})
 
-	local close = Components.button({
-		Name = "Close",
-		Text = "LEAVE THE CHAPEL",
-		Variant = "ghost",
-		TextSize = Theme.TextSize.Small,
-		Size = UDim2.new(1, 0, 0, 46),
-		LayoutOrder = 7,
-		Parent = root,
-	})
-	close.Activated:Connect(function()
-		ChapelUI.close()
-	end)
-
 	panel = root
 	root.Visible = false
 end
@@ -453,7 +513,7 @@ function ChapelUI.mount(handlers: { onAction: (string, string?) -> () })
 	gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 	build(gui)
-	selectTab("Tithe")
+	selectTab("Stash")
 end
 
 function ChapelUI.setState(state: any)

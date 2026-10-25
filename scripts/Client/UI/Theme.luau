@@ -5,10 +5,10 @@
 	motion timing the interface uses. Screens never hard-code a Color3 or a
 	TweenInfo — they read them from here, so the whole game restyles from one file.
 
-	Art direction (locked): realistic medieval luxury. Deep navy and near-black
-	surfaces, antique gold rules and borders, bordeaux for danger/weight, parchment
-	for text. Nothing bright, nothing cartoon, nothing flat — every surface is a
-	gradient and every border is metal.
+	Art direction: realistic medieval luxury, in WARM colour: walnut and leather browns over near-black,
+	golden brown and antique gold for rules and borders, beige for text. Two colours are for meaning and are
+	never swapped: BORDEAUX RED for every way out (leave, close, abandon) and GREEN for every way forward
+	(depart, buy, confirm). Nothing cartoon, nothing flat: every surface is a gradient and every border is metal.
 
 	Location: StarterPlayer.StarterPlayerScripts.Client.UI.Theme
 ]]
@@ -22,50 +22,46 @@ local Theme = {}
 --============================================================================
 
 Theme.Color = {
-	-- Surfaces, darkest to lightest. Panels layer these to fake depth.
-	Void = Color3.fromRGB(7, 8, 11),
-	Ink = Color3.fromRGB(15, 17, 23),
-	Navy = Color3.fromRGB(23, 29, 44),
-	NavyLight = Color3.fromRGB(35, 44, 64),
+	-- Surfaces, darkest to lightest: warm black, walnut, leather. Panels layer these to fake depth.
+	-- (The names are the old blue ones: Navy is now the walnut. Every screen restyles from here.)
+	Void = Color3.fromRGB(12, 8, 6),
+	Ink = Color3.fromRGB(27, 19, 13),
+	Navy = Color3.fromRGB(52, 36, 24),
+	NavyLight = Color3.fromRGB(104, 72, 44),
 
-	-- Bordeaux: the royal accent. Weight, danger, "Hard".
-	Bordeaux = Color3.fromRGB(78, 15, 25),
-	BordeauxLight = Color3.fromRGB(126, 30, 43),
-	-- A lifted pair for the Leave action: still unmistakably red, but light
-	-- enough to read at a glance instead of sinking into the panel behind it.
-	BordeauxSoft = Color3.fromRGB(158, 58, 68),
-	BordeauxMid = Color3.fromRGB(116, 34, 46),
+	-- Bordeaux: the royal red. Every way OUT (leave, close, abandon) is this, whatever the screen.
+	Bordeaux = Color3.fromRGB(98, 16, 30),
+	BordeauxLight = Color3.fromRGB(176, 38, 54),
+	BordeauxSoft = Color3.fromRGB(206, 74, 84),
+	BordeauxMid = Color3.fromRGB(128, 24, 40),
 
-	-- Gold. Three stops, because one flat yellow never reads as metal.
-	GoldDim = Color3.fromRGB(112, 84, 30),
-	Gold = Color3.fromRGB(198, 158, 66),
-	GoldBright = Color3.fromRGB(242, 216, 142),
+	-- Gold, and the golden brown that sits between it and the walnut.
+	GoldDim = Color3.fromRGB(128, 88, 30),
+	Gold = Color3.fromRGB(218, 170, 72),
+	GoldBright = Color3.fromRGB(255, 228, 148),
+	Bronze = Color3.fromRGB(176, 118, 48),
+	BronzeDark = Color3.fromRGB(108, 66, 26),
 
-	-- Text.
-	Parchment = Color3.fromRGB(237, 227, 206),
-	-- Warm sand-white for text sitting on strong colour: pure white reads cold
-	-- and clinical against the gold and bordeaux.
-	Cream = Color3.fromRGB(249, 240, 218),
+	-- Text: beige, and a warm cream for text on strong colour.
+	Parchment = Color3.fromRGB(244, 230, 198),
+	Cream = Color3.fromRGB(253, 243, 218),
 	White = Color3.fromRGB(255, 255, 255),
-	Grey = Color3.fromRGB(154, 160, 166), -- the "Normal" mode grey
-	Muted = Color3.fromRGB(120, 118, 112),
+	Grey = Color3.fromRGB(184, 170, 148), -- the "Normal" mode grey, warm
+	Muted = Color3.fromRGB(176, 156, 126),
 
-	-- The one green: the "go" action. Deep and desaturated — a campaign banner,
-	-- not an arcade button.
-	Green = Color3.fromRGB(44, 88, 56),
-	GreenLight = Color3.fromRGB(74, 132, 84),
-	GreenBright = Color3.fromRGB(126, 196, 138),
+	-- The one green: every way FORWARD (depart, buy, confirm). Alive, but still a banner and not an arcade button.
+	Green = Color3.fromRGB(38, 102, 56),
+	GreenLight = Color3.fromRGB(88, 170, 94),
+	GreenBright = Color3.fromRGB(150, 226, 150),
 
-	-- The forge. Warm ember tones for heat, cost and upgrading — the only place
-	-- in the game allowed to glow orange, so the blacksmith reads as its own
-	-- room without leaving the palette.
-	Ember = Color3.fromRGB(196, 88, 32),
-	EmberLight = Color3.fromRGB(238, 132, 54),
-	EmberBright = Color3.fromRGB(255, 186, 108),
+	-- The forge. Warm ember tones for heat, cost and upgrading.
+	Ember = Color3.fromRGB(204, 94, 32),
+	EmberLight = Color3.fromRGB(244, 140, 56),
+	EmberBright = Color3.fromRGB(255, 198, 112),
 
-	-- Cold steel, for blades and stat readouts: the counterweight to the ember.
-	Steel = Color3.fromRGB(104, 126, 152),
-	SteelLight = Color3.fromRGB(158, 182, 208),
+	-- Bronze and tan for blades and stat readouts (they were cold steel blue: the whole palette is warm now).
+	Steel = Color3.fromRGB(150, 118, 84),
+	SteelLight = Color3.fromRGB(220, 192, 150),
 
 	Shadow = Color3.fromRGB(0, 0, 0),
 }

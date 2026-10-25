@@ -134,9 +134,25 @@ local function stateFor(player: Player, notice: string?): any?
 		end
 	end
 
+	-- everything in the stash that is a thing to look at, best first
+	local stashList: { any } = {}
+	local rankOrder = { Relic = 1, Hallowed = 2, Sound = 3, Worn = 4 }
+	for itemId, n in profile.stash do
+		if n > 0 and items[itemId] then
+			table.insert(stashList, { id = itemId, count = n, rank = rankOrder[items[itemId].Rank or "Worn"] or 5, name = items[itemId].DisplayName })
+		end
+	end
+	table.sort(stashList, function(a, b)
+		if a.rank ~= b.rank then
+			return a.rank < b.rank
+		end
+		return a.name < b.name
+	end)
+
 	return {
 		kind = "state",
 		notice = notice,
+		stashList = stashList,
 		stash = { boneDust = profile.stash.bone_dust or 0, shards = profile.stash.star_shard or 0, pages = pagesFound },
 		tithe = {
 			cost = needLines(profile, tithe.Cost),

@@ -125,9 +125,10 @@ local Interactions = {
 			Avatar = { UserId = 0, FaceAngle = 0 },
 		},
 
-		-- The Chapel (docs/systems/Spoils.md §6.2): four tables, one screen. `Tab` is the one that
+		-- The Chapel (docs/systems/Spoils.md §6.2): five tables, one screen. `Tab` is the one that
 		-- opens first. Built by tools/BuildChapel into workspace.Lobby.Chapel; move the models
 		-- wherever the chapel stands, the rings follow them.
+		{ Id = "chapel_stash", Screen = "Chapel", Tab = "Stash", Folder = "Chapel", Name = "Stash", Radius = 7 },
 		{ Id = "chapel_tithe", Screen = "Chapel", Tab = "Tithe", Folder = "Chapel", Name = "Tithe", Radius = 7 },
 		{ Id = "chapel_reliquary", Screen = "Chapel", Tab = "Reliquary", Folder = "Chapel", Name = "Reliquary", Radius = 7 },
 		{ Id = "chapel_altar", Screen = "Chapel", Tab = "Altar", Folder = "Chapel", Name = "Altar", Radius = 7 },

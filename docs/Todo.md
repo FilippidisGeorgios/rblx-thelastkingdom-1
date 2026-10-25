@@ -166,6 +166,7 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
 - [x] The camp: fire, bench (bandage, arrows, oil pot, torch), chest, the place the fallen wake (Changelog 0.33.0).
 - [x] The Hub's Chapel: Tithe, Reliquary (charm, Blessed Edge), Star Altar, Journal (Changelog 0.34.0).
+- [ ] UI pass, next: the camp bench panel, the document page and the ending card still use their own parchment colours (they could follow the warm Theme); the intro Skip button; a shop (none exists yet) should use the X and the green buy button; pictures for the Forge's weapons, the camp bench's recipes and the quest items; redo the ember, page and veil meshes (docs/systems/ItemArt.md).
 - [x] The Hub was opened with this code (2026-10-25): BuildChapel run, four rings live, panel clicked with a real mouse (Tithe, Altar, Journal).
 - [ ] SAVE the Hub place (the Chapel models and the synced scripts are in the open Studio session only), and look at the chapel by day-to-day eyes: where it stands (25 studs in front of the Storyteller, 8 left), its lighting, whether it crowds the plaza.
 - [ ] The five charms that only sit there: signet (parry window), stirrup (speed out of combat), veil (survive the first blow), lantern

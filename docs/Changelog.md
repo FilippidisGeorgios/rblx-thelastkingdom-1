@@ -1,3 +1,28 @@
+## Version 0.35.0 — The UI gets its colour: warm palette, red ways out, green ways forward, X windows, and a picture of every item
+
+- **Palette (`UI/Theme`).** The blue-grey navy surfaces are now walnut and leather browns over warm black; gold is brighter, with a golden
+  brown (`Bronze`) between it and the walnut; text is beige; the muted grey is a warm sand that reads on dark brown; the steel blue of the
+  stat lines is tan. Buttons were being darkened twice (a dark background multiplied by a gradient); the background is now white so the
+  gradient shows as written: every button is livelier. The old names are kept (`Navy` is the walnut), so every screen restyled at once.
+- **Two colours with a meaning, never swapped.** Every way OUT is **bordeaux red** (`Variant = "exit"`: the Dialogue's LEAVE, the train's
+  LEAVE, the new X); every way FORWARD is **green** (`Variant = "confirm"`: DEPART NOW, CREATE and JOIN PARTY, the Forge's buy buttons, the
+  Chapel's TAKE, MAKE and LAY A SHARD). Gold-brown is the neutral action (WEAR, READ, CONTINUE). `Components.setVariant` repaints a built button.
+- **The X.** The Forge, the Chapel and the pack have a small red square X in their top-right corner (`Components.closeButton`) and no
+  "leave" button under the list; the Dialogue and the train keep their red button.
+- **Panels fit the screen.** The Forge, the Chapel and the pack are as tall as the window allows (94%/78%) and their list scrolls inside:
+  a panel taller than the window took no clicks in its list (found with a real mouse in the Hub).
+- **A picture of every item (`UI/ItemArt`, `UI/ItemCard`, `configs/ItemArt`; `docs/systems/ItemArt.md`).** Twenty AI-generated meshes
+  (Studio `generate_mesh`): the name, the picture (a ViewportFrame), how many, the rank, and a small arrow that opens a box with what the
+  item is FOR, a TIP and its line of flavour (`Tip` is new in `configs/Items`, written for every banked item and the pages). Shown on the
+  pack in a run (replacing the text rows) and on the Chapel's new **Stash** tab (two cards across), and as a thumbnail on the Tithe's shelf
+  and the Reliquary's charms.
+- **The Chapel has a fifth table, the Stash** (a storeroom: an iron-banded chest with its lid open, sacks, crates, a lantern; ring
+  `chapel_stash`), and **has moved**: a column on the east side of the plaza facing the spawn, beside the path to the train (`BuildChapel`
+  rotates the whole row, `FACING`). Nothing overlaps a building (checked with a part query).
+- Seen in Studio: the Chapel's Tithe and Stash tabs after the restyle, the Forge, the Dialogue, the train's party screen, the
+  pack in the Forgotten Lands (clipped by the short window), and a contact sheet of all twenty meshes. Not seen: the Reliquary, Altar and Journal tabs
+  after the restyle, the Forge in a window tall enough to show all its rows after the resize, the pack's X.
+
 ## Version 0.34.0 — The Hub spends the stash: the Chapel (Tithe, Reliquary, Star Altar, Journal)
 
 - **The Chapel (`Server/Hub/ChapelService`, pure rules in `Server/Domain/Chapel`, `configs/Chapel.luau`).** Four tables, one screen

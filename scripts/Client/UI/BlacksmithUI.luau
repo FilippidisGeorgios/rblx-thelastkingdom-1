@@ -189,7 +189,7 @@ local function buildRow(entry: Entry, order: number)
 	local button = Components.button({
 		Name = "Upgrade",
 		Text = ("%d GOLD"):format(entry.cost),
-		Variant = if entry.affordable then "ember" else "ghost",
+		Variant = if entry.affordable then "green" else "ghost",
 		TextSize = Theme.TextSize.Small,
 		Size = UDim2.fromOffset(190, 44),
 		LayoutOrder = 2,
@@ -227,15 +227,15 @@ end
 local function build(parent: ScreenGui)
 	local root = Components.panel({
 		Name = "ForgePanel",
-		Size = UDim2.fromOffset(720, 0),
+		-- as tall as the screen allows (the stock scrolls), never taller than it needs to be
+		Size = UDim2.new(0, 720, 0.94, 0),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = parent,
 	})
-	root.AutomaticSize = Enum.AutomaticSize.Y
 
 	local constraint = Instance.new("UISizeConstraint")
-	constraint.MinSize = Vector2.new(480, 0)
+	constraint.MinSize = Vector2.new(480, 360)
 	constraint.MaxSize = Vector2.new(820, 640)
 	constraint.Parent = root
 
@@ -243,7 +243,7 @@ local function build(parent: ScreenGui)
 	Components.list(root, 10)
 	Theme.shadow(root)
 
-	Components.label({
+	local title = Components.label({
 		Name = "Title",
 		Text = Components.spaced("THE FORGE"),
 		Role = Theme.Role.Logo,
@@ -252,6 +252,10 @@ local function build(parent: ScreenGui)
 		LayoutOrder = 1,
 		Parent = root,
 	})
+	-- the way out is the red X in the corner, not a button under the list
+	Components.closeButton(title, function()
+		BlacksmithUI.close()
+	end)
 
 	goldLabel = Components.label({
 		Name = "Gold",
@@ -292,7 +296,8 @@ local function build(parent: ScreenGui)
 
 	local scroller = Instance.new("ScrollingFrame")
 	scroller.Name = "Stock"
-	scroller.Size = UDim2.new(1, 0, 0, 340)
+	-- what is left under the title, the gold, the tabs and the notice
+	scroller.Size = UDim2.new(1, 0, 1, -200)
 	scroller.BackgroundTransparency = 1
 	scroller.BorderSizePixel = 0
 	scroller.ScrollBarThickness = 4
@@ -313,19 +318,6 @@ local function build(parent: ScreenGui)
 		LayoutOrder = 6,
 		Parent = root,
 	})
-
-	local close = Components.button({
-		Name = "Close",
-		Text = "LEAVE THE FORGE",
-		Variant = "ghost",
-		TextSize = Theme.TextSize.Small,
-		Size = UDim2.new(1, 0, 0, 46),
-		LayoutOrder = 7,
-		Parent = root,
-	})
-	close.Activated:Connect(function()
-		BlacksmithUI.close()
-	end)
 
 	panel = root
 	root.Visible = false

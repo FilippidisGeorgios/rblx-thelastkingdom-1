@@ -24,6 +24,7 @@ These are the **per-system design documents**. Responsibilities are split three 
 | `Animation.md` | Motion, hit feedback, effects, sound, production order | §1.2 Pillar 1 | **Design (2026-10-20)** |
 | `Trials.md` | What each chamber asks: tasks, pressure, deeds, the camp | §1.2 Pillars 3, 5 | **Design (2026-10-21)** — engine + chamber 4 built |
 | `Spoils.md` | What the dead leave: ranks, items, the backpack, co-op loot | §2 · §5 | **Design (2026-10-21)** — roll, pack and pickups built |
+| `ItemArt.md` | The picture of every item: AI meshes, the card, the prompts | §2 | **Built (0.35.0)** |
 
 > The **GDD is the source of truth for vision**. These docs must not contradict it. Where a
 > doc adds detail beyond the GDD, that detail is the **design-of-record** for that system.

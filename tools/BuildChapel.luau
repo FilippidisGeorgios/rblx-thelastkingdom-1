@@ -1,7 +1,8 @@
 --[[
 	BuildChapel — run in the KINGDOM HUB place, in EDIT MODE.
-	Builds the four tables of the Chapel (docs/systems/Spoils.md §6.2) into `workspace.Lobby.Chapel`:
+	Builds the five tables of the Chapel (docs/systems/Spoils.md §6.2) into `workspace.Lobby.Chapel`:
 
+	  Stash      the storeroom: an iron-banded chest with its lid open, sacks and crates, a hanging lantern
 	  Tithe      an alms table: a bowl of bone dust, three plates (today's shelf), tallow candles, an alms box
 	  Reliquary  a stone table with a glass casket (an ember in it), two candelabra, a linen cloth
 	  Altar      a three-step plinth, the altar, a stele with nine niches, a shard hanging in light above it
@@ -11,8 +12,8 @@
 	each model at run time, so MOVE THE MODELS wherever the chapel stands (select `Lobby.Chapel` and
 	drag it): nothing else needs to change.
 
-	Where it is built: `ORIGIN` below, or, left nil, twenty-five studs in front of the Storyteller (and eight to
-	the left, clear of the Tudor house) if he is there, or the world origin. The ground is found with a ray. A rerun deletes `Lobby.Chapel` and builds it again.
+	Where it is built: `ORIGIN` below, or, left nil, thirty studs east of the spawn point and a dozen behind it (the
+	east side of the plaza, beside the path from the spawn to the train) if there is one, or the world origin. The ground is found with a ray. A rerun deletes `Lobby.Chapel` and builds it again.
 
 	NOTE: a tool, not game code. Not synced by Rojo. Everything is anchored; only the big pieces collide.
 ]]
@@ -20,6 +21,9 @@
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local ORIGIN: Vector3? = nil
+-- Which way the four tables face, in degrees about the vertical axis: 0 = a row along x facing +z; -90 = a column
+-- along z facing -x (west), the Hub chapel: a column on the east side of the plaza, facing the spawn.
+local FACING = -90
 
 --==========================================================================
 local lobby = workspace:FindFirstChild("Lobby")
@@ -41,12 +45,10 @@ root.Parent = lobby
 
 local anchor = ORIGIN
 if not anchor then
-	local npcs = lobby:FindFirstChild("NPCs")
-	local teller = npcs and npcs:FindFirstChild("Storyteller")
-	if teller then
-		local pivot = if teller:IsA("Model") then teller:GetPivot().Position else (teller :: BasePart).Position
-		-- the plaza between the spawn and the train, left of the Tudor house (the row is 48 studs wide)
-		anchor = pivot + Vector3.new(-8, 0, 25)
+	local spawnFolder = lobby:FindFirstChild("Spawn")
+	local spawn = spawnFolder and spawnFolder:FindFirstChild("SpawnPoint")
+	if spawn and spawn:IsA("BasePart") then
+		anchor = spawn.Position + Vector3.new(32, 0, -12)
 	else
 		anchor = Vector3.zero
 	end
@@ -123,6 +125,51 @@ local function table4(m: Model, at: CFrame, w: number, d: number, h: number, top
 			part(m, "Leg", Vector3.new(0.5, h - 0.25, 0.5), at * CFrame.new(sx * (w / 2 - 0.5), (h - 0.25) / 2, sz * (d / 2 - 0.5)), leg, Enum.Material.Wood, true)
 		end
 	end
+end
+
+--==========================================================================
+-- THE STASH
+--==========================================================================
+do
+	local m, at = model("Stash", -40)
+	-- a low plank platform
+	part(m, "Platform", Vector3.new(8, 0.4, 6), at * CFrame.new(0, 0.2, 0), OAK_DARK, Enum.Material.WoodPlanks, true)
+	-- the great chest, lid thrown back
+	part(m, "ChestBody", Vector3.new(5, 2.6, 3), at * CFrame.new(0, 1.7, 0), OAK, Enum.Material.WoodPlanks, true)
+	for _, x in { -1.8, 0, 1.8 } do
+		part(m, "ChestBand", Vector3.new(0.4, 2.8, 3.1), at * CFrame.new(x, 1.7, 0), IRON, Enum.Material.CorrodedMetal)
+	end
+	part(m, "ChestRim", Vector3.new(5.2, 0.3, 3.2), at * CFrame.new(0, 3.1, 0), IRON, Enum.Material.CorrodedMetal)
+	part(m, "ChestLid", Vector3.new(5, 0.5, 3), at * CFrame.new(0, 4.4, -1.9) * CFrame.Angles(math.rad(-100), 0, 0), OAK_PALE, Enum.Material.Wood)
+	part(m, "ChestLock", Vector3.new(0.7, 0.9, 0.3), at * CFrame.new(0, 2.5, 1.55), BRASS, Enum.Material.Metal)
+	-- what spills from it: a heap of cloth, a bar of silver, a gold glint
+	part(m, "Heap", Vector3.new(4.2, 0.5, 2.4), at * CFrame.new(0, 3.35, 0), Color3.fromRGB(150, 128, 92), Enum.Material.Fabric)
+	part(m, "Ingot", Vector3.new(1.2, 0.3, 0.6), at * CFrame.new(-0.9, 3.7, 0.2) * CFrame.Angles(0, math.rad(20), 0), Color3.fromRGB(190, 196, 204), Enum.Material.Metal)
+	local glint = part(m, "Glint", Vector3.new(0.5, 0.5, 0.5), at * CFrame.new(0.9, 3.75, -0.1), Color3.fromRGB(255, 214, 120), Enum.Material.Neon)
+	glint.Shape = Enum.PartType.Ball
+	glint.CanQuery = false
+	local glow = Instance.new("PointLight")
+	glow.Color = Color3.fromRGB(255, 205, 120)
+	glow.Brightness = 0.9
+	glow.Range = 14
+	glow.Shadows = false
+	glow.Parent = glint
+	-- two sacks and two crates beside it
+	part(m, "SackA", Vector3.new(1.8, 2, 1.6), at * CFrame.new(-3.3, 1.4, 0.8) * CFrame.Angles(0, math.rad(15), math.rad(5)), Color3.fromRGB(120, 104, 76), Enum.Material.Fabric, true)
+	part(m, "SackB", Vector3.new(1.6, 1.7, 1.4), at * CFrame.new(-3.5, 1.25, -1.1) * CFrame.Angles(0, math.rad(-20), math.rad(-6)), Color3.fromRGB(132, 114, 84), Enum.Material.Fabric, true)
+	part(m, "CrateA", Vector3.new(2, 2, 2), at * CFrame.new(3.3, 1.4, 0.9) * CFrame.Angles(0, math.rad(10), 0), OAK, Enum.Material.WoodPlanks, true)
+	part(m, "CrateB", Vector3.new(1.5, 1.5, 1.5), at * CFrame.new(3.4, 3.15, 0.9) * CFrame.Angles(0, math.rad(-12), 0), OAK_PALE, Enum.Material.WoodPlanks)
+	-- a lantern on a post
+	post(m, "Post", 6.4, 0.4, at * CFrame.new(-3.8, 0.4, 2.4), OAK_DARK, Enum.Material.Wood)
+	part(m, "Arm", Vector3.new(1.6, 0.3, 0.3), at * CFrame.new(-3.0, 6.6, 2.4), OAK_DARK, Enum.Material.Wood)
+	local lantern = part(m, "Lantern", Vector3.new(0.8, 1.1, 0.8), at * CFrame.new(-2.3, 6.0, 2.4), Color3.fromRGB(255, 190, 110), Enum.Material.Neon)
+	lantern.Transparency = 0.25
+	local lamp = Instance.new("PointLight")
+	lamp.Color = Color3.fromRGB(255, 176, 96)
+	lamp.Brightness = 0.9
+	lamp.Range = 16
+	lamp.Shadows = false
+	lamp.Parent = lantern
 end
 
 --==========================================================================
@@ -304,10 +351,20 @@ end
 
 --==========================================================================
 -- flagstones under all four, so the chapel reads as one place
-for i = 0, 3 do
-	local x = -24 + i * 16
+for i = 0, 4 do
+	local x = -40 + i * 16
 	local slab = part(root, "Flags", Vector3.new(11, 0.2, 9), CFrame.new(BASE + Vector3.new(x, 0.1, 0)), STONE_DARK, Enum.Material.Cobblestone, false)
 	slab.CanQuery = false
+end
+
+-- turn the whole chapel about its middle to face where it should
+if FACING ~= 0 then
+	local turn = CFrame.new(BASE) * CFrame.Angles(0, math.rad(FACING), 0) * CFrame.new(-BASE)
+	for _, descendant in root:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			descendant.CFrame = turn * descendant.CFrame
+		end
+	end
 end
 
 if recording then

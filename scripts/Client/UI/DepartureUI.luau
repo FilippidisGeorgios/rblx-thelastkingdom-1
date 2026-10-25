@@ -328,7 +328,7 @@ local function buildBottomStack(parent: ScreenGui)
 	departButton = Components.button({
 		Name = "DepartNow",
 		Text = "DEPART NOW",
-		Variant = "gold",
+		Variant = "confirm",
 		TextSize = Theme.TextSize.Body,
 		Size = UDim2.fromOffset(228, 48),
 		LayoutOrder = 4,

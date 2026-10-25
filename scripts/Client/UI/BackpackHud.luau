@@ -25,6 +25,8 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 
 local Theme = require(script.Parent.Theme)
+local Components = require(script.Parent.Components)
+local ItemCard = require(script.Parent.ItemCard)
 
 local BackpackHud = {}
 
@@ -127,7 +129,12 @@ function BackpackHud.create(): Handle
 	-- Sits above the button it opens from, not over it.
 	panel.AnchorPoint = Vector2.new(1, 1)
 	panel.Position = UDim2.new(1, -LOG_MARGIN, 1, -(LOG_MARGIN + 54))
-	panel.Size = UDim2.fromOffset(380, 440)
+	-- as tall as the screen allows (the list scrolls), never taller than 600
+	panel.Size = UDim2.new(0, 430, 0.78, 0)
+	local limit = Instance.new("UISizeConstraint")
+	limit.MinSize = Vector2.new(430, 240)
+	limit.MaxSize = Vector2.new(430, 600)
+	limit.Parent = panel
 	panel.BackgroundColor3 = Theme.Color.Ink
 	panel.BackgroundTransparency = 0.06
 	panel.Visible = false
@@ -147,6 +154,10 @@ function BackpackHud.create(): Handle
 	title.Text = "THE PACK"
 	title.Parent = panel
 	Theme.applyFont(title, Theme.Role.Heading)
+	-- the way out: the red X in the corner
+	Components.closeButton(title, function()
+		panel.Visible = false
+	end)
 
 	local summary = Instance.new("TextLabel")
 	summary.Name = "Summary"
@@ -266,6 +277,13 @@ function BackpackHud.create(): Handle
 	end
 
 	local function redraw()
+		-- keep the boxes the player had open
+		local openIds: { [string]: boolean } = {}
+		for _, child in rows:GetChildren() do
+			if child:IsA("Frame") and child:GetAttribute("Open") == true then
+				openIds[child.Name] = true
+			end
+		end
 		clearRows()
 		order = 0
 		local set = lastSet
@@ -295,12 +313,16 @@ function BackpackHud.create(): Handle
 		else
 			for _, s in stacks do
 				local def = items[s.id]
-				addRow(
-					if def then def.DisplayName else s.id,
-					s.n,
-					if def then def.Use else nil,
-					rankColour(def and def.Rank or "Worn")
-				)
+				order += 1
+				ItemCard.create({
+					Parent = rows,
+					ItemId = s.id,
+					Def = def,
+					Count = s.n,
+					RankColour = rankColour(def and def.Rank or "Worn"),
+					LayoutOrder = order,
+					Open = openIds[s.id],
+				})
 			end
 		end
 

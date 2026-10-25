@@ -208,21 +208,23 @@ end
 -- Every label here is `Theme.onDark(...)`: mostly white, holding just enough of
 -- the button's own colour to belong to it. See the rule in Theme.
 local VARIANTS = {
+	-- The neutral action: golden brown, like a worn brass fitting (take, wear, read).
 	gold = {
-		top = Theme.Color.GoldDim,
-		bottom = Theme.Color.Void,
-		-- The darkest surface of the five, so it takes the most white.
-		text = Theme.onDark(Theme.Color.GoldBright, 0.85),
+		top = Color3.fromRGB(204, 150, 60),
+		bottom = Theme.Color.BronzeDark,
+		text = Theme.onDark(Theme.Color.GoldBright, 0.88),
 	},
+	-- Forward: depart, buy, confirm.
 	green = {
 		top = Theme.Color.GreenLight,
 		bottom = Theme.Color.Green,
-		text = Theme.onDark(Theme.Color.GreenBright, 0.8),
+		text = Theme.onDark(Theme.Color.GreenBright, 0.85),
 	},
+	-- A quiet button on a dark panel.
 	ghost = {
-		top = Theme.Color.Navy,
-		bottom = Theme.Color.Ink,
-		text = Theme.onDark(Color3.fromRGB(168, 196, 236), 0.8),
+		top = Color3.fromRGB(124, 90, 56),
+		bottom = Color3.fromRGB(60, 42, 28),
+		text = Theme.onDark(Theme.Color.SteelLight, 0.85),
 	},
 	-- Pure white, no tint at all: the stepper's +/- are the control the player
 	-- uses most and they must never be hunted for.
@@ -231,18 +233,22 @@ local VARIANTS = {
 		bottom = Theme.Color.Navy,
 		text = Theme.Color.White,
 	},
+	-- Out: leave, close, abandon. Always bordeaux.
 	danger = {
-		top = Theme.Color.BordeauxSoft,
-		bottom = Theme.Color.BordeauxMid,
-		text = Theme.onDark(Color3.fromRGB(255, 158, 158), 0.8),
+		top = Theme.Color.BordeauxLight,
+		bottom = Theme.Color.Bordeaux,
+		text = Theme.onDark(Theme.Color.BordeauxSoft, 0.88),
 	},
 	-- The forge's own action: buying a level of steel.
 	ember = {
 		top = Theme.Color.EmberLight,
 		bottom = Theme.Color.Ember,
-		text = Theme.onDark(Theme.Color.EmberBright, 0.82),
+		text = Theme.onDark(Theme.Color.EmberBright, 0.86),
 	},
 }
+-- The two meanings, by name: use these in a screen and the colour follows the rule.
+VARIANTS.exit = VARIANTS.danger
+VARIANTS.confirm = VARIANTS.green
 
 Components.Variants = VARIANTS
 
@@ -269,7 +275,8 @@ function Components.button(props: ButtonProps): TextButton
 	button.Name = props.Name or "Button"
 	button.Text = ""
 	button.AutoButtonColor = false
-	button.BackgroundColor3 = variant.bottom
+	-- white: the gradient below is multiplied by the background, so a dark background would darken the variant
+	button.BackgroundColor3 = Color3.new(1, 1, 1)
 	button.BorderSizePixel = 0
 	button.Size = props.Size or UDim2.new(1, 0, 0, 44)
 	button.Position = props.Position or UDim2.fromScale(0, 0)
@@ -337,6 +344,42 @@ function Components.setTextColor(button: TextButton, color: Color3)
 	if label and label:IsA("TextLabel") then
 		label.TextColor3 = color
 	end
+end
+
+-- Repaints a built button as another variant (the train's one button is "create", "join" or "leave").
+function Components.setVariant(button: TextButton, name: string)
+	local variant = VARIANTS[name] or VARIANTS.ghost
+	button.BackgroundColor3 = Color3.new(1, 1, 1)
+	local gradient = button:FindFirstChildOfClass("UIGradient")
+	if gradient then
+		gradient.Color = ColorSequence.new(variant.top, variant.bottom)
+	end
+	Components.setTextColor(button, variant.text)
+end
+
+--[[
+	The square X in the corner of a window (the forge, the chapel, the shops). Bordeaux, always.
+	Put it as a child of a label or frame that is NOT in a list layout (the title is the usual home):
+	it hangs from that parent's top-right corner, a little outside it.
+]]
+function Components.closeButton(parent: Instance, onClick: () -> ()): TextButton
+	local button = Components.button({
+		Name = "CloseX",
+		Text = "X",
+		Variant = "exit",
+		TextSize = Theme.TextSize.Small,
+		Size = UDim2.fromOffset(40, 40),
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, 12, 0, -12),
+		Parent = parent,
+	})
+	button.ZIndex = 8
+	local label = button:FindFirstChild("Label")
+	if label and label:IsA("TextLabel") then
+		label.ZIndex = 9
+	end
+	button.Activated:Connect(onClick)
+	return button
 end
 
 --============================================================================

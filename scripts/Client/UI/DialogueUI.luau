@@ -299,7 +299,7 @@ local function build(parent: ScreenGui)
 	closeButton = Components.button({
 		Name = "Close",
 		Text = "LEAVE",
-		Variant = "ghost",
+		Variant = "exit",
 		TextSize = Theme.TextSize.Body,
 		Size = UDim2.fromOffset(180, 50),
 		LayoutOrder = 1,
