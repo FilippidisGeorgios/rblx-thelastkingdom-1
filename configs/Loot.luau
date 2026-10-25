@@ -272,11 +272,11 @@ local Loot = {
 		--==================================================================
 		-- The three letters of the Rows: the first of the nine star shards, and a veil.
 		deed_rows_letters = {
-			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "mourners_veil", Min = 1, Max = 1 } },
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "mourners_veil", Min = 1, Max = 1 }, { Item = "page_rows_letters", Min = 1, Max = 1 } },
 		},
 		-- The Inner Ward's three papers: a star shard, and the Marshal's signet from his table.
 		deed_ward_papers = {
-			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "company_signet", Min = 1, Max = 1 } },
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "company_signet", Min = 1, Max = 1 }, { Item = "page_ward_papers", Min = 1, Max = 1 } },
 		},
 		-- The mangonel put back in order: what the crew had left in its ammunition box.
 		deed_ward_mangonel = {
@@ -300,16 +300,17 @@ local Loot = {
 
 		-- The three papers of the keep: a star shard, and a stirrup nobody has ridden in for forty years.
 		deed_keep_papers = {
-			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "brass_stirrup", Min = 1, Max = 1 } },
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "brass_stirrup", Min = 1, Max = 1 }, { Item = "page_keep_papers", Min = 1, Max = 1 } },
 		},
 		deed_smithy_planks = {
-			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 } },
+			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 }, { Item = "page_smithy_tally", Min = 1, Max = 1 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "hearty_dish", Weight = 1, Min = 1, Max = 1 } } },
 		},
 		deed_graveyard_bell = {
 			Always = {
 				{ Item = "grave_silver", Min = 3, Max = 5 },
 				{ Item = "saints_medal", Min = 1, Max = 1 },
+				{ Item = "page_graveyard_bell", Min = 1, Max = 1 },
 			},
 		},
 	},

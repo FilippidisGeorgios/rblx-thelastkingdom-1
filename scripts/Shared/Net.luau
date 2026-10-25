@@ -52,6 +52,8 @@ local EVENT_NAMES: { string } = {
 	"EndingEvent", -- server -> client: the end of the run: the screen closes on a title and a few lines
 	"CampEvent", -- server -> client: the camp bench opens (recipes and what can be made) / updates
 	"RequestCraft", -- client -> server: make recipe `id` at the camp bench
+	"ChapelEvent", -- server -> client: the Hub chapel's state (the Tithe, the Reliquary, the Altar, the Journal)
+	"RequestChapel", -- client -> server: { action = "state"|"tithe"|"charm"|"forge"|"offer", id = string? }
 }
 local FUNCTION_NAMES: { string } = {}
 

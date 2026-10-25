@@ -165,7 +165,13 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Pickup sound and a better pickup look; pickups rotate/bob (client only).
 - [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
 - [x] The camp: fire, bench (bandage, arrows, oil pot, torch), chest, the place the fallen wake (Changelog 0.33.0).
-- [ ] The Hub's Tithe, Reliquary, Shard Altar, Journal (they SPEND the stash that is now banked).
+- [x] The Hub's Chapel: Tithe, Reliquary (charm, Blessed Edge), Star Altar, Journal (Changelog 0.34.0).
+- [ ] OPEN THE HUB with this code: run `tools/BuildChapel` there, drag `Lobby.Chapel` to where the chapel stands, walk into the four rings,
+      look at the panel at full height. The Hub place has not been opened with it yet.
+- [ ] The five charms that only sit there: signet (parry window), stirrup (speed out of combat), veil (survive the first blow), lantern
+      (the dead notice later), Sexton's key (one locked cache); and the Falling Star sigil on the tabard.
+- [ ] Pages: only five Deeds give one; the Journal grows with the next chambers' deeds and the Story's other voices.
+- [ ] The Hub does not yet show currency, runs won and the stash outside the Chapel; the Forge still takes gold only (rusted iron's use, mending).
 - [ ] Look at the camp by eye (layout in the passage mouth of 1 to 8, the panel, the fire's light); tune: heal 3/s, radius 13,
       the bench's four recipes, the chest's one Sound find.
 - [x] Chamber 3: recipe, ingredients, the pot (minded), the pen, the five cured followers (Changelog 0.27.0).

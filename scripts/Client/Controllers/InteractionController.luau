@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = script:FindFirstAncestor("Client")
 local DialogueUI = require(Client.UI.DialogueUI)
 local BlacksmithUI = require(Client.UI.BlacksmithUI)
+local ChapelUI = require(Client.UI.ChapelUI)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -33,6 +34,7 @@ local byId: { [string]: any } = {}
 local activeId: string? = nil
 
 local forgeState: RemoteEvent
+local chapelRequest: RemoteEvent
 
 local function openFor(point: any)
 	if point.Screen == "Dialogue" and point.Dialogue then
@@ -42,6 +44,10 @@ local function openFor(point: any)
 		-- changes every time a run pays out.
 		forgeState:FireServer()
 		BlacksmithUI.open()
+	elseif point.Screen == "Chapel" then
+		-- the stash changes every run: ask for it fresh
+		chapelRequest:FireServer({ action = "state" })
+		ChapelUI.open(point.Tab)
 	else
 		log:warn(("no screen for '%s' (%s)"):format(tostring(point.Id), tostring(point.Screen)))
 	end
@@ -52,6 +58,8 @@ local function closeFor(point: any)
 		DialogueUI.close()
 	elseif point.Screen == "Blacksmith" then
 		BlacksmithUI.close()
+	elseif point.Screen == "Chapel" then
+		ChapelUI.close()
 	end
 end
 
@@ -77,6 +85,18 @@ function InteractionController.Start()
 			forgeUpgrade:FireServer(weaponId)
 		end,
 	})
+
+	chapelRequest = Net.getEvent("RequestChapel")
+	ChapelUI.mount({
+		onAction = function(action, id)
+			chapelRequest:FireServer({ action = action, id = id })
+		end,
+	})
+	Net.getEvent("ChapelEvent").OnClientEvent:Connect(function(payload)
+		if typeof(payload) == "table" and payload.kind == "state" then
+			ChapelUI.setState(payload)
+		end
+	end)
 
 	forgeEvent.OnClientEvent:Connect(function(payload)
 		if typeof(payload) ~= "table" then

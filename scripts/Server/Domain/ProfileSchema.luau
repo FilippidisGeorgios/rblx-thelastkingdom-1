@@ -7,10 +7,15 @@
 
 	v2 adds progression fields (`xp`, `level`) owned by the Progression/Reward systems.
 	v3 adds the `stash`: counts of what a run brought home (materials, relics, shards,
-	pages), banked by RunSettlement; the Hub's Tithe, Reliquary and Altar will spend it.
+	pages), banked by RunSettlement; the Hub's Tithe, Reliquary and Altar spend it.
+	v4 adds what the Chapel does with it: the `loadout` (what the next run starts with: a
+	`kit` of things to carry in, an equipped `charm`, a `blessing`) and the Falling Star's
+	`altar` (shards offered so far). See Domain/Chapel.
 
 	Location: ServerScriptService.Server.Domain.ProfileSchema
 ]]
+
+export type Loadout = { kit: { [string]: number }, charm: string?, blessing: string? }
 
 export type Profile = {
 	version: number,
@@ -19,6 +24,8 @@ export type Profile = {
 	level: number,
 	inventory: { [string]: any },
 	stash: { [string]: number },
+	loadout: Loadout,
+	altar: { offered: number },
 	upgrades: { [string]: any },
 	stats: { [string]: any },
 	unlockedLore: { [string]: boolean },
@@ -27,7 +34,7 @@ export type Profile = {
 
 local ProfileSchema = {}
 
-ProfileSchema.VERSION = 3
+ProfileSchema.VERSION = 4
 
 -- Returns a fresh default profile for a brand-new player.
 function ProfileSchema.default(): Profile
@@ -38,6 +45,8 @@ function ProfileSchema.default(): Profile
 		level = 1,
 		inventory = {},
 		stash = {},
+		loadout = { kit = {} },
+		altar = { offered = 0 },
 		upgrades = {},
 		stats = {},
 		unlockedLore = {},
@@ -56,6 +65,10 @@ function ProfileSchema.migrate(profile: Profile): Profile
 	profile.currency = profile.currency or 0
 	profile.inventory = profile.inventory or {}
 	profile.stash = profile.stash or {}
+	profile.loadout = profile.loadout or { kit = {} }
+	profile.loadout.kit = profile.loadout.kit or {}
+	profile.altar = profile.altar or { offered = 0 }
+	profile.altar.offered = profile.altar.offered or 0
 	profile.upgrades = profile.upgrades or {}
 	profile.stats = profile.stats or {}
 	profile.unlockedLore = profile.unlockedLore or {}

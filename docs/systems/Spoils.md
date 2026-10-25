@@ -1,7 +1,7 @@
 # Spoils — what falls, what is rare, and what a heap of it is for (Design)
 
 **Status:** DESIGN written 2026-10-21. **Built (0.26.0): items, tables, the roll with pity, the backpack, personal
-pickups and the HUD (§10 steps 1–4); the camp bench and the banking of a run (0.33.0).** The Hub uses (§6.2) are not. Supersedes the "Loot" paragraph of
+pickups and the HUD (§10 steps 1–4); the camp bench and the banking of a run (0.33.0); the Hub's Chapel (0.34.0).** Supersedes the "Loot" paragraph of
 `Economy.md` §1 and fills `configs/Loot.luau` / `configs/Items.luau` (both empty until now).
 **Reads with:** `Trials.md` (where the tasks pay out), `Bestiary.md` §9 (equipment of the dead),
 `Arsenal.md` §7 (the run), `Inventory.md`, `Economy.md`, `Progression.md`.
@@ -111,7 +111,11 @@ Crafting at the camp bench, instant, no UI beyond four buttons (the panel `CampU
 Nothing else needs a menu. The point is that after chamber 3 a player *wants* cloth, and after chamber 5
 wants iron.
 
-### 6.2 Between runs — the Hub **[PROPOSED]**
+### 6.2 Between runs — the Hub **[BUILT 0.34.0 for the Chapel]** (`configs/Chapel.luau`, `Server/Hub/ChapelService`)
+*What was built, where it differs from the proposal:* the Tithe's shelf (six things, three a day, a pick goes to the next run's kit, or to the
+stash for grave silver); the Reliquary makes ONE kind of blessing (the Blessed Edge, +10% damage for a run: fire damage against the Hollow
+waits for fire damage to exist) and wears a charm (one slot; only the Saint's Medal does anything yet); the Altar takes shards one at a
+time; the Journal reads `configs/Pages`. The Forge's use of rusted iron (mending) is not built: there is no durability.
 - **The Tithe** (the chapel): bring **60 Bone Dust** → pick **one** from today's shelf of three Sound items
   (rotates daily). *Bone Dust is the commons' sink: a player with a full pack of it always has something to
   do.*

@@ -1,3 +1,38 @@
+## Version 0.34.0 — The Hub spends the stash: the Chapel (Tithe, Reliquary, Star Altar, Journal)
+
+- **The Chapel (`Server/Hub/ChapelService`, pure rules in `Server/Domain/Chapel`, `configs/Chapel.luau`).** Four tables, one screen
+  (`UI/ChapelUI`, four tabs, the forge's look), opened by four rings in the Hub (`configs/Interactions`: `chapel_tithe`,
+  `chapel_reliquary`, `chapel_altar`, `chapel_journal`, models `Lobby.Chapel.<Name>`). Server-authoritative: the client sends
+  `{action, id}` (`RequestChapel`) and is sent the whole state back (`ChapelEvent`); every change is saved at once, because the world
+  loads the profile at the next boarding.
+  - **The Tithe:** 60 bone dust for one of **today's shelf** of three (the same shelf for everyone all day, by UTC day number): hearty
+    dish, oil pot, arrow bundle, bandage, tallow, grave silver. A pick that is a consumable goes to the **kit** (carried into the next run);
+    grave silver stays in the stash for the Reliquary.
+  - **The Reliquary:** the one **charm**, any relic of the six in the stash, worn run after run (`profile.loadout.charm`; Saint's Medal
+    puts a bandage in the pack at the gate, the other five can be worn and do nothing yet, and the panel says so); and the **Blessed Edge**
+    (1 Hollow Ember + 2 Grave Silver, one at a time): for the next run only, blows land 10% heavier (`RunModService` source).
+  - **The Star Altar:** one star shard at a time, nine in all (`profile.altar.offered`); the ninth raises the Falling Star
+    (`achievements.falling_star`, and a `FallingStar` attribute on the player in the Hub and the world, for the tabard later).
+  - **The Journal:** the pages (`configs/Pages`, five of them, one for each Deed that is a place with a paper: the Sexton's Ledger, a
+    Smith's Tally, the Clerk's Muster, the Marshal's Dispatch, the Chancery's Last Page), in the castle's order; a page not yet found
+    shows only where it was written. They are new `page_*` items given by the deeds of chambers 4, 5, 7, 8 and 9 (`configs/Loot`,
+    `configs/Items`), banked in the stash and never lost, even on a wiped run.
+- **The gate hands it over (`Server/World/RunKitService`).** When a player's profile is in, in the Forgotten Lands: the kit goes into the
+  pack, the charm's gift with it (a Saint's Medal: +1 bandage), the blessing becomes a run mod, and `kit` and `blessing` are cleared and
+  saved on the spot (the charm stays on). Anything unused is banked back at the end of the run like everything else.
+- **ProfileSchema v4:** `loadout = { kit, charm?, blessing? }` and `altar = { offered }`; v1 to v3 profiles migrate.
+- **`tools/BuildChapel`** (run in the Hub place, Edit mode) builds the four tables: an alms table with a bowl of bone dust, today's three
+  plates, candles and a hanging sign; a stone table with a glass casket and an ember, two candelabra and a cloth; the altar on three steps
+  with a stele of nine niches, a shard hanging in light and two braziers; a lectern with an open book, quill, ink, a stool and a
+  bookcase of rolls. The rings are drawn round whatever the models are, so the models can be dragged anywhere.
+- `Chapel.spec` (12 specs: the daily shelf, the price, refusals that change nothing, charm, blessing, the ninth shard, the journal, what
+  the next run is handed once, and a check that the config names only things that exist and every page is given by a deed). 157 specs pass.
+- Verified in a Studio playtest of the Forgotten Lands with a copy of ChapelService booted there: every action through the real remotes
+  (tithe, a pick not on the shelf, forge twice, three charms, nine shards and a tenth), the panel rendering the state, and then a fresh
+  join receiving the kit (two arrow bundles and the medal's bandage), the blessing (x1.10 damage), the kit cleared and the charm kept.
+  Not seen: the Hub itself (the models were built and looked at in the Forgotten Lands and removed; the Hub place has not been opened
+  with this code), and the panel at full height (the Studio viewport was 394 px tall).
+
 ## Version 0.33.0 — Closing the run: the camp, the bank, the prisoner's due, the wipe
 
 - **The run is settled (`Server/World/RunSettlement`, pure rules in `Server/Domain/Settlement`).** When the party leaves by the arch

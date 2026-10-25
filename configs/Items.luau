@@ -279,6 +279,53 @@ local Items = {
 		Use = "Nine raise the Falling Star.",
 		Look = look("Block", Vector3.new(0.3, 0.9, 0.3), Color3.fromRGB(250, 236, 190), Enum.Material.Neon, true),
 	},
+
+	-- The Journal's pages (configs/Pages): copied out when a Deed is done, never lost.
+	page_graveyard_bell = {
+		DisplayName = "The Sexton's Ledger",
+		Category = "Relic",
+		Stackable = false,
+		Rank = "Relic",
+		Flavour = "Forty places dug, and no one sent for them.",
+		Use = "Read it in the Journal, at the Chapel.",
+		Look = look("Block", Vector3.new(0.8, 0.06, 0.6), Color3.fromRGB(226, 210, 170), Enum.Material.Fabric),
+	},
+	page_smithy_tally = {
+		DisplayName = "A Smith's Tally",
+		Category = "Relic",
+		Stackable = false,
+		Rank = "Relic",
+		Flavour = "Two hundred and twelve, and three more for no one.",
+		Use = "Read it in the Journal, at the Chapel.",
+		Look = look("Block", Vector3.new(0.8, 0.06, 0.6), Color3.fromRGB(226, 210, 170), Enum.Material.Fabric),
+	},
+	page_rows_letters = {
+		DisplayName = "The Clerk's Muster",
+		Category = "Relic",
+		Stackable = false,
+		Rank = "Relic",
+		Flavour = "Nineteen of sixty-one.",
+		Use = "Read it in the Journal, at the Chapel.",
+		Look = look("Block", Vector3.new(0.8, 0.06, 0.6), Color3.fromRGB(226, 210, 170), Enum.Material.Fabric),
+	},
+	page_ward_papers = {
+		DisplayName = "The Marshal's Dispatch",
+		Category = "Relic",
+		Stackable = false,
+		Rank = "Relic",
+		Flavour = "We kept the gate as long as there was a gate.",
+		Use = "Read it in the Journal, at the Chapel.",
+		Look = look("Block", Vector3.new(0.8, 0.06, 0.6), Color3.fromRGB(226, 210, 170), Enum.Material.Fabric),
+	},
+	page_keep_papers = {
+		DisplayName = "The Chancery's Last Page",
+		Category = "Relic",
+		Stackable = false,
+		Rank = "Relic",
+		Flavour = "The ink is still wet.",
+		Use = "Read it in the Journal, at the Chapel.",
+		Look = look("Block", Vector3.new(0.8, 0.06, 0.6), Color3.fromRGB(226, 210, 170), Enum.Material.Fabric),
+	},
 }
 
 return table.freeze(Items)
