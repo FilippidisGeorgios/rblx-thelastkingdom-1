@@ -331,6 +331,7 @@ local function selectTab(name: string)
 		Components.setTextColor(b, if tabName == name then Theme.Color.GoldBright else Theme.Color.Muted)
 	end
 	if lastState then
+		lastState.notice = nil -- a line about the last thing done belongs to the tab it was done on
 		ChapelUI.setState(lastState)
 	end
 end
@@ -338,16 +339,16 @@ end
 local function build(parent: ScreenGui)
 	local root = Components.panel({
 		Name = "ChapelPanel",
-		Size = UDim2.fromOffset(760, 0),
+		-- as tall as the screen allows (the list inside scrolls), never taller than it needs to be
+		Size = UDim2.new(0, 760, 0.94, 0),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Parent = parent,
 	})
-	root.AutomaticSize = Enum.AutomaticSize.Y
 
 	local constraint = Instance.new("UISizeConstraint")
-	constraint.MinSize = Vector2.new(480, 0)
-	constraint.MaxSize = Vector2.new(860, 660)
+	constraint.MinSize = Vector2.new(480, 360)
+	constraint.MaxSize = Vector2.new(860, 700)
 	constraint.Parent = root
 
 	Theme.padding(root, Theme.Size.Pad)
@@ -396,7 +397,8 @@ local function build(parent: ScreenGui)
 
 	local scroller = Instance.new("ScrollingFrame")
 	scroller.Name = "Content"
-	scroller.Size = UDim2.new(1, 0, 0, 360)
+	-- what is left under the title, the tabs, the notice and the close button
+	scroller.Size = UDim2.new(1, 0, 1, -300)
 	scroller.BackgroundTransparency = 1
 	scroller.BorderSizePixel = 0
 	scroller.ScrollBarThickness = 4

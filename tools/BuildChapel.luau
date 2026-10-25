@@ -11,8 +11,8 @@
 	each model at run time, so MOVE THE MODELS wherever the chapel stands (select `Lobby.Chapel` and
 	drag it): nothing else needs to change.
 
-	Where it is built: `ORIGIN` below, or, left nil, thirty studs behind the Storyteller if he is there,
-	or the world origin. The ground is found with a ray. A rerun deletes `Lobby.Chapel` and builds it again.
+	Where it is built: `ORIGIN` below, or, left nil, twenty-five studs in front of the Storyteller (and eight to
+	the left, clear of the Tudor house) if he is there, or the world origin. The ground is found with a ray. A rerun deletes `Lobby.Chapel` and builds it again.
 
 	NOTE: a tool, not game code. Not synced by Rojo. Everything is anchored; only the big pieces collide.
 ]]
@@ -45,7 +45,8 @@ if not anchor then
 	local teller = npcs and npcs:FindFirstChild("Storyteller")
 	if teller then
 		local pivot = if teller:IsA("Model") then teller:GetPivot().Position else (teller :: BasePart).Position
-		anchor = pivot + Vector3.new(0, 0, 30)
+		-- the plaza between the spawn and the train, left of the Tudor house (the row is 48 studs wide)
+		anchor = pivot + Vector3.new(-8, 0, 25)
 	else
 		anchor = Vector3.zero
 	end
