@@ -73,11 +73,14 @@ local TASKS: { [string]: any } = {
 	siege = require(script.Parent.Trial.Siege),
 	rescue = require(script.Parent.Trial.Rescue),
 	letters = require(script.Parent.Trial.Letters),
+	dig = require(script.Parent.Trial.Dig),
+	mangonel = require(script.Parent.Trial.Mangonel),
 }
 
 local PRESSURE: { [string]: any } = {
 	rising = require(script.Parent.Trial.Rising),
 	tide = require(script.Parent.Trial.Tide),
+	surge = require(script.Parent.Trial.Surge),
 }
 
 type Handle = { start: () -> (), stop: () -> (), progress: (() -> (number, number))? }
@@ -159,6 +162,18 @@ local function taskDef(trial: Live, id: string): any?
 	return nil
 end
 
+-- A short line over the top line, then it falls back to the phase's own.
+local function noteFor(trial: Live, text: string, seconds: number?)
+	trial.noteToken += 1
+	local token = trial.noteToken
+	say("trialnote", text)
+	task.delay(seconds or 3, function()
+		if trial.noteToken == token then
+			say("trialnote", nil)
+		end
+	end)
+end
+
 local function startPressureFor(trial: Live, from: string)
 	for _, p in trial.def.pressure or {} do
 		if (p.from or "start") == from and not trial.pressureStarted[p.id] then
@@ -170,6 +185,9 @@ local function startPressureFor(trial: Live, from: string)
 				local handle = module.create({
 					area = trial.area,
 					folder = trial.folder,
+					note = function(text: string, seconds: number?)
+						noteFor(trial, text, seconds)
+					end,
 					warn = function(text: string)
 						log:warn(("area %d %s: %s"):format(trial.area, p.id, text))
 					end,
@@ -271,14 +289,7 @@ startTask = function(trial: Live, id: string)
 			refreshHint(trial)
 		end,
 		note = function(text: string, seconds: number?)
-			trial.noteToken += 1
-			local token = trial.noteToken
-			say("trialnote", text)
-			task.delay(seconds or 3, function()
-				if trial.noteToken == token then
-					say("trialnote", nil)
-				end
-			end)
+			noteFor(trial, text, seconds)
 		end,
 		warn = function(text: string)
 			log:warn(("area %d %s: %s"):format(trial.area, id, text))

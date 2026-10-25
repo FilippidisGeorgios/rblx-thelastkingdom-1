@@ -200,8 +200,8 @@ Each of these exists to put a *question* to the player that the five above do no
   damage to anyone in it).
 - *Question:* "do I stand where I killed it?" — punishes swinging in a pile and rewards knockback.
 
-**Hollow Knight** — `undead_knight` · Elite+ · chambers 8–9 (the King's guard in plate)
-- HP 520 · speed 6 · great-sword sweep 38 · windup **1.0** · heavy armour (cut/pierce resisted, crush weak)
+**Hollow Knight** — `undead_knight` · Elite+ · chambers 8–9 (the King's guard in plate) **[BUILT 0.31.0]**
+- HP 300 (x2 at depth 8) · speed 6 · great-sword sweep 38 · windup **1.0** · `Armour 0.4` (an ordinary blow does 60%; the forge's Weight temper does 84%). Cut/pierce/crush are not separate damage types yet, so armour is one number.
 - *Silhouette:* the tallest thing that is not the King: full plate, a great helm with a crest, the star
   on a surcoat that has outlived its owner. The eyes are the brightest in the castle apart from his.
 - *Behaviour:* guards doorways and the way to the keep; wide 360° sweep after a long, loud wind-up.

@@ -90,6 +90,8 @@ the reason a parry is worth the risk.
 
 That one table is why the mace exists, and why the Smithy's forge choice (§7) matters in chamber 8.
 
+**[BUILT 0.31.0]** Until the damage types are split, armour is `Armour` on the enemy (a share of every ordinary blow turned aside) and `pierce` on the attacker (the share of it that a blow gets through): the Weight temper has `pierce 0.6`. See `ArmourService`.
+
 ### 3.4 Feel (see `Animation.md` §6 for the numbers)
 Hit-stop, a small camera push, knock-back by weight, impact dust and sparks, sound in layers. A blow
 that lands should be *felt in the controller*; a blow that is parried should *ring*.

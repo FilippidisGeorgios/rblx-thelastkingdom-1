@@ -177,6 +177,10 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Look at chamber 6 by eye; tune: the 75 s pause, 150 health a plank, the wave sizes (113 dead for one player).
 - [ ] Boards as a repair loop: a broken door in the middle of a wave, planks from the racks, a cooldown on rebuilding.
 - [x] Chamber 7: the prisoner (held 20 s, retries), the walk to the gate, three letters (Changelog 0.30.0).
+- [x] Chamber 8: the cut (pick, slip-back, frames), surges, the Hollow Knight and its armour, the mangonel, three papers (Changelog 0.31.0).
+- [ ] Sounds for the work: pick on stone, rubble rolling back, the windlass's ratchet, the throw, plate. (No audio in the project yet.)
+- [ ] More poses in `WorkPoseController`: the forge's hammer, the woodyard's axe, nailing a board, untying a rope.
+- [ ] Look at the Hollow Knight's sweep and the digger from the front, in the real fog; tune the surges with two players.
 - [ ] A sitting pose for the bound prisoner (and a living idle); his voice; the death branch seen once.
 - [ ] Settle the run: pay the prisoner bonus (+5% gold) and bank (see the banking item above).
 - [ ] Chambers

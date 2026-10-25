@@ -1,3 +1,37 @@
+## Version 0.31.0 — Chamber 8, the Inner Ward: the cut, the surges, the Hollow Knight, the mangonel
+
+- **The cut (`Trial/Dig`).** The arch over the passage is down. Hold E at the face of the trench and the party swings a miner's pick
+  (the chamber 5 pick; without it, bare hands at under half the speed): the stones in front of you are flung to either side, one by one;
+  **let go and they roll back**, as far as the last timber frame set. Five lengths of twelve stones, a frame at the end of each of the first
+  four (they drop in with a bounce and a cloud of dust), a roof of fallen masonry over it all. One length is packed hard (rolled; bigger,
+  darker stones; half speed). A second pair of hands is worth half a first. A blow taken **staggers** the digger for 0.7 s. The sword is
+  sheathed while you dig (WeaponVisualService) and drawn again after. The heap is the progress bar: nothing on screen.
+- **Surges (`Trial/Surge`, a pressure kind).** One mass of the dead sent once, after a warning line and a delay, from named markers;
+  heavy groups (`flat`) scale with the party only. The cut starts one on every frame set (the noise carries): shamblers and runners,
+  spearmen and archers, a Hollow Knight with shamblers, two knights, a gravedigger and runners. `TrialService` passes `note` to pressures.
+- **The Hollow Knight (`undead_knight`).** A new body (full plate over mail, a great helm with a crest and a visor slit that is not dark,
+  the star on a torn surcoat, a great sword across the body), 300 health, `Armour = 0.4`, a one-second windup into a wide **sweep**
+  (`ZombieAnims` "sweep": the body winds right behind the sword, then unwinds across the front). `ArmourService` is one modifier on the
+  combat pipeline: damage x (1 - Armour x (1 - pierce)); the forge's **Weight** temper now carries `pierce = 0.6` (RunModService).
+  Verified: 100 damage becomes 60 against plate, 84 with the Weight temper.
+- **The mangonel (`Trial/Mangonel`, a deed).** The camp's counterweight trebuchet has lost its arm. Lift the arm into the axle, wind the
+  windlass (ratchet clicks, the weight rising), bring a stone from the heap (one in the hands at a time), load the sling, pull the pin: the
+  arm whips over, the stone leaves the sling at the top of the throw and comes down on the densest cluster of the dead 40 to 150 studs in
+  front of the engine (190 damage at the centre, half at the rim, radius 15). The first throw pays a prize.
+- **Three papers (`letters`, a deed).** The Marshal's order of the day, the surgeon's tally, the Marshal's unsent letter to the King.
+- **`WorkPoseController` (client).** The body of a person at work: the server sets an attribute on the character (`WorkPose`, `WorkAt`,
+  `WorkHit`); every client poses the arms, waist, hips and knees on the Motor6Ds after the engine's animation step (the pick goes up over
+  the shoulder, comes down, the hips drop with it, a spit of grit at the face on every blow, a nudge to the camera, a flinch when hit), and the
+  local player turns to face the work. The forge's hammer and the woodyard's axe will be more entries in the same table.
+- **The north spawn of the Ward** moved behind the fallen tower (`Encounters.area_8`): the marker stood at the mouth of the trench.
+
+**Checked in a playtest** (real prompts and keys): the trench dug end to end and the gate raised (4 frames, the packed length, slip-back
+to the last frame, the surge notes), the plank-and-brace frames seen from inside, the knight walking, winding up and striking, the armour
+numbers, the whole mangonel (arm lifted, wound, a stone taken, loaded, the pin pulled; five dummies in a row killed at the target).
+**Not checked:** the pose of the digger from the front (the camera in a trench is cramped), the sweep from the front, two players in the
+cut, a surge arriving mid-dig on a real run, the mangonel when two people use it at once, the third and fourth stones, phone performance.
+No sounds yet (pick on stone, the windlass's click, the throw): there is no audio in the project to take them from.
+
 ## Version 0.30.0 — Chamber 7, the Rows: the prisoner, and three letters
 
 - **The rescue (`Trial/Rescue`).** A villager is bound to the chair in the tavern (a living body, three coils of rope round

@@ -178,6 +178,34 @@ local Loot = {
 			},
 		},
 
+		-- The Hollow Knight. The line's own guard in plate: a kill that has to be
+		-- earned, so it pays like one.
+		undead_knight = {
+			Gold = { Chance = 1.0, Min = 12, Max = 24 },
+			Drops = {
+				{ Item = "rusted_iron", Chance = 1.0, Min = 2, Max = 3 },
+				{ Item = "bone_dust", Chance = 1.0, Min = 1, Max = 3 },
+				{ Item = "grave_silver", Chance = 0.4, Min = 1, Max = 2 },
+			},
+			Sound = {
+				Chance = 0.25,
+				Pool = {
+					{ Item = "tallow", Weight = 20, Min = 1, Max = 2 },
+					{ Item = "grave_silver", Weight = 30, Min = 1, Max = 2 },
+					{ Item = "oil_pot", Weight = 25, Min = 1, Max = 1 },
+					{ Item = "hearty_dish", Weight = 25, Min = 1, Max = 1 },
+				},
+			},
+			Hallowed = {
+				Chance = 0.06,
+				Pool = {
+					{ Item = "hollow_ember", Weight = 60, Min = 1, Max = 1 },
+					{ Item = "sextons_key", Weight = 20, Min = 1, Max = 1 },
+					{ Item = "hollow_lantern", Weight = 20, Min = 1, Max = 1 },
+				},
+			},
+		},
+
 		the_king = {
 			Gold = { Chance = 1.0, Min = 120, Max = 160 },
 			Always = {
@@ -243,6 +271,15 @@ local Loot = {
 		-- The three letters of the Rows: the first of the nine star shards, and a veil.
 		deed_rows_letters = {
 			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "mourners_veil", Min = 1, Max = 1 } },
+		},
+		-- The Inner Ward's three papers: a star shard, and the Marshal's signet from his table.
+		deed_ward_papers = {
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "company_signet", Min = 1, Max = 1 } },
+		},
+		-- The mangonel put back in order: what the crew had left in its ammunition box.
+		deed_ward_mangonel = {
+			Always = { { Item = "rusted_iron", Min = 3, Max = 5 }, { Item = "bandage", Min = 2, Max = 3 } },
+			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "arrow_bundle", Weight = 1, Min = 1, Max = 2 } } },
 		},
 		deed_smithy_planks = {
 			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 } },

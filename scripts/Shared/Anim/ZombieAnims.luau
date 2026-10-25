@@ -501,6 +501,38 @@ local ATTACKS: { [string]: Attack } = {
 			Head = deg(3, -2, 0),
 		},
 	},
+	-- the Hollow Knight: the whole body winds to the right behind a sword drawn back over the
+	-- shoulder (the plate groans), a long hold, then one wide cut across the front as the hips
+	-- unwind and the weight comes onto the front foot. The head keeps the target while the body turns.
+	sweep = {
+		cock = {
+			LowerTorso = move(0, -0.35, 0.3, -4, -32, 0),
+			UpperTorso = deg(12, -72, 0),
+			Head = deg(-4, 46, 0),
+			RightUpperArm = deg(-38, 0, 72),
+			RightLowerArm = deg(62, 0, 0),
+			LeftUpperArm = deg(24, 0, 42),
+			LeftLowerArm = deg(72, 0, 0),
+			RightUpperLeg = deg(10, 0, 0),
+			RightLowerLeg = deg(-18, 0, 0),
+			LeftUpperLeg = deg(-6, 0, 0),
+			LeftLowerLeg = deg(12, 0, 0),
+		},
+		hit = {
+			LowerTorso = move(0, -0.12, -0.85, 2, 44, 0),
+			UpperTorso = deg(-8, 84, 0),
+			Head = deg(0, -52, 0),
+			RightUpperArm = deg(72, 0, 14),
+			RightLowerArm = deg(10, 0, 0),
+			LeftUpperArm = deg(78, 0, 36),
+			LeftLowerArm = deg(12, 0, 0),
+			RightUpperLeg = deg(-30, 0, 0),
+			RightLowerLeg = deg(8, 0, 0),
+			LeftUpperLeg = deg(18, 0, 0),
+			LeftLowerLeg = deg(-12, 0, 0),
+		},
+		settle = 0.85,
+	},
 	-- the shieldman: the shield draws back on the shoulder, the sword rises, then the bash
 	bash = {
 		cock = {
@@ -530,6 +562,7 @@ local KIND: { [string]: string } = {
 	undead_spearman = "thrust",
 	undead_archer = "draw",
 	undead_sentinel = "bash",
+	undead_knight = "sweep",
 	the_king = "bash",
 }
 

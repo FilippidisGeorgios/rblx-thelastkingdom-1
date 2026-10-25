@@ -351,4 +351,14 @@ local Encounters = {
 	},
 }
 
+--[[
+	The Inner Ward's "north" is the far end of the room, which is where the dead
+	come from in every other chamber and is where THE PASSAGE is here: the spot
+	the party digs at for a minute and a half. The marker stands at the mouth of
+	the trench, so the first wave would be born inside the heap. They come from
+	behind the fallen tower instead: along the strip between it and the wall, and
+	a long walk to the passage.
+]]
+;(Encounters.area_8.spawnPoints :: any).north = Vector3.new(40, 5, -1945)
+
 return table.freeze(Encounters)

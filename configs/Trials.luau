@@ -161,7 +161,7 @@ local Trials = {
 						tempers = {
 							edge = { name = "Edge", damage = 1.18, text = "an edge that bites deeper (+18% damage)" },
 							point = { name = "Point", reach = 3, text = "a point that reaches further (+3 studs)" },
-							weight = { name = "Weight", damage = 1.4, cooldown = 1.35, text = "a weight that breaks things (+40% damage, slower swing)" },
+							weight = { name = "Weight", damage = 1.4, cooldown = 1.35, pierce = 0.6, text = "a weight that breaks things (+40% damage, slower swing, plate does not stop it)" },
 						},
 					},
 					{
@@ -321,6 +321,138 @@ local Trials = {
 						},
 					},
 				},
+			},
+		},
+	},
+
+	--======================================================================
+	-- 8 — The Inner Ward. The line, and the way out under the arch.
+	--
+	-- The tower fell across the ward and the arch over the passage came down
+	-- with it. The only way on is to cut a trench through the heap: a held pick,
+	-- five lengths of it, a timber frame at the end of each. Hands off and it
+	-- slips back, as far as the last frame. Every frame set is noise, and the
+	-- noise carries to the far end of the ward: a surge for each, the last of
+	-- them the line's own guard in plate. The fallen tower is the one high
+	-- ground; the two slopes of rubble up to it are the only way up. Three
+	-- papers in the camp, and the broken mangonel, are the deeds.
+	--======================================================================
+	[8] = {
+		phases = {
+			{
+				id = "dig",
+				hint = "Dig out the buried passage: frames set %d of %d",
+				tasks = {
+					{
+						id = "passage",
+						kind = "dig",
+						seconds = 26,
+						bare = 0.45,
+						fall = 0.8,
+						hands = 0.5,
+					},
+				},
+			},
+		},
+
+		pressure = {
+			{
+				id = "surge1",
+				kind = "surge",
+				from = "signal:shore1",
+				warn = "A drum, far off in the ward. They heard the picks.",
+				delay = 12,
+				groups = {
+					{ id = "undead_shambler", count = 3, spawn = "Battleground.Chamber8.Spawns.East", spread = 14 },
+					{ id = "undead_runner", count = 2, spawn = "Battleground.Chamber8.Spawns.West", spread = 12 },
+				},
+			},
+			{
+				id = "surge2",
+				kind = "surge",
+				from = "signal:shore2",
+				warn = "Horns on the east wall. Spears are coming along the line.",
+				delay = 12,
+				groups = {
+					{ id = "undead_spearman", count = 3, spawn = "Battleground.Chamber8.Spawns.West", spread = 12 },
+					{ id = "undead_archer", count = 2, spawn = "Battleground.Chamber8.Spawns.East", spread = 12 },
+				},
+			},
+			{
+				id = "surge3",
+				kind = "surge",
+				from = "signal:shore3",
+				warn = "Plate on stone, from the far side of the ward. Something heavy is walking.",
+				delay = 10,
+				groups = {
+					{ id = "undead_knight", count = 1, spawn = "Battleground.Chamber8.Spawns.East", spread = 4, flat = true },
+					{ id = "undead_shambler", count = 3, spawn = "Battleground.Chamber8.Spawns.West", spread = 14 },
+				},
+			},
+			{
+				id = "surge4",
+				kind = "surge",
+				from = "signal:shore4",
+				warn = "The bells have stopped. The line's own guard has begun to march.",
+				delay = 10,
+				groups = {
+					{ id = "undead_knight", count = 1, spawn = "Battleground.Chamber8.Spawns.West", spread = 4, flat = true },
+					{ id = "undead_knight", count = 1, spawn = "Battleground.Chamber8.Spawns.East", spread = 4, flat = true },
+					{ id = "undead_brute_heavy", count = 1, spawn = "Battleground.Chamber8.Spawns.East", spread = 6, flat = true },
+					{ id = "undead_runner", count = 3, spawn = "Battleground.Chamber8.Spawns.West", spread = 14 },
+				},
+			},
+		},
+
+		deeds = {
+			{
+				id = "papers",
+				kind = "letters",
+				prize = "deed_ward_papers",
+				letters = {
+					{
+						at = "Decorations.Area8.Camp.Trestle",
+						title = "Order of the Day",
+						sign = "Marshal Aldous Venn, under the Company's star",
+						lines = {
+							"The line holds at the palisade. The tower holds at the line. Nobody leaves the ward by the arch; the arch is the king's, and it is shut.",
+							"The sappers will mine the keep road by night in case the hollow comes up that way. They will say nothing to the families. The hospital will say nothing to the families.",
+							"If the bells begin again, we do not answer them. That is an order. I do not wish to hear that any man has answered them.",
+						},
+					},
+					{
+						at = "Decorations.Area8.Camp.Table",
+						title = "The Surgeon's Tally",
+						sign = "Ilse Marrow, field surgeon",
+						lines = {
+							"Cots: 31. Linen: for nine. Bone-saws: two, one bent. Poppy: none since the fourth week.",
+							"Cause of death, this week. Fever: 3. The line: 11. Not the line, not the fever: 17. These are men who lie down quietly in the morning and are still lying down at noon, and I have stopped writing why.",
+							"The cold comes up the ward from the keep. It is not the winter's cold. The candles lean toward it.",
+						},
+					},
+					{
+						at = "Decorations.Area8.MarshalsHouse.Table",
+						title = "Unsent: to the King",
+						sign = "A. Venn, never sealed",
+						lines = {
+							"Majesty. I have held the line forty days and forty nights and on the forty-first the tower fell on its own, with no hand near it and no gun, as if the stone had grown tired.",
+							"My sappers dig toward the keep and are met, I will not say by what. They come back, those that come back, and ask me when you will come out.",
+							"If you can hear me down there: the Company is not coming. They went north the winter before the star fell. It is only us. Come out, my king, and let the bells be.",
+						},
+					},
+				},
+			},
+			{
+				id = "mangonel",
+				kind = "mangonel",
+				model = "Decorations.Area8.Camp.Mangonel",
+				stones = 4,
+				splash = 15,
+				damage = 190,
+				minRange = 40,
+				maxRange = 150,
+				windSeconds = 4,
+				prize = "deed_ward_mangonel",
 			},
 		},
 	},

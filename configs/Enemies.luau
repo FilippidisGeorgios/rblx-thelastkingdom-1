@@ -20,6 +20,7 @@
 			DamageType  = string,
 			Resistances = { [damageType: string]: number },
 			Tier        = "Standard" | "Elite" | "Boss",
+			Armour      = number?,  -- OPTIONAL 0..1: the share of an ordinary blow turned aside (ArmourService)
 			Abilities   = { string },
 			Body        = { string }?, -- OPTIONAL: bodies in ServerStorage.Assets.Undead it may wear; absent = the plain box
 
@@ -271,6 +272,46 @@ local Enemies = {
 			Spread = 0.055, -- radians at MaxSpreadRange; ~3 degrees
 			LeadFactor = 0.55, -- leads a moving target, but only partly
 			MaxRange = 160,
+		},
+	},
+
+	--[[
+		The Hollow Knight (docs/systems/Bestiary.md §5.2). Full plate and a
+		two-handed sword, slow, and the only common unit that wants a different
+		answer: `Armour` turns 40% of an ordinary blow aside (Server/World/
+		ArmourService), and the forge's WEIGHT temper from chamber 5 turns most of
+		that back. First seen in the Inner Ward, where it is the line's own guard.
+
+		One sweep, a long loud windup (a full second, the whole body winds with
+		it), and a long recovery: the fight is the gap after it, like the
+		gravedigger's, but wider, and the sword reaches further than the shambler's
+		arm by half again.
+	]]
+	undead_knight = {
+		DisplayName = "Hollow Knight",
+		Faction = "Enemies",
+		Archetype = "Undead",
+		MaxHealth = 300,
+		Armour = 0.4,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Elite",
+		Abilities = {},
+		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
+		Body = { "undead_knight" },
+		AI = {
+			DetectionRadius = 130,
+			AttackRange = 9,
+			LeashRadius = 260,
+			ArrivalRadius = 3,
+			MoveSpeed = 6,
+			AttackCooldown = 2.9,
+			Windup = 1.0,
+			Strike = 0.25,
+			Recover = 1.2,
+			AttackDamage = 38,
+			AttackDamageType = "Physical",
 		},
 	},
 

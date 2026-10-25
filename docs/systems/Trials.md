@@ -1,7 +1,7 @@
 # Trials — what each chamber asks of you (Design)
 
 **Status:** DESIGN written 2026-10-21. **Built: the engine, the verbs `light`, `toll`, `read`, `gather`, `cook` and `feed`, the pressures `rising` and `tide`,
-and chambers 3 to 7 as data (0.26.0 to 0.30.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
+and chambers 3 to 8 as data (0.26.0 to 0.31.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
 chamber), `Encounters.md` (the waves), `Bestiary.md` / `Arsenal.md` (who and with what) and `Spoils.md`
 (what falls out of it all).
 **Serves:** GDD Pillar 3 (exploration is a verb), Pillar 5 (co-op), and the replay goal.
@@ -56,6 +56,7 @@ Each verb is one module (`Server/World/Trial/<Kind>.luau`), driven by data in `c
 | `use` | Spend items at a station (feed, pour, board, put on the fire) | `station`, `item`, `count`, `hold` | **[BUILT]** |
 | `light` | `use` + a flame that stays: ignite N points | `points`, `fuel` | **[BUILT]** |
 | `forge` / `burn` / `chop` / `mine` | The smithy's verbs: the heat you hold, the door you burn, the trees, the veins | see `Trial/Forge`, `Burn`, `Chop`, `Mine` | **[BUILT]** |
+| `dig` / `mangonel` | The trench you cut with a held pick and prop as you go (slip-back to the last frame); the siege engine you put right and loose | see `Trial/Dig`, `Trial/Mangonel` | **[BUILT]** |
 | `rescue` / `letters` | The long hold on a bound person and the walk to the gate; pages across several houses | see `Trial/Rescue`, `Trial/Letters` | **[BUILT]** |
 | `board` / `siege` | Nail doorways shut; the pause, the horn and the waves that break them (the Great Hall) | see `Trial/Board`, `Trial/Siege` | **[BUILT]** |
 | `cook` / `feed` | The pot that must be minded, and the ladle to each of the penned (chamber 3's own verbs) | see `Trial/Cook`, `Trial/Feed` | **[BUILT]** |
@@ -159,11 +160,20 @@ plan, in the order they will be written. Numbers are provisional.
 - **Pressure:** very hard; the Rows are a maze, **Ambush** at each street end.
 - **Pays:** the whole team +5% gold if they survive (AreaPlan).
 
-### 8 — Inner Ward · *The line*
-- **Asks:** the passage is buried: `hold` to dig it out **with the pickaxe from 5**, with a slip-back like the
-  winch's. The fallen tower is the only high ground.
-- **Pressure:** **Funnel** — the dead have to climb to the tower; Hollow Knights.
-- **Rolled:** which side the rubble gives way from.
+### 8 — Inner Ward · *The line* **[BUILT]**
+- **Asks:** the arch over the passage is down. **Dig** a trench through the heap (hold E at the face): five lengths, a timber frame at
+  the end of each of the first four, and the heap slips back stone by stone, as far as the last frame, when you let go. The miner's pick
+  from chamber 5 is full speed; without it, bare hands at 45%. One length is packed hard (rolled, visible: bigger, darker stones).
+  26 s of unbroken pick work solo; a second pair of hands is worth half a first. A blow taken staggers you for 0.7 s. The sword is
+  sheathed while you work.
+- **Pressure:** the chamber's own five waves from the entry, **plus a surge for every frame set** (the noise carries): the first with
+  shamblers and runners, then spearmen and archers, then a **Hollow Knight**, then two and a gravedigger. They walk the whole ward to
+  you: a warning line, a delay, and a long march. The north spawn is behind the fallen tower.
+- **The fallen tower** is the only high ground, and its two rubble slopes the only way up: the funnel is the geometry, not a rule.
+- **Deeds:** *the mangonel* (lift the arm, wind, a stone, the sling, the pin: it throws at the densest knot of the dead 40 to 150
+  studs in front of it), and *three papers* (the Marshal's order, the surgeon's tally, his unsent letter to the King).
+- **Rolled:** which length of the cut is packed.
+- **Answer to the knight:** the forge's Weight temper (plate does not stop it), the mace, the mangonel, or patience.
 
 ### 9 — Keep Steps · *The King*
 - **Asks:** `slay` the King → the keep door opens → the scribe: hear the whole dialogue → the key → the

@@ -213,7 +213,7 @@ on it and a `SeatPoint` part where the villager sits. Reachable from both sides.
 The passage is buried; clear it under heavy pressure. The fallen tower is the
 only high ground and the dead have to funnel up to it.
 
-**The scenery is built (2026-10-20), the mechanic is not.** The fallen tower lies
+**Built 2026-10-25 (Changelog 0.31.0): the cut, the surges, the knights, the mangonel, three papers.** The scenery was built 2026-10-20: the fallen tower lies
 across the south of the ward (its stump at x -78, z -1905; the shaft to x 46),
 its top 16 up, reached only by two slopes of rubble: from the north at the
 stump end and from the east at the crown end. Masonry is heaped either side of

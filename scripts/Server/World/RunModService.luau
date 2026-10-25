@@ -26,9 +26,10 @@ RunModService.Name = "RunModService"
 
 local log = Logger.new("RunModService")
 
-export type Mods = { damage: number?, reach: number?, cooldown: number? }
+-- `pierce` is the share of an armoured unit's plate that this player's blows get through (0..1).
+export type Mods = { damage: number?, reach: number?, cooldown: number?, pierce: number? }
 
-type Applied = { damage: number, reach: number, cooldown: number, sources: { [string]: Mods } }
+type Applied = { damage: number, reach: number, cooldown: number, pierce: number, sources: { [string]: Mods } }
 
 local applied: { [Player]: Applied } = {}
 
@@ -37,17 +38,18 @@ local function entry(player: Player): Applied
 	if existing then
 		return existing
 	end
-	local created: Applied = { damage = 1, reach = 0, cooldown = 1, sources = {} }
+	local created: Applied = { damage = 1, reach = 0, cooldown = 1, pierce = 0, sources = {} }
 	applied[player] = created
 	return created
 end
 
 local function recompute(a: Applied)
-	a.damage, a.reach, a.cooldown = 1, 0, 1
+	a.damage, a.reach, a.cooldown, a.pierce = 1, 0, 1, 0
 	for _, mods in a.sources do
 		a.damage *= mods.damage or 1
 		a.reach += mods.reach or 0
 		a.cooldown *= mods.cooldown or 1
+		a.pierce = math.max(a.pierce, mods.pierce or 0)
 	end
 end
 
@@ -72,6 +74,10 @@ end
 
 function RunModService.cooldown(player: Player): number
 	return entry(player).cooldown
+end
+
+function RunModService.pierce(player: Player): number
+	return entry(player).pierce
 end
 
 function RunModService.has(player: Player, source: string): boolean

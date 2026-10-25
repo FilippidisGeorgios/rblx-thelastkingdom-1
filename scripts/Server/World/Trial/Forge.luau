@@ -194,7 +194,7 @@ function Forge.create(ctx: any, def: any)
 						return
 					end
 					chosen[player] = true
-					RunModService.set(player, "temper", { damage = tdef.damage, reach = tdef.reach, cooldown = tdef.cooldown })
+					RunModService.set(player, "temper", { damage = tdef.damage, reach = tdef.reach, cooldown = tdef.cooldown, pierce = tdef.pierce })
 					sparks(ctx.folder, at + Vector3.new(0, 2, 0), 30)
 					ctx.note(("%s takes the %s: %s."):format(player.Name, o.label:lower(), tdef.text), 5)
 					if not finished then

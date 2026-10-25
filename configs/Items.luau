@@ -186,6 +186,7 @@ local Items = {
 	unlit_torch = { DisplayName = "Unlit Torch", Category = "QuestItem", Stackable = false, Banked = false, Use = "Light it at the forge." },
 	axe = { DisplayName = "Woodsman's Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the dead trees in the yard." },
 	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "To board the doors of the Great Hall." },
+	mangonel_stone = { DisplayName = "Mangonel Stone", Category = "QuestItem", Stackable = false, Banked = false, Use = "Load it in the sling of the mangonel in the Inner Ward." },
 	pickaxe = { DisplayName = "Miner's Pickaxe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For rubble. Keep it." },
 	broth = {
 		DisplayName = "A Ladle of Broth",
