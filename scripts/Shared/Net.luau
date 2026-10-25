@@ -50,6 +50,8 @@ local EVENT_NAMES: { string } = {
 	"DocumentEvent", -- server -> client: open a parchment (a recipe, a letter, a burial roll) for one player
 	"BackpackEvent", -- server -> client: the run backpack (set) and what was just picked up (gain)
 	"EndingEvent", -- server -> client: the end of the run: the screen closes on a title and a few lines
+	"CampEvent", -- server -> client: the camp bench opens (recipes and what can be made) / updates
+	"RequestCraft", -- client -> server: make recipe `id` at the camp bench
 }
 local FUNCTION_NAMES: { string } = {}
 

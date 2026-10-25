@@ -26,6 +26,7 @@
 		PickupSeconds   = number,   -- an unclaimed drop vanishes after this long
 		MaxPickups      = number,   -- in the world at once; the oldest goes first
 		WipeKeepsGold   = number,   -- fraction of gold kept on a wiped run   [PROPOSED, Spoils §7]
+	PrisonerGoldBonus = number, -- of the gold, for the team, with the prisoner alive at the end of a won run (RunSettlement)
 		BackpackSlots   = number,   -- stacks a player can carry (quest items are separate)
 	}
 
@@ -59,6 +60,7 @@ local Loot = {
 		PickupSeconds = 90,
 		MaxPickups = 90,
 		WipeKeepsGold = 0.25,
+		PrisonerGoldBonus = 0.05, -- of the gold carried out, for the whole team, if the prisoner of the Rows is alive at the end of a won run
 		BackpackSlots = 16,
 	},
 
@@ -281,6 +283,21 @@ local Loot = {
 			Always = { { Item = "rusted_iron", Min = 3, Max = 5 }, { Item = "bandage", Min = 2, Max = 3 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "arrow_bundle", Weight = 1, Min = 1, Max = 2 } } },
 		},
+		-- The camp chest (Server/World/CampService): once per player per camp, a guaranteed Sound find.
+		camp_chest = {
+			Gold = { Chance = 1.0, Min = 6, Max = 14 },
+			Drops = { { Item = "bandage", Chance = 0.6, Min = 1, Max = 2 }, { Item = "grave_cloth", Chance = 0.5, Min = 1, Max = 3 } },
+			Sound = {
+				Chance = 1.0,
+				Pool = {
+					{ Item = "oil_pot", Weight = 25, Min = 1, Max = 1 },
+					{ Item = "hearty_dish", Weight = 25, Min = 1, Max = 1 },
+					{ Item = "grave_silver", Weight = 30, Min = 1, Max = 2 },
+					{ Item = "tallow", Weight = 20, Min = 2, Max = 3 },
+				},
+			},
+		},
+
 		-- The three papers of the keep: a star shard, and a stirrup nobody has ridden in for forty years.
 		deed_keep_papers = {
 			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "brass_stirrup", Min = 1, Max = 1 } },

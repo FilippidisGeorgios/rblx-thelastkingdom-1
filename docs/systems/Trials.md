@@ -194,7 +194,10 @@ plan, in the order they will be written. Numbers are provisional.
 When a gate opens, a **camp** appears in the passage mouth (a hearth, a bench, a chest): a safe-ish place
 (no spawns within 30 studs) where the party can breathe, **craft** from what they have gathered
 (`Spoils.md` §6) and have their place saved. It is the point of the loot: *a reason to pick things up*.
-**[PROPOSED]**; first version after the first two chambers' spoils work.
+**[BUILT 0.33.0]** (`Server/World/CampService`, `configs/Camp.luau`): lit in the mouth of the passage of chambers 1 to 8 three and a half
+seconds after the gate goes up, on the side toward the middle of the castle so the way through stays clear: a fire (heals 3 a second within
+13 studs), a bench (the four recipes; a panel, E), a chest (one Sound find per player), a bedroll, a sack, a crate; and the place the
+fallen wake from then on (`DeathService.setRespawnPoint`). Chamber 9 has none: it ends at the tower.
 
 ## 7. Time
 

@@ -539,7 +539,6 @@ local Trials = {
 						arch = "Decorations.Area9.Keep.Interior.ExitArch",
 						key = "keep_key",
 						leave = 2,
-						after = 10,
 					},
 				},
 			},

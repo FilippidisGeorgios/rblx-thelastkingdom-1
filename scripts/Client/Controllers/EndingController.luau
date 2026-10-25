@@ -31,6 +31,8 @@ function EndingController.Start()
 			title = if typeof(payload.title) == "string" then payload.title else nil,
 			subtitle = if typeof(payload.subtitle) == "string" then payload.subtitle else nil,
 			lines = if typeof(payload.lines) == "table" then payload.lines else nil,
+			ledgerTitle = if typeof(payload.ledgerTitle) == "string" then payload.ledgerTitle else nil,
+			ledger = if typeof(payload.ledger) == "table" then payload.ledger else nil,
 			footer = if typeof(payload.footer) == "string" then payload.footer else nil,
 		})
 	end)

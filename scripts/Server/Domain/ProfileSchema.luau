@@ -6,6 +6,8 @@
 	migrations as the schema evolves.
 
 	v2 adds progression fields (`xp`, `level`) owned by the Progression/Reward systems.
+	v3 adds the `stash`: counts of what a run brought home (materials, relics, shards,
+	pages), banked by RunSettlement; the Hub's Tithe, Reliquary and Altar will spend it.
 
 	Location: ServerScriptService.Server.Domain.ProfileSchema
 ]]
@@ -16,6 +18,7 @@ export type Profile = {
 	xp: number,
 	level: number,
 	inventory: { [string]: any },
+	stash: { [string]: number },
 	upgrades: { [string]: any },
 	stats: { [string]: any },
 	unlockedLore: { [string]: boolean },
@@ -24,7 +27,7 @@ export type Profile = {
 
 local ProfileSchema = {}
 
-ProfileSchema.VERSION = 2
+ProfileSchema.VERSION = 3
 
 -- Returns a fresh default profile for a brand-new player.
 function ProfileSchema.default(): Profile
@@ -34,6 +37,7 @@ function ProfileSchema.default(): Profile
 		xp = 0,
 		level = 1,
 		inventory = {},
+		stash = {},
 		upgrades = {},
 		stats = {},
 		unlockedLore = {},
@@ -51,6 +55,7 @@ function ProfileSchema.migrate(profile: Profile): Profile
 	-- Backfill any container that a partial/old save might be missing.
 	profile.currency = profile.currency or 0
 	profile.inventory = profile.inventory or {}
+	profile.stash = profile.stash or {}
 	profile.upgrades = profile.upgrades or {}
 	profile.stats = profile.stats or {}
 	profile.unlockedLore = profile.unlockedLore or {}

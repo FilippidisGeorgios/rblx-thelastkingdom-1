@@ -53,6 +53,11 @@ local reviveProgress: { [Player]: number } = {} -- downed player -> teammate-rev
 local runPlayers: { Player } = {}
 local runActive = false
 local onWipeCb: (() -> ())? = nil
+local runOverHandlers: { (players: { Player }) -> () } = {}
+local runBeginHandlers: { () -> () } = {}
+
+-- Where a fallen player is put back: the last camp the party lit (CampService), else the arrival spawn.
+local respawnAt: CFrame? = nil
 
 local function fireDeath(player: Player, payload: any)
 	if deathEvent then
@@ -80,6 +85,13 @@ local function loadCharacter(player: Player)
 	downedPosition[player] = nil
 	reviveProgress[player] = nil
 	player:LoadCharacter()
+	local point = respawnAt
+	if point then
+		local character = player.Character
+		if character then
+			character:PivotTo(point)
+		end
+	end
 end
 
 -- After a fresh spawn, drops the player's HP to `percent` of max (revive at reduced
@@ -120,6 +132,7 @@ local function checkRunOver()
 	runActive = false
 	local cb = onWipeCb
 	onWipeCb = nil
+	local group = table.clone(runPlayers)
 	log:info("run over (party down)")
 
 	-- Respawn everyone idle at spawn so no one is stuck dead, and prompt Play Again.
@@ -133,6 +146,10 @@ local function checkRunOver()
 
 	if cb then
 		task.spawn(cb) -- mission fails; ChapterService halts (Play Again is manual)
+	end
+	-- the run is settled: what the party keeps goes home (RunSettlement)
+	for _, handler in runOverHandlers do
+		task.spawn(handler, group)
 	end
 end
 
@@ -262,6 +279,10 @@ function DeathService.beginRun(players: { Player }, onWipe: () -> ())
 	runPlayers = table.clone(players)
 	onWipeCb = onWipe
 	runActive = true
+	respawnAt = nil
+	for _, handler in runBeginHandlers do
+		task.spawn(handler)
+	end
 	for _, player in players do
 		if status[player] ~= Status.Alive then
 			status[player] = Status.Alive
@@ -269,6 +290,21 @@ function DeathService.beginRun(players: { Player }, onWipe: () -> ())
 		end
 		status[player] = Status.Alive
 	end
+end
+
+-- Called when the whole party is down (a wiped run). Registered by RunSettlement.
+function DeathService.onRunOver(handler: (players: { Player }) -> ())
+	table.insert(runOverHandlers, handler)
+end
+
+-- Called each time a run begins (the first, and every Play Again): what belongs to the last run is put away.
+function DeathService.onRunBegin(handler: () -> ())
+	table.insert(runBeginHandlers, handler)
+end
+
+-- A camp was lit: this is where the fallen come back to.
+function DeathService.setRespawnPoint(point: CFrame?)
+	respawnAt = point
 end
 
 function DeathService.endRun()

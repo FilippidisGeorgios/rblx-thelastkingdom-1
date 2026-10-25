@@ -1,3 +1,34 @@
+## Version 0.33.0 — Closing the run: the camp, the bank, the prisoner's due, the wipe
+
+- **The run is settled (`Server/World/RunSettlement`, pure rules in `Server/Domain/Settlement`).** When the party leaves by the arch
+  (`Trial/Exit`) or is wiped (`DeathService.onRunOver`), each player's pack is turned into their profile and emptied, the profile is
+  saved, and a card shows what they carry home. **Won:** every banked thing goes home: gold becomes `profile.currency`, the rest the new
+  `profile.stash` (ProfileSchema **v3**, a table of counts; v1 and v2 profiles migrate to an empty stash); the quest things (keys, the
+  scribe's key) are never banked. **The prisoner**, if he is still alive at the end (`RunModService` flag `prisonerAlive`), pays every
+  player +5% of their gold (`Loot.Rules.PrisonerGoldBonus`). **Wiped:** the castle keeps three quarters of the gold
+  (`Loot.Rules.WipeKeepsGold` = 25% kept); the star shards and the pages come home all the same. The profile's stats count runs won,
+  runs wiped and the best run's gold. It happens once per run; the party is sent to the Hub only after the card has finished (the server
+  works out the card's length), and a Play Again cancels a way home still pending and re-arms the settlement.
+- **The ending card** gets a ledger: "You carry home", a gold line and one line per kind of thing. The Won card says the prisoner's bonus
+  in brackets; the Wiped card ("The Run Is Over", "The castle keeps what it keeps") says what was kept of what.
+- **The camp (`Server/World/CampService`, `configs/Camp.luau`).** When a gate of chambers 1 to 8 goes up (`AreaService.onCleared`),
+  3.6 s later a camp is lit in the passage mouth, against the wall toward the middle of the castle: a ring of stones with a fire (flame,
+  light that comes up over a couple of seconds, smoke), a tripod and a steaming pot; a bench with a vice, hammer, saw, thread, cloth, iron
+  bars and a lantern on a post; an iron-banded chest; a bedroll, a sack, a crate. **The fire heals** whoever stands within 13 studs, 3 a
+  second. **The bench** (E; the panel `CampUi`, four rows with what each costs and what you have, a Make button): Bandage (3 grave cloth),
+  Arrows (2 fletching + 1 rusted iron into an arrow bundle), Oil pot (2 tallow + 1 rusted iron), Torch (1 tallow + 1 grave cloth into a lit
+  torch for 45 s). The server checks the distance to the bench, the needs and the room; the panel closes on E, Esc, a click outside, the
+  walk away, or the ending. **The chest** gives one Sound find per player per camp (`Loot.camp_chest`). **The place is saved:** a fallen
+  player wakes at the last camp lit (`DeathService.setRespawnPoint`), not at the castle's gate. A new run (Play Again) strikes the camps.
+- Code: `BackpackService.reset`; `DeathService.onRunOver`/`onRunBegin`/`setRespawnPoint`; `AreaService.onCleared`; the net events
+  `CampEvent` and `RequestCraft`; client `CampController` + `UI/CampUi`; `Settlement.spec` (6 specs: won banks all but the quest items,
+  the prisoner's +5%, the wipe rule, whole gold, apply into the profile, v2 to v3). 145 specs pass.
+- Verified in a Studio playtest: the bench makes bandage, torch and oil pot and refuses what it cannot (not enough of a thing, out of
+  reach); the panel renders (and scrolls in a short window); a Won settlement banked 200 gold + 10 (the prisoner), the materials, and left
+  the key; a Wiped one kept 25 of 100 and the star shard and lost the rest; a second settlement is refused; the fire healed 15 in 5 s; the
+  profile survived a restart (DataStore backend). Not seen: the camp's look at full size (the Studio viewport was 394 px tall) and the
+  respawn at the camp.
+
 ## Version 0.32.0 — Chamber 9, the Keep Steps: the King, the keep, the scribe, the way out (every chamber is now built)
 
 - **The King (`Trial/King`).** One body, one health bar, a nameplate that says "The King" with two lines on its bar where he changes

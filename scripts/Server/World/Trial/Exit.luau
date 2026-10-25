@@ -12,8 +12,8 @@
 	     castle has ever let anybody up here, which is the reason it is the way out.
 	  3. THE ARCH. A held "Leave" in the light. It does not take the party until every living player has
 	     it: the first to arrive is told how many are still coming, and a player who dies drops out of the
-	     count. When all are there the screen closes (EndingEvent), and a few seconds later the party goes
-	     back to the Hub.
+	     count. When all are there the run is settled (RunSettlement: the pack is banked, the card closes
+	     the screen, and a few seconds later the party goes back to the Hub).
 
 	THIS TASK IS THE END OF THE RUN. It calls the trial done (the last one), which stops the pressure and
 	lets AreaService do whatever it does at the last chamber (nothing: there is no gate).
@@ -23,21 +23,17 @@
 	  arch     dotted path of the Model of the arch (Interior.ExitArch)
 	  key      the item id of the key
 	  leave    seconds of the held "Leave"
-	  after    seconds between the screen closing and the party leaving
 
 	Place: Forgotten Lands ONLY (Server/World/Trial).
 ]]
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local Server = script.Parent.Parent.Parent
 local BackpackService = require(script.Parent.Parent.BackpackService)
 local RunModService = require(script.Parent.Parent.RunModService)
-local TeleportService = require(Server.Services.TeleportService)
-local Net = require(ReplicatedStorage.Shared.Net)
+local RunSettlement = require(script.Parent.Parent.RunSettlement)
 local Util = require(script.Parent.Util)
 
 local Exit = {}
@@ -114,22 +110,9 @@ function Exit.create(ctx: any, def: any)
 		leaving = true
 		RunModService.setFlag("runComplete", true)
 		ctx.hint(nil)
-		Net.getEvent("EndingEvent"):FireAllClients({
-			title = "The Last Kingdom",
-			subtitle = "Book One: the Return",
-			lines = {
-				"The King kneels, and the bells are quiet.",
-				"The way up is open, and you went up it together.",
-				"Asterfall remembers.",
-				"Nobody has written down what sent the Company north.",
-			},
-			footer = "To be continued",
-		})
-		task.spawn(function()
-			task.wait(def.after)
-			local players = Players:GetPlayers()
-			pcall(TeleportService.returnToHub, players, { runComplete = true })
-		end)
+		-- what each player carried out is banked, their card closes the screen, and a few
+		-- seconds later the party is sent home (RunSettlement)
+		RunSettlement.finish("won")
 		ctx.done()
 	end
 

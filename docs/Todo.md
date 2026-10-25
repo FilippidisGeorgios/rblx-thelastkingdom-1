@@ -160,11 +160,14 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
       the torch as a weapon, wipe penalty, the Tithe, personal loot, the shards, one charm or two.
 - [ ] Look at chamber 4 with your own eyes: the graves opening, the torch in the hand, the flame, how long
       25 s feels, whether six graves a section is too many.
-- [ ] Banking at the end of a won run: gold → profile currency, materials/relics/shards → `profile.stash`
-      (ProfileSchema v3); the wiped-run rule.
+- [x] Banking at the end of a run: gold → profile currency, materials/relics/shards → `profile.stash` (ProfileSchema v3); the
+      wiped-run rule; the prisoner's +5% (Changelog 0.33.0).
 - [ ] Pickup sound and a better pickup look; pickups rotate/bob (client only).
 - [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
-- [ ] The camp (bench: bandage, arrows, oil pot, torch); the Hub's Tithe, Reliquary, Shard Altar, Journal.
+- [x] The camp: fire, bench (bandage, arrows, oil pot, torch), chest, the place the fallen wake (Changelog 0.33.0).
+- [ ] The Hub's Tithe, Reliquary, Shard Altar, Journal (they SPEND the stash that is now banked).
+- [ ] Look at the camp by eye (layout in the passage mouth of 1 to 8, the panel, the fire's light); tune: heal 3/s, radius 13,
+      the bench's four recipes, the chest's one Sound find.
 - [x] Chamber 3: recipe, ingredients, the pot (minded), the pen, the five cured followers (Changelog 0.27.0).
 - [ ] Look at chamber 3 by eye; tune: the cured die fast (more health? stay back from the front?), simmer 30 s, tide 7 s.
 - [ ] A proper living head for the cured (now the skin union is tinted whole); their own lines/voices.
@@ -180,12 +183,12 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [x] Chamber 8: the cut (pick, slip-back, frames), surges, the Hollow Knight and its armour, the mangonel, three papers (Changelog 0.31.0).
 - [x] Chamber 9: the King (three faces, kneels, "Release him"), the keep door, the scribe, the key, the marshal's door, the stair and the walk, the arch and the ending card (Changelog 0.32.0). **All nine chambers are built.**
 - [ ] LOOK at chamber 9 (Studio stopped rendering during its playtest): the King's three faces and the frost rings, the doors, the hall and the stair, the ending card.
-- [ ] The ending is a card and a teleport; the run is not settled (banking to the profile, the prisoner bonus, the wipe rule).
+- [x] The ending settles the run (Changelog 0.33.0).
+- [ ] The Hub does not yet show what was banked (currency, stash, runs won).
 - [ ] Sounds for the work: pick on stone, rubble rolling back, the windlass's ratchet, the throw, plate. (No audio in the project yet.)
 - [ ] More poses in `WorkPoseController`: the forge's hammer, the woodyard's axe, nailing a board, untying a rope.
 - [ ] Look at the Hollow Knight's sweep and the digger from the front, in the real fog; tune the surges with two players.
 - [ ] A sitting pose for the bound prisoner (and a living idle); his voice; the death branch seen once.
-- [ ] Settle the run: pay the prisoner bonus (+5% gold) and bank (see the banking item above).
 - [ ] Chambers
       8 (dig out), 9 (the King): each a Trials entry plus the verbs it needs (`gather`, `use`,
       `wait`, `read`, `defend`, `free`, `sequence`, `slay`).

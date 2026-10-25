@@ -19,7 +19,7 @@ local Theme = require(script.Parent.Theme)
 
 local EndingUi = {}
 
-export type Payload = { title: string?, subtitle: string?, lines: { string }?, footer: string? }
+export type Payload = { title: string?, subtitle: string?, lines: { string }?, ledgerTitle: string?, ledger: { string }?, footer: string? }
 
 function EndingUi.play(payload: Payload)
 	local gui = Instance.new("ScreenGui")
@@ -86,6 +86,19 @@ function EndingUi.play(payload: Payload)
 			hide(l, 1.4)
 			task.wait(1.6)
 			l:Destroy()
+		end
+		-- what this player carries home: a short list, held longer than a line
+		if payload.ledger and #payload.ledger > 0 then
+			local head = label(payload.ledgerTitle or "You carry home", 26, Theme.Color.Gold, Theme.Role.Heading, 0.22, 40)
+			show(head, 1.4)
+			local joined = table.concat(payload.ledger, string.char(10))
+			local list = label(joined, 24, Color3.fromRGB(226, 214, 188), Theme.Role.Body, 0.3, 360)
+			list.TextYAlignment = Enum.TextYAlignment.Top
+			show(list, 1.6)
+			task.wait(math.clamp(#payload.ledger * 0.9, 5, 14))
+			hide(head, 1.2)
+			hide(list, 1.2)
+			task.wait(1.4)
 		end
 		if payload.footer then
 			local f = label(payload.footer, 24, Color3.fromRGB(150, 138, 118), Theme.Role.Body, 0.5, 40)

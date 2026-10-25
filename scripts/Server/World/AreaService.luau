@@ -187,6 +187,7 @@ local lastArea: { [number]: number } = {} -- keyed by UserId
 	mechanic, it is an exploit.
 ]]
 local entered: { [number]: boolean } = {}
+local clearedHandlers: { (number) -> () } = {}
 local enterHandlers: { [number]: { (Player) -> () } } = {}
 
 local areaEvent: RemoteEvent? = nil
@@ -554,6 +555,14 @@ function AreaService.clear(index: number)
 	end
 	log:info(("area %d cleared — gate rising"):format(index))
 	tellEveryoneIn(index)
+	for _, handler in clearedHandlers do
+		task.spawn(handler, index)
+	end
+end
+
+-- Called with the chamber's index each time one is cleared (the camp lights itself on this).
+function AreaService.onCleared(handler: (number) -> ())
+	table.insert(clearedHandlers, handler)
 end
 
 -- Shuts a chamber again. Used when a run restarts, and by any mechanic that

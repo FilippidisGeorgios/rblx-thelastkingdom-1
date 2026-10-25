@@ -1,7 +1,7 @@
 # Spoils — what falls, what is rare, and what a heap of it is for (Design)
 
 **Status:** DESIGN written 2026-10-21. **Built (0.26.0): items, tables, the roll with pity, the backpack, personal
-pickups and the HUD (§10 steps 1–4).** Banking, the camp and the Hub uses are not. Supersedes the "Loot" paragraph of
+pickups and the HUD (§10 steps 1–4); the camp bench and the banking of a run (0.33.0).** The Hub uses (§6.2) are not. Supersedes the "Loot" paragraph of
 `Economy.md` §1 and fills `configs/Loot.luau` / `configs/Items.luau` (both empty until now).
 **Reads with:** `Trials.md` (where the tasks pay out), `Bestiary.md` §9 (equipment of the dead),
 `Arsenal.md` §7 (the run), `Inventory.md`, `Economy.md`, `Progression.md`.
@@ -98,8 +98,8 @@ The roll is pure (`Server/Domain/LootTable`, spec-tested with a seeded RNG).
 
 ## 6. What a heap is for
 
-### 6.1 In the run — the camp **[PROPOSED]** (`Trials.md` §6)
-Crafting at the camp bench, instant, no UI beyond four buttons:
+### 6.1 In the run — the camp **[BUILT 0.33.0]** (`Trials.md` §6, `configs/Camp.luau`)
+Crafting at the camp bench, instant, no UI beyond four buttons (the panel `CampUi`, E at the bench):
 
 | Make | From | Result |
 |---|---|---|
@@ -160,7 +160,8 @@ owner was down or far).
 4. `Server/World/LootService` (kill → rolls → owned pickups → auto-collect) and the client
    `LootController` + `BackpackHud` (pickup lines, the panel).
 5. Then `TrialService` and chamber 4 (`Trials.md`) use `gather`/`carry` and pay Deeds into the same pack.
-6. **Later:** camp crafting; banking to the profile on a won run; the Hub's Tithe, Reliquary, Altar, Journal.
+6. **Done (0.33.0):** camp crafting; banking to the profile (won and wiped), the prisoner's bonus.
+7. **Later:** the Hub's Tithe, Reliquary, Altar, Journal.
 
 ## 11. Open questions for the developer
 

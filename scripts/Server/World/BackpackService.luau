@@ -144,6 +144,15 @@ function BackpackService.clearCarried(player: Player)
 	markDirty(player)
 end
 
+-- One player's pack emptied (their run has been settled).
+function BackpackService.reset(player: Player)
+	local bp = packs[player]
+	if bp then
+		bp:reset()
+		markDirty(player)
+	end
+end
+
 -- A new run: every pack empty.
 function BackpackService.resetAll()
 	for player, bp in packs do
