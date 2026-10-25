@@ -166,8 +166,8 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Containers: a `search` verb generalised from the winch, `cache_*` tables on the stables' nine points.
 - [x] The camp: fire, bench (bandage, arrows, oil pot, torch), chest, the place the fallen wake (Changelog 0.33.0).
 - [x] The Hub's Chapel: Tithe, Reliquary (charm, Blessed Edge), Star Altar, Journal (Changelog 0.34.0).
-- [ ] OPEN THE HUB with this code: run `tools/BuildChapel` there, drag `Lobby.Chapel` to where the chapel stands, walk into the four rings,
-      look at the panel at full height. The Hub place has not been opened with it yet.
+- [x] The Hub was opened with this code (2026-10-25): BuildChapel run, four rings live, panel clicked with a real mouse (Tithe, Altar, Journal).
+- [ ] SAVE the Hub place (the Chapel models and the synced scripts are in the open Studio session only), and look at the chapel by day-to-day eyes: where it stands (25 studs in front of the Storyteller, 8 left), its lighting, whether it crowds the plaza.
 - [ ] The five charms that only sit there: signet (parry window), stirrup (speed out of combat), veil (survive the first blow), lantern
       (the dead notice later), Sexton's key (one locked cache); and the Falling Star sigil on the tabard.
 - [ ] Pages: only five Deeds give one; the Journal grows with the next chambers' deeds and the Story's other voices.
