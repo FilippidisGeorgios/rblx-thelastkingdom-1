@@ -1,7 +1,7 @@
 # Trials — what each chamber asks of you (Design)
 
 **Status:** DESIGN written 2026-10-21. **Built: the engine, the verbs `light`, `toll`, `read`, `gather`, `cook` and `feed`, the pressures `rising` and `tide`,
-and chambers 3 to 8 as data (0.26.0 to 0.31.0).** The rest is design. Builds on `AreaPlan.md` (what is *in* each
+and chambers 3 to 9 as data (0.26.0 to 0.32.0): all nine chambers.** The rest is design. Builds on `AreaPlan.md` (what is *in* each
 chamber), `Encounters.md` (the waves), `Bestiary.md` / `Arsenal.md` (who and with what) and `Spoils.md`
 (what falls out of it all).
 **Serves:** GDD Pillar 3 (exploration is a verb), Pillar 5 (co-op), and the replay goal.
@@ -56,6 +56,8 @@ Each verb is one module (`Server/World/Trial/<Kind>.luau`), driven by data in `c
 | `use` | Spend items at a station (feed, pour, board, put on the fire) | `station`, `item`, `count`, `hold` | **[BUILT]** |
 | `light` | `use` + a flame that stays: ignite N points | `points`, `fuel` | **[BUILT]** |
 | `forge` / `burn` / `chop` / `mine` | The smithy's verbs: the heat you hold, the door you burn, the trees, the veins | see `Trial/Forge`, `Burn`, `Chop`, `Mine` | **[BUILT]** |
+| `king` / `unseal` / `scribe` / `exit` | The boss in three faces that kneels instead of falling; the keep door that answers; the scribe's dialogue and key; the locked roof door, the stair and the arch that ends the run | see `Trial/King`, `Unseal`, `Scribe`, `Exit` | **[BUILT]** |
+| `surge` (pressure) | One mass of the dead, sent once after a warning | `warn`, `delay`, `groups` | **[BUILT]** |
 | `dig` / `mangonel` | The trench you cut with a held pick and prop as you go (slip-back to the last frame); the siege engine you put right and loose | see `Trial/Dig`, `Trial/Mangonel` | **[BUILT]** |
 | `rescue` / `letters` | The long hold on a bound person and the walk to the gate; pages across several houses | see `Trial/Rescue`, `Trial/Letters` | **[BUILT]** |
 | `board` / `siege` | Nail doorways shut; the pause, the horn and the waves that break them (the Great Hall) | see `Trial/Board`, `Trial/Siege` | **[BUILT]** |
@@ -175,10 +177,17 @@ plan, in the order they will be written. Numbers are provisional.
 - **Rolled:** which length of the cut is packed.
 - **Answer to the knight:** the forge's Weight temper (plate does not stop it), the mace, the mangonel, or patience.
 
-### 9 — Keep Steps · *The King*
-- **Asks:** `slay` the King → the keep door opens → the scribe: hear the whole dialogue → the key → the
-  roof door → everyone leaves together.
-- **Pressure:** the boss; the court (the cured villagers who survived stand beside you).
+### 9 — Keep Steps · *The King* **[BUILT]**
+- **Asks (four phases):** (1) break **the King** in his three faces and *release* him (he kneels; a held "Release him" that all can add to);
+  (2) the keep's door answers (the bar lifts, the leaves swing in, a line of chevrons lights the way); (3) the **scribe**: hear the whole
+  dialogue and take the key; (4) the key opens the marshal's door in the west of the hall, a stair of three flights goes up to the wall-walk,
+  and at the end of it an arch with a light: a held "Leave" that needs every living player there. Then the screen closes and the party goes
+  back to the Hub.
+- **Pressure:** the boss. Bestiary §8 is the design of the three faces; the court's carts, statues and fountain are the
+  cover that the Archer King's aimed shots respect and his marked rain ignores.
+- **Deeds:** three papers (the Chancery, the Treasury, the King's garden bench).
+- **Law:** the King is never killed. A modifier on the combat pipeline holds him at the line of each face and at 1 health; the ending is not
+  an attack (Story §8).
 
 ## 6. The camp — the breath after a gate
 

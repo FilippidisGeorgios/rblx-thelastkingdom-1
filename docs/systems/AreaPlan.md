@@ -232,7 +232,7 @@ this is. He must feel like a real opponent, not a health bar.
 **The tower is sealed** until he dies. When he falls it opens, and an arrow
 appears on the ground pointing the way in.
 
-**The scenery is built (2026-10-20), the mechanics are not.** The tower is the
+**Built 2026-10-25/26 (Changelog 0.32.0): the King, the keep door, the scribe, the key, the stair, the walk, the arch.** The scenery was built 2026-10-20: the tower is the
 keep against the back wall (x 0, z -2188; 68 × 56; parapet 72, turrets 84).
 Its door is at the head of the Keep Steps, on a landing 18 up, and it is shut
 and barred: `Decorations.Area9.Keep.KeepDoor` (attribute `Sealed`, collidable,

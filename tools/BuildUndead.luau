@@ -1185,6 +1185,236 @@ TYPES.undead_knight = {
 	end,
 }
 
+-- The Fallen King of Asterfall. The biggest thing in the castle: blackened plate edged in gold, a crown
+-- on a bare, gaunt head that is not quite dead, a bordeaux cloak with a rag of ermine at the neck, the
+-- star on the surcoat. He carries EVERYTHING and shows what the fight needs: the server (Trial/King)
+-- turns the sets on and off by name, so one body is three fights:
+--   SwordSet + ShieldArm  — The Crowned (phase 1)
+--   BowSet                — The Archer King (phase 2)
+--   GreatSet              — The Hollow (phase 3), and the Seam parts light up cold
+--   ShieldBack            — on his back from the start, gone in phase 3
+TYPES.the_king = {
+	dressing = "the fallen king",
+	seed = 91,
+	w = 1.34,
+	h = 1.22,
+	pose = {
+		LowerTorso = V3(-3, 4, 0),
+		UpperTorso = V3(-6, 8, 0),
+		Head = V3(-4, -8, 0),
+		LeftUpperArm = V3(24, 0, 12),
+		LeftLowerArm = V3(88, 0, 0),
+		RightUpperArm = V3(-14, 0, -14),
+		RightLowerArm = V3(70, 0, 0),
+		RightUpperLeg = V3(-12, 0, 0),
+		RightLowerLeg = V3(12, 0, 0),
+		LeftUpperLeg = V3(14, 0, 4),
+		LeftLowerLeg = V3(6, 0, 0),
+	},
+	look = {
+		UpperTorso = { "mail", shade(C.mail, 0.8) },
+		LowerTorso = { "cloth", C.bordeaux },
+		RightUpperArm = { "mail", shade(C.mail, 0.8) },
+		LeftUpperArm = { "mail", shade(C.mail, 0.8) },
+		RightLowerArm = { "steel", shade(C.steel, 0.5) },
+		LeftLowerArm = { "steel", shade(C.steel, 0.5) },
+		RightUpperLeg = leg("cloth", shade(C.bordeaux, 0.7)),
+		LeftUpperLeg = leg("cloth", shade(C.bordeaux, 0.7)),
+		RightLowerLeg = leg("steel", shade(C.steel, 0.5)),
+		LeftLowerLeg = leg("steel", shade(C.steel, 0.5)),
+		RightFoot = { "steel", shade(C.steel, 0.45) },
+		LeftFoot = { "steel", shade(C.steel, 0.45) },
+	},
+	dress = function(ctx: Ctx)
+		local w, h = ctx.w, ctx.h
+		local plate = shade(C.steel, 0.5) -- blackened
+		local plateEdge = shade(C.gold, 1.0)
+		local function named(model: Model?, name: string)
+			if model then
+				model.Name = name
+			end
+		end
+		-- the face: bare, gaunt, the Hollow Light as bright as it gets
+		face(ctx, 1.0, 8, "head_heavy")
+		hair(ctx, C.bone, 16)
+		fingers(ctx, 60)
+		joints(ctx, plate, "steel", plateEdge, plate, "steel")
+		skirt(ctx, C.bordeaux, "cloth", 1.3, 0.25)
+		kit(ctx, "torso_hauberk", "UpperTorso", CFrame.new(), math.max(w, h))
+		tabard(ctx, C.bordeaux, true, true, 0.24)
+		-- breastplate behind the surcoat, gorget, fauld
+		acc(ctx, "UpperTorso", "Breastplate", V3(1.5 * w, 0.9 * h, 0.2 * w), CF(0, 0.34 * h, -0.5 * w) * ANG(rad(-6), 0, 0), "steel", plate)
+		cylAcc(ctx, "UpperTorso", "Gorget", 0.34 * h, 0.5 * w, CF(0, 0.8 * h, -0.02 * w), "steel", plate)
+		cylAcc(ctx, "UpperTorso", "GorgetEdge", 0.06 * h, 0.52 * w, CF(0, 0.97 * h, -0.02 * w), "gold", plateEdge).CastShadow = false
+		for i = 0, 3 do
+			acc(ctx, "LowerTorso", "Fauld" .. i, V3((1.7 - i * 0.04) * w, 0.2 * h, 1.0 * w), CF(0, (0.24 - i * 0.17) * h, -0.02 * w) * ANG(rad(-3 * i), 0, 0), "steel", shade(plate, 1 - i * 0.04))
+			acc(ctx, "LowerTorso", "FauldEdge", V3((1.72 - i * 0.04) * w, 0.03 * h, 1.02 * w), CF(0, (0.14 - i * 0.17) * h, -0.02 * w) * ANG(rad(-3 * i), 0, 0), "gold", plateEdge).CastShadow = false
+		end
+		belt(ctx, C.leatherDark, false)
+		for _, side in { "Right", "Left" } do
+			acc(ctx, side .. "UpperLeg", side .. "Tasset", V3(0.9 * w, 0.8 * h, 0.94 * w), CF(0, 0.12 * h, -0.06 * w), "steel", plate)
+			acc(ctx, side .. "UpperLeg", side .. "TassetEdge", V3(0.92 * w, 0.04 * h, 0.96 * w), CF(0, -0.28 * h, -0.06 * w), "gold", plateEdge).CastShadow = false
+			ballAcc(ctx, side .. "UpperLeg", side .. "Poleyn", V3(0.82 * w, 0.64 * h, 0.86 * w), CF(0, -0.56 * h, -0.08 * w), "steel", plate)
+			cylAcc(ctx, side .. "LowerLeg", side .. "Greave", 0.84 * h, 0.36 * w, CF(0, -0.12 * h, 0), "steel", plate)
+			acc(ctx, side .. "Foot", side .. "Sabaton", V3(0.68 * w, 0.3 * h, 1.24 * w), CF(0, 0.02 * h, -0.08 * w), "steel", plate)
+			cylAcc(ctx, side .. "LowerArm", side .. "Vambrace", 0.9 * h, 0.32 * w, CF(0, -0.02 * h, 0), "steel", plate)
+			cylAcc(ctx, side .. "LowerArm", side .. "VambraceEdge", 0.05 * h, 0.34 * w, CF(0, -0.46 * h, 0), "gold", plateEdge).CastShadow = false
+			acc(ctx, side .. "Hand", side .. "Gauntlet", V3(0.64 * w, 0.58 * h, 0.42 * w), CF(0, -0.02 * h, 0), "steel", shade(plate, 0.85))
+			ballAcc(ctx, side .. "UpperArm", side .. "Couter", V3(0.64 * w, 0.56 * h, 0.64 * w), CF(0, -0.58 * h, -0.02 * w), "steel", plate)
+		end
+		-- pauldrons: three lames, gold rims, a spike
+		for _, sx in { -1, 1 } do
+			ballAcc(ctx, "UpperTorso", "Pauldron", V3(1.2 * w, 0.86 * h, 1.2 * w), CF(sx * 1.16 * w, 0.76 * h, 0) * ANG(0, 0, rad(-sx * 14)), "steel", plate)
+			for i = 1, 2 do
+				acc(ctx, "UpperTorso", "PauldronLame", V3((1.1 - i * 0.06) * w, 0.18 * h, 1.1 * w), CF(sx * (1.2 + i * 0.03) * w, (0.52 - i * 0.16) * h, 0) * ANG(0, 0, rad(-sx * (14 + i * 6))), "steel", shade(plate, 1 - i * 0.05))
+			end
+			cylAcc(ctx, "UpperTorso", "PauldronRim", 0.05 * h, 0.52 * w, CF(sx * 1.18 * w, 0.42 * h, 0) * ANG(0, 0, rad(-sx * 14)), "gold", plateEdge).CastShadow = false
+			wedgeAcc(ctx, "UpperTorso", "PauldronSpike", V3(0.18 * w, 0.56 * h, 0.44 * w), CF(sx * 1.3 * w, 1.14 * h, 0) * ANG(0, 0, rad(-sx * 24)), "gold", plateEdge)
+		end
+		-- the crown: a band, five points, a stone in each; and the cold light under it
+		cylAcc(ctx, "Head", "CrownBand", 0.22 * h, 0.52 * w, CF(0, 0.5 * h, 0.02 * w), "gold", plateEdge)
+		for i = 0, 4 do
+			local a = i * math.pi * 2 / 5
+			wedgeAcc(ctx, "Head", "CrownPoint", V3(0.12 * w, 0.4 * h, 0.12 * w), CF(math.cos(a) * 0.5 * w, 0.78 * h, math.sin(a) * 0.5 * w) * ANG(0, -a + math.pi / 2, 0), "gold", plateEdge)
+			ballAcc(ctx, "Head", "CrownStone", V3(0.07, 0.07, 0.07) * w, CF(math.cos(a) * 0.5 * w, 0.52 * h, math.sin(a) * 0.5 * w), "neon", rgb(190, 40, 60)).CastShadow = false
+		end
+		-- the cloak: bordeaux, torn; a rag of ermine at the neck
+		cloak(ctx, shade(C.bordeaux, 0.5), "cloth", 3.2, 2.5)
+		for i = 1, 8 do
+			local a = ctx.rng:NextNumber(0, math.pi * 2)
+			ballAcc(ctx, "UpperTorso", "Ermine", V3(0.34, 0.3, 0.34) * w, CF(math.cos(a) * 0.92 * w, 0.84 * h, math.sin(a) * 0.5 * w + 0.1), "cloth", C.bone)
+		end
+		-- the cold seams: lit in the last third of the fight, invisible before
+		local seams = {
+			{ "UpperTorso", V3(0.04, 0.8 * h, 0.04), CF(0.3 * w, 0.34 * h, -0.62 * w) * ANG(0, 0, rad(10)) },
+			{ "UpperTorso", V3(0.04, 0.6 * h, 0.04), CF(-0.3 * w, 0.3 * h, -0.62 * w) * ANG(0, 0, rad(-14)) },
+			{ "RightUpperLeg", V3(0.04, 0.7 * h, 0.04), CF(0.1 * w, 0.1 * h, -0.46 * w) },
+			{ "LeftUpperLeg", V3(0.04, 0.7 * h, 0.04), CF(-0.1 * w, 0.1 * h, -0.46 * w) },
+			{ "RightLowerArm", V3(0.04, 0.6 * h, 0.04), CF(0, -0.1 * h, -0.3 * w) },
+			{ "LeftLowerArm", V3(0.04, 0.6 * h, 0.04), CF(0, -0.1 * h, -0.3 * w) },
+			{ "Head", V3(0.04, 0.5 * h, 0.04), CF(0.3 * w, 0.2 * h, -0.4 * w) },
+		}
+		for _, s in seams do
+			local p = acc(ctx, s[1], "Seam", s[2], s[3], "neon", rgb(150, 210, 255))
+			p.CastShadow = false
+			p.Transparency = 1
+		end
+		-- THE SHIELD ON HIS BACK (a kite shield, gold star): until the Hollow takes it
+		local back = kit(ctx, "shield_kite", "UpperTorso", CF(0, 0.1 * h, 0.72 * w) * ANG(0, math.pi, 0), 1.5)
+		named(back, "ShieldBack")
+		-- THE SHIELD ON THE ARM, face out: phase 1
+		local l = pointOf(ctx, "LeftLowerArm")
+		local arm = kitRoot(ctx, "shield_kite", "LeftLowerArm", CF(l + V3(0.45, 0.05, -0.5)) * ANG(0, rad(-10), 0), 1.45)
+		named(arm, "ShieldArm")
+		-- THE SWORD: arming sword in the right hand, point up and forward
+		local r = handAt(ctx, "Right")
+		local sword = kitRoot(ctx, "sword_arming", "RightHand", alongX(r, V3(0.3, 1, -0.4).Unit, 90), 1.35)
+		named(sword, "SwordSet")
+		-- THE BOW: phase 2, in the left hand, string toward him, an arrow on it
+		local lh = handAt(ctx, "Left")
+		local bowAt = CFrame.fromMatrix(lh, V3(0, 1, 0), V3(-1, 0, 0), V3(0, 0, 1))
+		local bow = kitRoot(ctx, "bow_long", "LeftHand", bowAt, 1.5)
+		named(bow, "BowSet")
+		-- THE GREAT SWORD: phase 3, across the body in both fists (the knight's, longer)
+		local dir = (lh - r).Unit
+		local pommel = r - dir * 0.7
+		local guardAt = lh + dir * 0.8
+		local great = Instance.new("Model")
+		great.Name = "GreatSet"
+		great.Parent = ctx.model
+		local function inGreat(p: BasePart): BasePart
+			p.Parent = great
+			return p
+		end
+		inGreat(rodRoot(ctx, "RightHand", "Grip", pommel, guardAt, 0.1, "leather", C.leatherDark))
+		inGreat(rootAcc(ctx, "RightHand", "Pommel", V3(0.4, 0.4, 0.4), CF(pommel), "gold", plateEdge, Enum.PartType.Ball))
+		local side = dir:Cross(V3(0, 1, 0)).Unit
+		inGreat(rodRoot(ctx, "RightHand", "Guard", guardAt - side * 1.0, guardAt + side * 1.0, 0.09, "gold", plateEdge))
+		local bladeLen = 5.4
+		inGreat(rootAcc(ctx, "RightHand", "Blade", V3(0.56, bladeLen, 0.08), CFrame.fromMatrix(guardAt + dir * (bladeLen / 2), side, dir), "steel", shade(C.steel, 1.15)))
+		inGreat(rootAcc(ctx, "RightHand", "Fuller", V3(0.12, bladeLen * 0.8, 0.1), CFrame.fromMatrix(guardAt + dir * (bladeLen * 0.45), side, dir), "dark", shade(C.steel, 0.55)))
+		inGreat(rootAcc(ctx, "RightHand", "Tip", V3(0.56, 0.8, 0.08), CFrame.fromMatrix(guardAt + dir * (bladeLen + 0.25), side, dir), "steel", shade(C.steel, 1.1), nil, "WedgePart"))
+		for _, d in great:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.Transparency = 1
+			end
+		end
+		-- the three that are not in use are hidden by the server at the start (it sets Transparency)
+		blotch(ctx, "UpperTorso", V3(0.34, 0.3, -0.76) * w, V3(0.5, 0.4, 0.06) * w, C.ichor)
+	end,
+}
+
+-- The scribe of the keep: the one living thing left in it. A thin man in an ink-stained robe, a cap, a
+-- satchel of rolls, a quill held like something he forgot he was holding. Drawn on the shambler's
+-- skeleton, with the old man's face; the server paints him living (Cured).
+TYPES.undead_scribe = {
+	dressing = "scribe",
+	seed = 95,
+	w = 0.92,
+	h = 1.0,
+	pose = {
+		LowerTorso = V3(-6, 0, 0),
+		UpperTorso = V3(-12, 4, 0),
+		Head = V3(-10, -6, 0),
+		RightUpperArm = V3(28, 0, -8),
+		RightLowerArm = V3(74, 0, 0),
+		LeftUpperArm = V3(20, 0, 10),
+		LeftLowerArm = V3(60, 0, 0),
+		RightUpperLeg = V3(-6, 0, -1),
+		RightLowerLeg = V3(6, 0, 0),
+		LeftUpperLeg = V3(8, 0, 1),
+		LeftLowerLeg = V3(2, 0, 0),
+	},
+	look = {
+		UpperTorso = { "cloth", shade(C.woad, 0.9) },
+		LowerTorso = { "cloth", shade(C.woad, 0.8) },
+		RightUpperArm = { "cloth", shade(C.woad, 0.9) },
+		LeftUpperArm = { "cloth", shade(C.woad, 0.9) },
+		RightLowerArm = { "skin", C.skin },
+		LeftLowerArm = { "skin", C.skin },
+		RightUpperLeg = leg("cloth", shade(C.woad, 0.8)),
+		LeftUpperLeg = leg("cloth", shade(C.woad, 0.8)),
+		RightLowerLeg = leg("cloth", shade(C.woad, 0.72)),
+		LeftLowerLeg = leg("cloth", shade(C.woad, 0.72)),
+		RightFoot = { "leather", C.leatherDark },
+		LeftFoot = { "leather", C.leatherDark },
+	},
+	dress = function(ctx: Ctx)
+		local w, h = ctx.w, ctx.h
+		face(ctx, 0.0, 4, "head_old")
+		fingers(ctx, 36)
+		joints(ctx, shade(C.woad, 0.9), "cloth", C.skinDark, shade(C.woad, 0.8), "cloth")
+		-- a long robe to the ankle, torn at the hem, with ink down the front
+		skirt(ctx, shade(C.woad, 0.8), "cloth", 2.2, 0.3)
+		acc(ctx, "UpperTorso", "RobeFront", V3(1.5 * w, 1.2 * h, 0.1), CF(0, 0.08 * h, -0.46 * w), "cloth", shade(C.woad, 0.9))
+		strips(ctx, "UpperTorso", "RobeHem", 6, 1.5 * w, 2.3 * h, CF(0, -0.5 * h, -0.47 * w), "cloth", shade(C.woad, 0.8), 0.3, 5)
+		acc(ctx, "UpperTorso", "InkStain", V3(0.5 * w, 0.4 * h, 0.03), CF(0.2 * w, 0.0, -0.52 * w), "dark", C.ichor).CastShadow = false
+		acc(ctx, "UpperTorso", "InkStain2", V3(0.26 * w, 0.5 * h, 0.03), CF(-0.35 * w, -0.3 * h, -0.52 * w), "dark", shade(C.ichor, 0.8)).CastShadow = false
+		belt(ctx, C.leather, true)
+		boots(ctx, C.leatherDark)
+		-- a soft cap, and a few long grey hairs under it
+		ballAcc(ctx, "Head", "Cap", V3(1.04 * w, 0.62 * h, 1.06 * w), CF(0, 0.38 * h, 0.04 * w), "cloth", shade(C.woad, 0.72))
+		hair(ctx, shade(C.bone, 0.8), 7)
+		-- the satchel of rolls across the body, and a roll under the arm
+		acc(ctx, "LowerTorso", "Satchel", V3(0.8 * w, 0.8 * h, 0.4 * w), CF(-0.95 * w, -0.1 * h, 0.1 * w), "leather", C.leather)
+		for i = 0, 2 do
+			cylAcc(ctx, "LowerTorso", "Roll", 0.9 * h, 0.1 * w, CF((-0.8 - i * 0.12) * w, 0.55 * h, (0.1 + i * 0.05) * w) * ANG(0, 0, rad(-8 + i * 8)), "cloth", C.linen)
+		end
+		acc(ctx, "UpperTorso", "Strap", V3(0.12, 2.1 * h, 0.06), CF(0, 0, -0.48 * w) * ANG(0, 0, rad(30)), "leather", C.leatherDark)
+		-- the quill in the right hand, the nib stained; an ink-horn at the belt
+		local hand = handAt(ctx, "Right")
+		rodRoot(ctx, "RightHand", "QuillShaft", hand + V3(0.05, 0.3, 0.2), hand + V3(0.25, -0.3, -1.25), 0.03, "bone", C.bone)
+		for k = 0, 3 do
+			wedgeAcc(ctx, "RightHand", "Vane", V3(0.02, 0.26, 0.22), CF(0.0, 0, 0), "cloth", shade(C.linen, 0.85 + k * 0.05)).CFrame = ctx.root.CFrame * CFrame.lookAt(hand + V3(0.05 + k * 0.025, 0.3 + k * 0.12, 0.2 + k * 0.05), hand + V3(0.25, -0.3, -1.25))
+		end
+		cylAcc(ctx, "LowerTorso", "InkHorn", 0.3 * h, 0.12 * w, CF(0.7 * w, -0.05 * h, -0.45 * w), "bone", shade(C.bone, 0.8))
+		-- spectacles: two thin rings
+		for _, sx in { -1, 1 } do
+			cylAcc(ctx, "Head", "Lens", 0.03, 0.12 * w, CF(sx * 0.18 * w, 0.12 * h, -0.44 * w) * ANG(rad(90), 0, 0), "steel", shade(C.steel, 0.9)).CastShadow = false
+		end
+	end,
+}
+
 -- Wall archer: thin, coifed, a bow taller than the shoulders.
 TYPES.undead_archer = {
 	dressing = "wall archer",
@@ -1381,6 +1611,8 @@ if MODE ~= "clear" then
 		"undead_archer",
 		"undead_sentinel",
 		"undead_knight",
+		"the_king",
+		"undead_scribe",
 	}
 	local built = {}
 	for _, id in order do

@@ -171,6 +171,16 @@ type RangedProfile = {
 	maxRange: number,
 }
 
+--[[
+	A script may take a unit over for a while (the King's three fights): `hold` stops the brain, and
+	`hooks` replace what the windup and the strike DO while the brain keeps the telegraphing, the facing
+	and the animation states. A `strike` hook returns nothing: the brain does not also attack.
+]]
+type Hooks = {
+	windup: ((entityId: string, target: CombatEntity.CombatEntity?) -> ())?,
+	strike: ((entityId: string, target: CombatEntity.CombatEntity?, selfPos: Vector3) -> ())?,
+}
+
 type Agent = {
 	brain: EnemyBrain.EnemyBrain,
 	spawnPosition: Vector3,
@@ -199,6 +209,8 @@ type Agent = {
 	-- Only The King has both; nil means "whatever it has, it always uses".
 	meleeRange: number?,
 	follow: boolean, -- with nothing to fight, walk to the nearest player (the cured)
+	held: boolean, -- a script has taken the body: the brain does nothing (Trial/King)
+	hooks: Hooks?,
 	farTime: number, -- seconds a follower has been further than FOLLOW_TELEPORT_DIST
 	stuckSeconds: number,
 	followCheckAt: number,
@@ -479,6 +491,8 @@ function EnemyAIService.attach(entity: CombatEntity.CombatEntity, enemyId: strin
 		ranged = ranged,
 		meleeRange = ai.MeleeRange,
 		follow = ai.Follow == true,
+		held = false,
+		hooks = nil,
 		farTime = 0,
 		stuckSeconds = 0,
 		followCheckAt = 0,
@@ -712,6 +726,9 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		return
 	end
 	local model = entity.model
+	if agent.held then
+		return
+	end
 	local selfPos = positionOf(model)
 
 	local target, targetDist = nearestHostile(selfPos, entity.faction)
@@ -808,7 +825,9 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 				THE STRIKE. Judged now, not when the swing began: a target that has
 				stepped out of reach, or round behind, takes nothing.
 			]]
-			if target and target.model and targetDist then
+			if agent.hooks and agent.hooks.strike then
+				agent.hooks.strike(entityId, target, selfPos)
+			elseif target and target.model and targetDist then
 				local toTarget = positionOf(target.model) - selfPos
 				local flatTo = Vector3.new(toTarget.X, 0, toTarget.Z)
 				local look = model:GetPivot().LookVector
@@ -887,6 +906,9 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 					agent.phaseEnd = now + agent.windup
 					agent.faceUntil = now + agent.windup * FACE_LOCK
 					setVisual(model, agent, "Windup")
+					if agent.hooks and agent.hooks.windup then
+						agent.hooks.windup(entityId, target)
+					end
 				end
 			end
 		end
@@ -900,6 +922,99 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		end
 	end
 	-- Dead: EnemyService takes the body from here.
+end
+
+--[[
+	TAKING A UNIT OVER (Trial/King). Everything here is for the one unit that changes how it fights as
+	it loses health; ordinary enemies never need it.
+]]
+function EnemyAIService.hold(entityId: string, held: boolean)
+	local agent = agents[entityId]
+	if agent then
+		agent.held = held
+		agent.waypoints = {}
+		agent.pathGoal = nil
+		agent.phase = nil
+	end
+end
+
+function EnemyAIService.setHooks(entityId: string, hooks: Hooks?)
+	local agent = agents[entityId]
+	if agent then
+		agent.hooks = hooks
+	end
+end
+
+-- What it fights with right now. Any field left nil is left alone.
+export type Tune = {
+	moveSpeed: number?,
+	attackDamage: number?,
+	attackCooldown: number?,
+	windup: number?,
+	strike: number?,
+	recover: number?,
+	attackRange: number?,
+	minRange: number?,
+	meleeRange: number?,
+	ranged: boolean?, -- true: use the bow from the def; false: swing only
+	spawnPosition: Vector3?,
+	detection: number?,
+	leash: number?,
+}
+
+local rangedBackup: { [string]: RangedProfile } = {}
+
+function EnemyAIService.tune(entityId: string, t: Tune)
+	local agent = agents[entityId]
+	if not agent then
+		return
+	end
+	if t.moveSpeed then
+		agent.moveSpeed = t.moveSpeed
+	end
+	if t.attackDamage then
+		agent.attackDamage = t.attackDamage
+	end
+	if t.attackCooldown then
+		agent.attackCooldown = t.attackCooldown
+	end
+	if t.windup then
+		agent.windup = t.windup
+	end
+	if t.strike then
+		agent.strike = t.strike
+	end
+	if t.recover then
+		agent.recover = t.recover
+	end
+	if t.attackRange then
+		agent.params.AttackRange = t.attackRange
+	end
+	if t.minRange ~= nil then
+		agent.params.MinRange = if t.minRange > 0 then t.minRange else nil
+	end
+	if t.meleeRange ~= nil then
+		agent.meleeRange = if t.meleeRange > 0 then t.meleeRange else nil
+	end
+	if t.detection then
+		agent.params.DetectionRadius = t.detection
+	end
+	if t.leash then
+		agent.params.LeashRadius = t.leash
+	end
+	if t.spawnPosition then
+		agent.spawnPosition = t.spawnPosition
+	end
+	if t.ranged ~= nil then
+		if t.ranged then
+			if not agent.ranged then
+				agent.ranged = rangedBackup[entityId]
+			end
+		elseif agent.ranged then
+			rangedBackup[entityId] = agent.ranged
+			agent.ranged = nil
+		end
+	end
 end
 
 function EnemyAIService.Init() end

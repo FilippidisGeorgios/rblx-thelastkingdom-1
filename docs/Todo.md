@@ -178,6 +178,9 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] Boards as a repair loop: a broken door in the middle of a wave, planks from the racks, a cooldown on rebuilding.
 - [x] Chamber 7: the prisoner (held 20 s, retries), the walk to the gate, three letters (Changelog 0.30.0).
 - [x] Chamber 8: the cut (pick, slip-back, frames), surges, the Hollow Knight and its armour, the mangonel, three papers (Changelog 0.31.0).
+- [x] Chamber 9: the King (three faces, kneels, "Release him"), the keep door, the scribe, the key, the marshal's door, the stair and the walk, the arch and the ending card (Changelog 0.32.0). **All nine chambers are built.**
+- [ ] LOOK at chamber 9 (Studio stopped rendering during its playtest): the King's three faces and the frost rings, the doors, the hall and the stair, the ending card.
+- [ ] The ending is a card and a teleport; the run is not settled (banking to the profile, the prisoner bonus, the wipe rule).
 - [ ] Sounds for the work: pick on stone, rubble rolling back, the windlass's ratchet, the throw, plate. (No audio in the project yet.)
 - [ ] More poses in `WorkPoseController`: the forge's hammer, the woodyard's axe, nailing a board, untying a rope.
 - [ ] Look at the Hollow Knight's sweep and the digger from the front, in the real fog; tune the surges with two players.

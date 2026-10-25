@@ -128,7 +128,10 @@ local function apply(agent: Agent)
 		t:Play(0.08)
 	elseif state == "Windup" then
 		stopLoops(agent, nil)
-		local id = set.attack[set.kindOf[agent.kind] or "shove"] or set.attack.shove
+		-- A unit that fights three ways (the King) says which one it is doing right now.
+		local override = model:GetAttribute("AttackKind")
+		local kindName = if typeof(override) == "string" then override else set.kindOf[agent.kind]
+		local id = set.attack[kindName or "shove"] or set.attack.shove
 		local t = track(agent, "attack", id)
 		if t.IsPlaying then
 			t:Stop(0)

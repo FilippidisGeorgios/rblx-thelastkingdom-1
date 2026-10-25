@@ -281,6 +281,10 @@ local Loot = {
 			Always = { { Item = "rusted_iron", Min = 3, Max = 5 }, { Item = "bandage", Min = 2, Max = 3 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "arrow_bundle", Weight = 1, Min = 1, Max = 2 } } },
 		},
+		-- The three papers of the keep: a star shard, and a stirrup nobody has ridden in for forty years.
+		deed_keep_papers = {
+			Always = { { Item = "star_shard", Min = 1, Max = 1 }, { Item = "brass_stirrup", Min = 1, Max = 1 } },
+		},
 		deed_smithy_planks = {
 			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "hearty_dish", Weight = 1, Min = 1, Max = 1 } } },

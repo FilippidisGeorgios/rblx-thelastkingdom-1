@@ -1,3 +1,45 @@
+## Version 0.32.0 — Chamber 9, the Keep Steps: the King, the keep, the scribe, the way out (every chamber is now built)
+
+- **The King (`Trial/King`).** One body, one health bar, a nameplate that says "The King" with two lines on its bar where he changes
+  face; three faces, and they cannot be skipped (`KingFloor` on the model is a combat modifier that clamps every blow to the line, and
+  he takes nothing while he changes face): **The Crowned** (shield on the arm, the sword; at 80% a horn and two spearmen out of the dark),
+  **The Archer King** (the shield goes to his back, the bow into his hand; he leaps up to the landing at the head of the Steps and rains
+  arrows on the court: a ring of pale frost shows where each one will land a second before it does, every second volley is an aimed
+  shot that cover can stop; climb at him and he sidesteps across the landing), **The Hollow** (the seams of the plate open on a cold
+  light, the shield is left, a great sword in two hands, faster; rings of frost grow over the court and slow whoever stands in them).
+  He does not fall: at the bottom he kneels (the kneeling clip, held), and the prompt is a held **Release him** (5 s, banked, summed
+  across players). The light goes out of his eyes, two points of the crown fall, and he pays the_king's table.
+- **EnemyAIService can be taken over** for a while: `hold`, `tune` (speed, damage, windup, ranges, bow or sword) and `hooks` (what the
+  windup and the strike DO while the brain keeps the telegraph, the facing and the animation); and the client takes an `AttackKind`
+  attribute so one body plays three attack clips (bash, draw, sweep).
+- **Bodies (`BuildUndead`).** `the_king` (blackened plate edged in gold, a crown on a bare gaunt head, bordeaux cloak with ermine, five
+  sets of arms toggled by name: sword, shield on the arm, shield on the back, bow, great sword) and `undead_scribe` (an ink-stained
+  robe, a cap, spectacles, a satchel of rolls, a quill).
+- **The keep door (`Trial/Unseal`).** The bar is lifted out of its staples, tips and falls to the landing; the two oak-and-iron leaves swing
+  in on their hinges one after the other (slow to start, a settle, dust at the foot); a line of pale chevrons comes up along the court
+  and the Steps toward the door and pulses toward it. Done when somebody walks in.
+- **The scribe (`Trial/Scribe`).** The only living thing in the keep. A conversation of nine lines over his head (the King, the well,
+  the bells, the Company's names, the child's drawing, the way out), only while somebody is within 34 studs, never hurried, never twice;
+  then the key (`keep_key`, carried). He gives another to whoever asks if the first is lost.
+- **The way out (`Trial/Exit`).** The marshal's little door in the west of the hall: a held "Unlock" with the key; the leaf swings in; behind
+  it three flights of nineteen steps, the wall-walk round the top of the keep, and an arch with a light in it. A held "Leave" in the
+  light; the screen closes when every living player has it and stands there (`EndingEvent` → `EndingController`/`EndingUi`: a title in
+  gold, four lines, "To be continued"), and ten seconds later the party is sent back to the Hub.
+- **`tools/BuildKeepInterior`** builds all of the keep's inside: six pillars, the long table with chairs and candles, the hearth, banners,
+  sconces and braziers, the scribe's desk and shelves, the stair tower and its partition and door, the wall-walk with railings and corbels,
+  the arch, and the two leaves of the keep's own door. Checked with the pathfinder: hall to vestibule, vestibule to the head of the
+  stair, the whole walk to the arch (each leg a route).
+- **Deeds:** three papers (the Chancery's last writ, the Treasurer's reckoning, the words cut in the King's bench) pay a star shard
+  and a brass stirrup.
+
+**Checked in a playtest** (real prompts and keys): the fight through all three faces (the damage clamp at each line, the face changes, the
+leap to the landing, the marked volleys and the aimed shots, the frost zones and the slow, the kneel), the banked "Release him" hold,
+the keep door opening (leaf 104°, bar on the landing, eight chevrons), the scribe's whole dialogue and the key, the Unlock with the key
+spent and the leaf opening (-102°), the Leave prompt, the ending card. **Not seen by eye after the first minutes**: Studio stopped
+rendering during the playtest (the capture came back flat), so the Archer King's rings, the Hollow's seams and frost, the opening of the
+doors, the hall and the stair tower with its lights, and the ending card have not been looked at; neither the sidestep nor the horn's
+guard arriving, two players, the end of a real run.
+
 ## Version 0.31.0 — Chamber 8, the Inner Ward: the cut, the surges, the Hollow Knight, the mangonel
 
 - **The cut (`Trial/Dig`).** The arch over the passage is down. Hold E at the face of the trench and the party swings a miner's pick

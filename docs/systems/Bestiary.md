@@ -280,7 +280,7 @@ Everything else — what spawns where, how many — is `Waves`/`Difficulty`/`Are
 
 ## 8. The King — a fight, not a health bar
 
-`the_king` **[BUILT]** · HP 2400 · nameplate **"The King"** **[LOCKED]**. Armour, a shield on the back, a
+`the_king` **[BUILT 0.32.0: Trial/King, three faces, kneels, "Release him"]** · HP 2400 · nameplate **"The King"** **[LOCKED]**. Armour, a shield on the back, a
 sword, and a bow. The arena is the keep forecourt below the Steps: the carriage on its side, the dry
 fountain, the statues, the guard's last ring of carts. Cover is real and he uses the same cover.
 

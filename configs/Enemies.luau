@@ -336,13 +336,14 @@ local Enemies = {
 		Faction = "Enemies",
 		Archetype = "Boss",
 		MaxHealth = 2400,
+		Armour = 0.25, -- blackened plate: the Weight temper turns most of it back (ArmourService)
 		Stats = {},
 		DamageType = "Physical",
 		Resistances = {},
 		Tier = "Boss",
 		Abilities = {},
 		-- The bodies it may wear (ServerStorage.Assets.Undead); one is picked per spawn.
-		Body = { "undead_sentinel" },
+		Body = { "the_king" },
 		AI = {
 			DetectionRadius = 200,
 			AttackRange = 80, -- the bow reaches this far
@@ -439,6 +440,24 @@ local Enemies = {
 			AttackDamage = 0,
 			AttackDamageType = "Physical",
 		},
+	},
+
+	--[[
+		The scribe of the keep (chamber 9): the one living thing in it. A static body at his desk: no brain,
+		no combat entity, nothing to hit (EnemyService.spawnStatic). Trial/Scribe gives him a voice.
+	]]
+	scribe_npc = {
+		DisplayName = "Scribe",
+		Faction = "Neutral",
+		Archetype = "Npc",
+		Body = { "undead_scribe" },
+		Cured = true,
+		MaxHealth = 1,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Standard",
+		Abilities = {},
 	},
 
 	cured_villager_bow = {

@@ -458,6 +458,136 @@ local Trials = {
 	},
 
 	--======================================================================
+	-- 9 — The Keep Steps. The King, and the way out.
+	--
+	-- Four phases, and they are the last of the run: break the King in his three
+	-- faces (and do not kill him: kneel him, and release him), watch the keep's
+	-- door answer, hear the scribe out and take his key, unlock the marshal's door
+	-- and go up together to the light at the end of the wall-walk. No gate: the
+	-- ending. Three papers in the court's own buildings are the deeds.
+	--======================================================================
+	[9] = {
+		phases = {
+			{
+				id = "king",
+				hint = "Break the King: face %d of %d",
+				tasks = {
+					{
+						id = "king",
+						kind = "king",
+						enemy = "the_king",
+						landing = "Decorations.Area9.KeepLanding",
+						centre = "Battleground.Chamber9.Objectives.Centre",
+						guard = {
+							id = "undead_spearman",
+							count = 2,
+							spawns = { "Battleground.Chamber9.Spawns.West", "Battleground.Chamber9.Spawns.East" },
+						},
+						release = 5,
+						slow = 0.55,
+					},
+				},
+			},
+			{
+				id = "door",
+				hint = "The keep is opening",
+				tasks = {
+					{
+						id = "door",
+						kind = "unseal",
+						door = "Decorations.Area9.Keep.Interior.KeepDoor",
+						seal = "Decorations.Area9.Keep.KeepDoor",
+						bar = "Decorations.Area9.Keep.Bar",
+						from = "Battleground.Chamber9.Objectives.Centre",
+						to = "Decorations.Area9.KeepLanding",
+					},
+				},
+			},
+			{
+				id = "hall",
+				hint = "Hear the scribe out",
+				tasks = {
+					{
+						id = "scribe",
+						kind = "scribe",
+						at = "Decorations.Area9.Keep.Interior.Desk.ScribeAt",
+						enemy = "scribe_npc",
+						name = "Orrin Vale, keeper of the rolls",
+						key = "keep_key",
+						lines = {
+							"You came up the Steps. Nobody has come up the Steps in forty years, and I have written that down every morning, in case.",
+							"Do not mind the quill. It dries if I stop. I stopped once, the ninth night of the bells, and I have not stopped since.",
+							"He went down under the keep, the King. Not to hide: to fetch. Something fell on Asterfall the year the Company marched. It fell into the old well under this hall, and he went to bring it up.",
+							"He brought it up. The bells rang nine days. Everyone who heard them lay down in the morning, and was still lying down at noon. I heard them too. I was writing.",
+							"The Company\'s names are in the third drawer, under the star. I have copied them nine hundred and eleven times. I do not know why I know how many.",
+							"You let him go. I heard it: the bells stopped, and the quiet is so large that I do not know where to put my hands.",
+							"He was not wicked. He was sad, as the child drew him. If it is true that a king can carry a kingdom, it is also true that a kingdom can sit down on him.",
+							"The way out is up. The marshal\'s stair, behind the little door in the west of the hall. I keep the key, because I keep everything.",
+							"Take it. Go up into the light, all of you together, and say that Asterfall remembers. And ask what it was that sent the Company north. Nobody ever wrote that down.",
+						},
+					},
+				},
+			},
+			{
+				id = "way",
+				hint = "Unlock the marshal's door, and go up together (%d of %d at the light)",
+				tasks = {
+					{
+						id = "exit",
+						kind = "exit",
+						door = "Decorations.Area9.Keep.Interior.RoofDoor",
+						arch = "Decorations.Area9.Keep.Interior.ExitArch",
+						key = "keep_key",
+						leave = 2,
+						after = 10,
+					},
+				},
+			},
+		},
+
+		pressure = {},
+
+		deeds = {
+			{
+				id = "papers",
+				kind = "letters",
+				prize = "deed_keep_papers",
+				letters = {
+					{
+						at = "Decorations.Area9.Chancery.Table",
+						title = "The Last Writ of the Chancery",
+						sign = "Clerk of the Seal, under the King's hand",
+						lines = {
+							"By the King's order: that the bells be rung for the Company's return, nine for the nine halls it left, at the hours of the old rule.",
+							"By the King's order: that no person leave the keep by the stair or the court without his seal. By the King's order: that the well be opened.",
+							"Sealed in the ninth month. The seal will not take the wax. I have put it in the fire to warm it, and it is cold when I take it out.",
+						},
+					},
+					{
+						at = "Decorations.Area9.Treasury.Clutter",
+						title = "The Treasurer's Reckoning",
+						sign = "Hollis Crane, treasurer of Asterfall",
+						lines = {
+							"Received, this quarter: nothing. Paid out: the stonemasons of the north quarter, for the well-head, to be built in secret. Paid out: the same again.",
+							"I am asked what the well is for. I have been told it is for water. I have been told it is for the Company's homecoming. Nobody has told me why the masons ask to be paid in candles.",
+							"If these books are found: the kingdom was solvent on the day it fell. It was the King who was not.",
+						},
+					},
+					{
+						at = "Decorations.Area9.KingsGarden.Seat",
+						title = "Cut in the stone of a bench",
+						sign = "a child's hand, then a man's",
+						lines = {
+							"Here the King sat in the evenings, and the child drew him, and he said it was not a good likeness, and kept it.",
+							"Underneath, in a larger and more careful hand, the same words again, and then: she would have liked the garden this year.",
+						},
+					},
+				},
+			},
+		},
+	},
+
+	--======================================================================
 	-- 4 — Graveyard. Carry the fire.
 	--
 	-- Four braziers, one to each section of the burying ground. A torch burns

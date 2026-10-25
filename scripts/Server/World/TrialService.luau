@@ -75,6 +75,10 @@ local TASKS: { [string]: any } = {
 	letters = require(script.Parent.Trial.Letters),
 	dig = require(script.Parent.Trial.Dig),
 	mangonel = require(script.Parent.Trial.Mangonel),
+	king = require(script.Parent.Trial.King),
+	unseal = require(script.Parent.Trial.Unseal),
+	scribe = require(script.Parent.Trial.Scribe),
+	exit = require(script.Parent.Trial.Exit),
 }
 
 local PRESSURE: { [string]: any } = {

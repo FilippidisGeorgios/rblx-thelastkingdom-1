@@ -49,6 +49,7 @@ local EVENT_NAMES: { string } = {
 	"RequestIntroSkip", -- client -> server: this player votes to skip the arrival scene
 	"DocumentEvent", -- server -> client: open a parchment (a recipe, a letter, a burial roll) for one player
 	"BackpackEvent", -- server -> client: the run backpack (set) and what was just picked up (gain)
+	"EndingEvent", -- server -> client: the end of the run: the screen closes on a title and a few lines
 }
 local FUNCTION_NAMES: { string } = {}
 
