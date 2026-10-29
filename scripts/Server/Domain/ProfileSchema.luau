@@ -11,14 +11,29 @@
 	v4 adds what the Chapel does with it: the `loadout` (what the next run starts with: a
 	`kit` of things to carry in, an equipped `charm`, a `blessing`) and the Falling Star's
 	`altar` (shards offered so far). See Domain/Chapel.
+	v5 adds the `account`: who this profile belongs to (the Company number from Domain/PlayerId, the
+	Roblox user id, the name and display name last seen, when it began and when it was last loaded), for the
+	Muster Roll and the admin panel to come. `stamp` writes it on every load.
 
 	Location: ServerScriptService.Server.Domain.ProfileSchema
 ]]
 
+local PlayerId = require(script.Parent.PlayerId)
+
 export type Loadout = { kit: { [string]: number }, charm: string?, blessing: string? }
+
+export type Account = {
+	id: string?,
+	userId: number?,
+	name: string?,
+	displayName: string?,
+	since: number?,
+	lastSeen: number?,
+}
 
 export type Profile = {
 	version: number,
+	account: Account,
 	currency: number,
 	xp: number,
 	level: number,
@@ -34,12 +49,13 @@ export type Profile = {
 
 local ProfileSchema = {}
 
-ProfileSchema.VERSION = 4
+ProfileSchema.VERSION = 5
 
 -- Returns a fresh default profile for a brand-new player.
 function ProfileSchema.default(): Profile
 	return {
 		version = ProfileSchema.VERSION,
+		account = {},
 		currency = 0,
 		xp = 0,
 		level = 1,
@@ -62,6 +78,7 @@ function ProfileSchema.migrate(profile: Profile): Profile
 		profile.level = profile.level or 1
 	end
 	-- Backfill any container that a partial/old save might be missing.
+	profile.account = profile.account or {}
 	profile.currency = profile.currency or 0
 	profile.inventory = profile.inventory or {}
 	profile.stash = profile.stash or {}
@@ -75,6 +92,23 @@ function ProfileSchema.migrate(profile: Profile): Profile
 	profile.achievements = profile.achievements or {}
 	profile.version = ProfileSchema.VERSION
 	return profile
+end
+
+--[[
+	Writes who the profile belongs to. The Company number is given ONCE (the first time) and never changed
+	after that, even if the scheme in Domain/PlayerId changes; the names and the last-seen time follow the
+	player. `now` is os.time(), passed in so the rule stays pure.
+]]
+function ProfileSchema.stamp(profile: Profile, who: { userId: number, name: string, displayName: string }, now: number)
+	local account = profile.account
+	if account.id == nil then
+		account.id = PlayerId.forUser(who.userId)
+	end
+	account.userId = who.userId
+	account.name = who.name
+	account.displayName = who.displayName
+	account.since = account.since or now
+	account.lastSeen = now
 end
 
 return ProfileSchema

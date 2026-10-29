@@ -36,6 +36,10 @@ export type Ledger = {
 	bonusGold: number, -- on top, the prisoner
 	lostGold: number, -- what a wiped run did not keep
 	items: { [string]: number },
+	-- filled in by RunSettlement after the run's experience is paid (Domain/RunXp)
+	xp: number?,
+	level: number?, -- the level they are at now
+	levelsGained: number?,
 }
 
 export type Profile = {

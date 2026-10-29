@@ -36,6 +36,16 @@ local ctx: PlayerCard.Context? = nil
 local profileEvent: RemoteEvent
 local lastAsk: { [Player]: number } = {}
 
+-- A player's name, level, rank, Might and Renown, for the train to show beside them. Nil without a profile.
+function ProfileService.brief(player: Player): PlayerCard.Brief?
+	local profile = DataService.get(player)
+	local context = ctx
+	if not profile or not context then
+		return nil
+	end
+	return PlayerCard.brief(PlayerCard.build(profile, context))
+end
+
 local function onRequest(player: Player)
 	local now = os.clock()
 	if now - (lastAsk[player] or 0) < ASK_GAP then

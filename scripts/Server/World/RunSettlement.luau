@@ -30,11 +30,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Server = script.Parent.Parent
 local Settlement = require(Server.Domain.Settlement)
+local RunXp = require(Server.Domain.RunXp)
+local PlayerStats = require(Server.Domain.PlayerStats)
+local PlayerCard = require(Server.Domain.PlayerCard)
 local DataService = require(Server.Services.DataService)
 local GameService = require(Server.Services.GameService)
 local SaveService = require(Server.Services.SaveService)
 local TeleportService = require(Server.Services.TeleportService)
+local RewardService = require(Server.Services.RewardService)
 local BackpackService = require(script.Parent.BackpackService)
+local RunStatsService = require(script.Parent.RunStatsService)
 local DeathService = require(script.Parent.DeathService)
 local RunModService = require(script.Parent.RunModService)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -65,6 +70,14 @@ local function ledgerLines(ledger: Settlement.Ledger, prisonerAlive: boolean): {
 		table.insert(lines, text)
 	else
 		table.insert(lines, ("Gold kept: %d of %d"):format(ledger.gold, ledger.gold + ledger.lostGold))
+	end
+	if ledger.xp and ledger.xp > 0 then
+		local text = ("Experience: +%d"):format(ledger.xp)
+		if (ledger.levelsGained or 0) > 0 and ledger.level then
+			local titles = Config.get("Profile").Titles
+			text ..= ("  (level %d, %s)"):format(ledger.level, PlayerCard.titleFor(ledger.level, titles))
+		end
+		table.insert(lines, text)
 	end
 	local names: { string } = {}
 	for itemId in ledger.items do
@@ -147,6 +160,18 @@ function RunSettlement.finish(outcome: Settlement.Outcome, players: { Player }?)
 			local profile = DataService.get(player)
 			if profile then
 				Settlement.apply(profile :: any, ledger)
+				-- what the run was worth in experience, and what they did in it (World/RunStatsService)
+				local snap = RunStatsService.snapshot(player)
+				local xp = RunXp.compute(
+					{ kills = snap.kills, cleared = snap.cleared, deeds = snap.deeds },
+					outcome,
+					Config.get("Experience").Sources
+				)
+				local paid = RewardService.applyTo(player, { xp = xp.total })
+				ledger.xp = xp.total
+				ledger.level = (profile :: any).level
+				ledger.levelsGained = if paid then paid.levelsGained else 0
+				PlayerStats.addRun((profile :: any).stats, snap, outcome, ledger.gold + ledger.bonusGold, xp.total)
 				SaveService.save(player)
 			else
 				log:warn(player.Name .. " has no profile: nothing was banked")

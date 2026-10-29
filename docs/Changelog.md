@@ -1,3 +1,53 @@
+## Version 0.38.0 — The profile grows up: the Company number, levels to 100, Renown, statistics, and the train knows who is aboard
+
+What the developer asked for in the profile (2026-10-30), built: the profile shows the level and the nickname, a unique ID for the
+admin panel to come, a level cap of 100 that is easy up to 30 and hard after, a prize at every 5th level and a milestone at every
+10th, the player's overall rating, their statistics, and all of it on the train.
+
+- **The Company number (`Domain/PlayerId`, schema v5).** `TLK-03YB-HWSR-T`: the Roblox user id in Crockford base 32 with one check
+  character. Made, not counted (no global counter, no DataStore call, the same in both places), given ONCE and stored in
+  `profile.account` (`ProfileSchema.stamp` on every load: `{ id, userId, name, displayName, since, lastSeen }`), so it never changes even if
+  the scheme does. `PlayerId.decode` goes back to the user id for the admin panel; a typed number is forgiven its case, spaces and O/0
+  and I/L/1, and any single wrong character is refused. The nickname is the Roblox display name; a custom nickname is not built.
+- **Levels 1 to 100 (`configs/Experience`).** The table is built from five numbers: 60 XP for the first level, +12% a level to level 30
+  (about 12,900 XP in all), then +4% a level to 100 (about 597,500 in all; level 99 alone costs 24,000). Ranks change every tenth level
+  (`configs/Profile.Titles`: Recruit, Footman, Man-at-Arms, Sergeant, Standard-Bearer, Knight-Errant, Banneret, Castellan, Marshal,
+  Lord Marshal, Warden of the Last Kingdom).
+- **The road and its prizes (`Domain/LevelMilestones`).** A prize stop at every 5th level, a milestone at every 10th, twenty stops in all,
+  drawn on the Roll (gold reached, the tens larger, the next outlined, "still being forged"). What the prizes ARE is not decided:
+  `Experience.LevelRewards` is empty. `RewardService` already reports the prize levels a gain passes (`Applied.prizeLevels`, logged), which is
+  where handing them over will go.
+- **A run now pays experience (`Domain/RunXp`, `configs/Experience.Sources`).** Before this, only the old placeholder missions paid XP, so no
+  one could level in the real game. At the end of a run each player is paid for the dead slain by tier (2, 8, 60), each chamber cleared
+  (30 + 10 x n), each deed (60) and, on a victory, 300. A wiped run pays all but the victory bonus (progress persists). The ending card
+  says "Experience: +530 (level 7, Recruit)".
+- **Statistics (`World/RunStatsService`, `Domain/PlayerStats`).** The run counts, per player, the dead by tier, the damage dealt (health actually
+  removed), the times fallen, the chambers cleared and the deeds; at settlement they are added to `profile.stats` (kills, elite and boss
+  kills, damage, falls, chambers cleared and the deepest, time in the castle, the fastest victory, gold brought home, xp earned) beside the
+  runs won and lost. A deed is written at once to every player as the achievement `deed_<id>` (`TrialService.onDeed`), so a wipe cannot lose it;
+  the page's "deeds done" now counts those (before, nothing ever wrote one).
+- **Renown (`Domain/Renown`, `configs/Profile.Renown`).** The whole player in one number out of 9,475: Rank, Might, Victories, Depth,
+  Deeds, Lore, The Star, Slaying, each part CAPPED so that no one thing makes a name (a billion kills are worth 500). Six bands from
+  Unknown to Legendary, a bar for every part on the Roll. It sets nothing about difficulty: that stays Might alone.
+- **The Muster Roll (`UI/ProfileUI`)** now opens with the portrait, the nickname, `@account` and the Company number, the rank, `LEVEL n OF 100`,
+  the xp bar, the xp earned in all; then the road, Renown, Might, Arms, the record, a statistics grid (the dead slain, elite/boss, damage,
+  times fallen, chambers, deepest, time in the castle, fastest victory, gold brought home, best run), the collection and the charm.
+- **The train (`TrainService`, `UI/DepartureUI`).** Every member aboard comes with `{ level, title, might, renown }` from
+  `ProfileService.brief`; the panel shows the name and, under it in a smaller hand, `Lv 12 · Sergeant · Might 5`, and for two or more the
+  party's Might (the average, `TeamPower.partyRating`). It is shown, not yet used: the difficulty still scales by head count.
+- **Found and fixed while testing.** A require cycle (TrialService -> Trial/Exit -> RunSettlement -> RunStatsService -> TrialService) failed four
+  modules at load; RunStatsService now requires TrialService when it starts. A dead enemy is gone from the combat registry before
+  `DamageDealt` fires, so kills were not counted until the target is taken from the damage pipeline's seam just before the blow.
+- **Tests.** 223 specs pass in both places (41 new: `PlayerId`, `LevelMilestones`, `RunXp`, `PlayerStats`, `Renown`, `Experience`, more of
+  `PlayerCard` and `ProfileSchema`); both projects build.
+- **Seen (2026-10-30, real playtests).** Forgotten Lands: a harness script in the running game killed 40 dead with real blows, cleared chambers,
+  fell once and ended the run as a victory: +530 XP (level 1 to 7, the prize at level 5 logged), kills 40, damage 2,400, downs 1, chambers 2,
+  deepest 5, fastest win 20 s, one deed written and counted once; the test profile was put back. Hub: the Roll with the real profile
+  (ID, nickname, level 1 of 100) and with a synthetic level-37 card (the road, Renown 4,418 "Renowned", the statistics); the train panel
+  with the name and `Lv 1 · Recruit · Might 1`.
+- **Not seen.** The Roll and the train on a phone; the train with two or more people; the ending card's new XP line (sent to the client,
+  not looked at); a real full run that earns its XP by fighting (the harness did the killing); deeds from live chambers other than the one tried.
+
 ## Version 0.37.0 — The Muster Roll: every player's own page in the Hub
 
 The first step of the profile work. The Hub now has a page for each player (key `P`, or the `ROLL` button in the corner), built from

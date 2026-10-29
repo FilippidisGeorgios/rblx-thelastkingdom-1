@@ -3,11 +3,13 @@
 	ProfileUI
 	The MUSTER ROLL: the player's own page, a parchment panel in the Hub.
 
-	  the portrait, the name, the rank title, the level and how far to the next
-	  MIGHT    the rating (out of ten, the best weapon) and what the difficulty does with it
-	  ARMS     every weapon and how far it is forged
-	  RECORD   runs won and lost, the best run, deeds
-	  COLLECTION  pages, shards on the altar, the stash; and the charm worn
+	  the portrait, the nickname, the Company number, the rank and the level with its xp
+	  THE ROAD  the prizes on the way to level 100 (one at every 5th level, a milestone at every 10th)
+	  RENOWN    the whole player in one number, and what it is made of
+	  MIGHT     the rating (out of ten, the best weapon) and what the difficulty does with it
+	  ARMS      every weapon and how far it is forged
+	  THE RECORD and STATISTICS   what they have done
+	  THE COLLECTION  pages, shards on the altar, the stash; and the charm worn
 
 	Presentation only: every number is built by the server (Server/Domain/PlayerCard) from this player's
 	own profile and sent whole. The panel asks for it when it opens (ProfileController does the asking).
@@ -33,6 +35,7 @@ local noticeLabel: TextLabel? = nil
 
 local PORTRAIT = 112
 local TILE_HEIGHT = 104
+local STOP_HEIGHT = 46
 
 --============================================================================
 -- Small builders
@@ -140,11 +143,11 @@ local function pips(parent: Instance, order: number, filled: number, total: numb
 	end
 end
 
--- A bar filled to `fraction`.
-local function bar(parent: Instance, order: number, fraction: number, fill: Color3)
+-- A bar filled to `fraction`; `height` defaults to a thick one.
+local function bar(parent: Instance, order: number, fraction: number, fill: Color3, height: number?): Frame
 	local trough = Instance.new("Frame")
 	trough.Name = "Bar"
-	trough.Size = UDim2.new(1, 0, 0, 14)
+	trough.Size = UDim2.new(1, 0, 0, height or 14)
 	trough.BackgroundColor3 = Theme.Color.Void
 	trough.BorderSizePixel = 0
 	trough.LayoutOrder = order
@@ -163,9 +166,10 @@ local function bar(parent: Instance, order: number, fraction: number, fill: Colo
 	inner.Parent = trough
 	Theme.corner(inner, Theme.Size.CornerSmall)
 	Theme.surface(inner, Color3.fromRGB(255, 255, 255), Color3.fromRGB(190, 190, 190))
+	return trough
 end
 
--- One figure with its name under it, and a picture when it has one.
+-- One figure with its name under it, and a picture when it has one. `across` tiles fit a row.
 local function tile(parent: Instance, order: number, value: string, caption: string, itemId: string?, tone: Color3?, across: number?)
 	local frame = Instance.new("Frame")
 	frame.Name = caption
@@ -251,6 +255,21 @@ local function percent(fraction: number): string
 	return ("%d%%"):format(math.floor(fraction * 100 + 0.5))
 end
 
+-- 3 h 20 m  /  12 m 05 s  /  45 s
+local function duration(seconds: number): string
+	seconds = math.floor(seconds)
+	if seconds >= 3600 then
+		return ("%d h %02d m"):format(seconds // 3600, (seconds % 3600) // 60)
+	elseif seconds >= 60 then
+		return ("%d m %02d s"):format(seconds // 60, seconds % 60)
+	end
+	return ("%d s"):format(seconds)
+end
+
+local function plain(n: number): string
+	return if n == math.floor(n) then tostring(math.floor(n)) else ("%.1f"):format(n)
+end
+
 --============================================================================
 -- The page
 --============================================================================
@@ -284,20 +303,133 @@ local function drawHeader(c: any, order: number)
 	details.AutomaticSize = Enum.AutomaticSize.Y
 	Components.list(details, 4, Enum.HorizontalAlignment.Left)
 
-	local me = Players.LocalPlayer
-	text(details, 1, me.DisplayName:upper(), Theme.TextSize.Heading, Theme.Color.GoldBright, Theme.Role.Heading)
-	text(details, 2, ("%s   @%s"):format(c.title:upper(), me.Name), Theme.TextSize.Micro, Theme.Color.Gold, Theme.Role.Strong)
+	local who = c.account
+	local nick = if who.displayName ~= "" then who.displayName else Players.LocalPlayer.DisplayName
+	local user = if who.name ~= "" then who.name else Players.LocalPlayer.Name
+	text(details, 1, nick:upper(), Theme.TextSize.Heading, Theme.Color.GoldBright, Theme.Role.Heading)
+	text(details, 2, ("@%s      %s"):format(user, who.id ~= "" and ("COMPANY NO. " .. who.id) or ""), Theme.TextSize.Micro, Theme.Color.SteelLight, Theme.Role.Strong)
+	text(details, 3, c.title:upper(), Theme.TextSize.Small, Theme.Color.Gold, Theme.Role.Heading)
 	text(
 		details,
-		3,
+		4,
 		if c.xpToNext > 0
-			then ("LEVEL %d OF %d      %d XP TO THE NEXT"):format(c.level, c.maxLevel, math.ceil(c.xpToNext))
+			then ("LEVEL %d OF %d      %s XP TO THE NEXT"):format(c.level, c.maxLevel, thousands(math.ceil(c.xpToNext)))
 			else ("LEVEL %d OF %d      THE HIGHEST RANK"):format(c.level, c.maxLevel),
 		Theme.TextSize.Micro,
 		Theme.Color.Parchment
 	)
-	bar(details, 4, c.xpFraction, Theme.Color.Gold)
-	text(details, 5, ("%s gold in the purse"):format(thousands(c.gold)), Theme.TextSize.Micro, Theme.Color.SteelLight)
+	bar(details, 5, c.xpFraction, Theme.Color.Gold)
+	text(details, 6, ("%s XP earned in all      %s gold in the purse"):format(thousands(c.totalXp), thousands(c.gold)), Theme.TextSize.Micro, Theme.Color.Muted)
+end
+
+local function drawRoad(c: any, order: number)
+	heading(order, "THE ROAD")
+	local frame = card(order + 1, "Road")
+	Components.list(frame, 8, Enum.HorizontalAlignment.Left)
+
+	local lines: { string } = {}
+	if c.nextReward then
+		table.insert(lines, ("The next prize is at level %d, %d %s away."):format(c.nextReward.level, c.nextReward.away, if c.nextReward.away == 1 then "level" else "levels"))
+	else
+		table.insert(lines, "Every prize on the road has been reached.")
+	end
+	if c.nextTitle then
+		table.insert(lines, ("The next rank, %s, comes at level %d."):format(c.nextTitle.name, c.nextTitle.level))
+	end
+	text(frame, 1, table.concat(lines, " "), Theme.TextSize.Micro, Theme.Color.Parchment)
+
+	-- twenty stops, ten to a row: a prize at every 5th level, the big ones at the 10ths
+	local strip = Instance.new("Frame")
+	strip.Name = "Stops"
+	strip.Size = UDim2.new(1, 0, 0, 0)
+	strip.AutomaticSize = Enum.AutomaticSize.Y
+	strip.BackgroundTransparency = 1
+	strip.LayoutOrder = 2
+	strip.Parent = frame
+	local wrap = Instance.new("UIListLayout")
+	wrap.FillDirection = Enum.FillDirection.Horizontal
+	wrap.Wraps = true
+	wrap.SortOrder = Enum.SortOrder.LayoutOrder
+	wrap.Padding = UDim.new(0, 6)
+	wrap.Parent = strip
+	local nextLevel = if c.nextReward then c.nextReward.level else nil
+	for i, stop in c.road do
+		local box = Instance.new("Frame")
+		box.Name = "Stop" .. stop.level
+		box.Size = UDim2.new(0.1, -6, 0, STOP_HEIGHT)
+		box.LayoutOrder = i
+		box.BorderSizePixel = 0
+		box.ZIndex = 3
+		box.BackgroundColor3 = if stop.reached then (if stop.milestone then Theme.Color.GoldBright else Theme.Color.Gold) else Theme.Color.Void
+		box.Parent = strip
+		Theme.corner(box, Theme.Size.CornerSmall)
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness = if stop.milestone then 2.4 else 1.2
+		stroke.Color = if stop.level == nextLevel then Theme.Color.GreenLight elseif stop.reached then Theme.Color.GoldBright else Theme.Color.GoldDim
+		stroke.Parent = box
+		local label = Components.label({
+			Name = "Level",
+			Text = tostring(stop.level),
+			Role = Theme.Role.Heading,
+			TextSize = if stop.milestone then Theme.TextSize.Small else Theme.TextSize.Micro,
+			TextColor = if stop.reached then Theme.Color.Void else (if stop.milestone then Theme.Color.Gold else Theme.Color.Muted),
+			Size = UDim2.fromScale(1, 1),
+			Parent = box,
+		})
+		label.TextYAlignment = Enum.TextYAlignment.Center
+	end
+	text(
+		frame,
+		3,
+		"Gold squares are reached. The large ones are milestones, a new rank every tenth level. The prizes themselves are still being forged.",
+		Theme.TextSize.Micro,
+		Theme.Color.Muted
+	)
+end
+
+local function drawRenown(c: any, order: number)
+	heading(order, "RENOWN")
+	local r = c.renown
+	local frame = card(order + 1, "Renown")
+	Components.list(frame, 8, Enum.HorizontalAlignment.Left)
+	text(
+		frame,
+		1,
+		("%s of %s      %s"):format(thousands(r.total), thousands(r.max), string.upper(r.tier)),
+		Theme.TextSize.Heading,
+		Theme.Color.GoldBright,
+		Theme.Role.Heading
+	)
+	bar(frame, 2, r.total / math.max(1, r.max), Theme.Color.Bronze, 16)
+	if r.nextTier then
+		text(frame, 3, ("%s more points make you %s."):format(thousands(r.toNext or 0), string.upper(r.nextTier)), Theme.TextSize.Micro, Theme.Color.SteelLight)
+	else
+		text(frame, 3, "There is no higher standing.", Theme.TextSize.Micro, Theme.Color.SteelLight)
+	end
+
+	-- what it is made of: every part is capped, so no one thing can make a standing
+	local parts = Instance.new("Frame")
+	parts.Name = "Parts"
+	parts.Size = UDim2.new(1, 0, 0, 0)
+	parts.AutomaticSize = Enum.AutomaticSize.Y
+	parts.BackgroundTransparency = 1
+	parts.LayoutOrder = 4
+	parts.Parent = frame
+	Components.list(parts, 6, Enum.HorizontalAlignment.Left)
+	for i, part in r.parts do
+		local line = Components.group({ Name = part.id, Size = UDim2.new(1, 0, 0, 0), LayoutOrder = i, Parent = parts })
+		line.AutomaticSize = Enum.AutomaticSize.Y
+		Components.list(line, 3, Enum.HorizontalAlignment.Left)
+		text(line, 1, ("%s      %s / %s"):format(string.upper(part.label), thousands(part.points), thousands(part.max)), Theme.TextSize.Micro, Theme.Color.Parchment, Theme.Role.Strong)
+		bar(line, 2, part.points / math.max(1, part.max), Theme.Color.Gold, 8)
+	end
+	text(
+		frame,
+		5,
+		"Renown is standing, not strength: it never changes how hard a run is. Each part has a ceiling, so no one thing can make a name.",
+		Theme.TextSize.Micro,
+		Theme.Color.Muted
+	)
 end
 
 local function drawMight(c: any, order: number)
@@ -309,11 +441,7 @@ local function drawMight(c: any, order: number)
 	text(
 		frame,
 		1,
-		("%s of %d      %s"):format(
-			(if might.rating == math.floor(might.rating) then tostring(math.floor(might.rating)) else ("%.1f"):format(might.rating)),
-			might.maxRating,
-			string.upper(might.tier)
-		),
+		("%s of %d      %s"):format(plain(might.rating), might.maxRating, string.upper(might.tier)),
 		Theme.TextSize.Heading,
 		Theme.Color.GoldBright,
 		Theme.Role.Heading
@@ -321,9 +449,9 @@ local function drawMight(c: any, order: number)
 	pips(frame, 2, math.floor(might.rating + 0.5), might.maxRating, 22, Theme.Color.Gold)
 
 	local weaponName = "your best weapon"
-	local items = Config.get("Weapons")
-	if might.bestId and items[might.bestId] then
-		weaponName = items[might.bestId].DisplayName
+	local weapons = Config.get("Weapons")
+	if might.bestId and weapons[might.bestId] then
+		weaponName = weapons[might.bestId].DisplayName
 	end
 	text(
 		frame,
@@ -387,11 +515,24 @@ end
 local function drawRecord(c: any, order: number)
 	heading(order, "THE RECORD")
 	local g = grid(order + 1)
-	local r = c.record
+	local r, s = c.record, c.stats
 	tile(g, 1, tostring(r.runsWon), "RUNS WON", nil, Theme.Color.GreenBright, 4)
 	tile(g, 2, tostring(r.runsWiped), "RUNS LOST", nil, Theme.Color.BordeauxSoft, 4)
-	tile(g, 3, thousands(r.bestRunGold), "BEST RUN (GOLD)", nil, Theme.Color.GoldBright, 4)
+	tile(g, 3, if s.winRate then percent(s.winRate) else "-", "OF RUNS WON", nil, Theme.Color.GoldBright, 4)
 	tile(g, 4, tostring(r.deeds), "DEEDS DONE", nil, Theme.Color.GoldBright, 4)
+
+	heading(order + 2, "STATISTICS")
+	local h = grid(order + 3)
+	tile(h, 1, thousands(s.kills), "THE DEAD SLAIN", nil, Theme.Color.Parchment, 4)
+	tile(h, 2, ("%d / %d"):format(s.eliteKills, s.bossKills), "ELITE / BOSS SLAIN", nil, Theme.Color.Parchment, 4)
+	tile(h, 3, thousands(s.damageDealt), "DAMAGE DEALT", nil, Theme.Color.Parchment, 4)
+	tile(h, 4, thousands(s.downs), "TIMES FALLEN", nil, Theme.Color.BordeauxSoft, 4)
+	tile(h, 5, thousands(s.chambersCleared), "CHAMBERS CLEARED", nil, Theme.Color.Parchment, 4)
+	tile(h, 6, if s.deepestChamber > 0 then tostring(s.deepestChamber) else "-", "DEEPEST CHAMBER", nil, Theme.Color.Parchment, 4)
+	tile(h, 7, duration(s.playSeconds), "TIME IN THE CASTLE", nil, Theme.Color.Parchment, 4)
+	tile(h, 8, if s.fastestWinSeconds then duration(s.fastestWinSeconds) else "-", "FASTEST VICTORY", nil, Theme.Color.GreenBright, 4)
+	tile(h, 9, thousands(s.goldBanked), "GOLD BROUGHT HOME", nil, Theme.Color.GoldBright, 4)
+	tile(h, 10, thousands(r.bestRunGold), "BEST RUN (GOLD)", nil, Theme.Color.GoldBright, 4)
 end
 
 local function drawCollection(c: any, order: number)
@@ -433,13 +574,15 @@ end
 local function drawCard(c: any)
 	clear()
 	drawHeader(c, 1)
-	drawMight(c, 2)
-	drawArms(c, 4)
-	drawRecord(c, 6)
-	drawCollection(c, 8)
+	drawRoad(c, 2)
+	drawRenown(c, 4)
+	drawMight(c, 6)
+	drawArms(c, 8)
+	drawRecord(c, 10)
+	drawCollection(c, 15)
 	text(
 		content :: Instance,
-		11,
+		20,
 		"This roll is yours alone: it is kept on your account and read by you only.",
 		Theme.TextSize.Micro,
 		Theme.Color.Muted,
@@ -496,6 +639,10 @@ local function build(parent: ScreenGui)
 	scroller.ZIndex = 3
 	scroller.Parent = root
 	Components.list(scroller, 10, Enum.HorizontalAlignment.Left)
+	local sidePad = Instance.new("UIPadding")
+	sidePad.PaddingLeft = UDim.new(0, 3)
+	sidePad.PaddingRight = UDim.new(0, 6)
+	sidePad.Parent = scroller
 	content = scroller :: any
 
 	noticeLabel = Components.label({

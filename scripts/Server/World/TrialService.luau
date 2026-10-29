@@ -53,6 +53,9 @@ local TrialService = {}
 
 TrialService.Name = "TrialService"
 
+-- Called (area, deedId) the first time a deed is done: the run's statistics and the profiles listen.
+local deedHandlers: { (number, string) -> () } = {}
+
 local log = Logger.new("TrialService")
 
 -- A breath between walking in and the room starting to ask things of you.
@@ -232,7 +235,13 @@ end
 local function onTaskDone(trial: Live, id: string)
 	local handle = trial.tasks[id]
 	local phaseBefore = trial.run:currentPhase()
+	local deedBefore = trial.run:deedDone(id)
 	local change = trial.run:taskDone(id)
+	if not deedBefore and trial.run:deedDone(id) then
+		for _, handler in deedHandlers do
+			task.spawn(handler, trial.area, id)
+		end
+	end
 	if handle and change then
 		handle.stop()
 	end
@@ -381,6 +390,11 @@ end
 --==========================================================================
 -- API
 --==========================================================================
+
+-- Subscribes to deeds: `handler(area, id)` runs once for each deed, the first time it is done.
+function TrialService.onDeed(handler: (number, string) -> ())
+	table.insert(deedHandlers, handler)
+end
 
 function TrialService.isRunning(area: number): boolean
 	local trial = live[area]

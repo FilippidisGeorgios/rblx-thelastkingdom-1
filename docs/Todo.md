@@ -201,15 +201,21 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 ## Profiles and fairness (design with the developer, 2026-10-30; Profile.md)
 - [x] The Muster Roll: a page per player in the Hub (rank title, level and xp, Might out of 10, arms, record, collection, charm), built
       server-side from the player's own profile; shows the fairness rules already in `TeamPower`.
-- [ ] **Developer's ideas, to be told:** what "points" should be beyond Might (a renown or season score from deeds, runs, speed?), what
-      makes it fairer (anti-carry, anti-farm, late joiners), and what "machines per account" means for the design. Read them into
-      `docs/systems/Profile.md` §4 before building.
-- [ ] Use the rating in the lobby: the train shows the party's rating and tier before departure (`TeamPower.partyRating`/`enemyScale`
-      are written and tested; nothing reads them yet, and `Scaling` still scales by head count only).
+- [x] The Company number (`Domain/PlayerId`, `profile.account`, schema v5), the nickname, levels 1 to 100 (easy to 30, hard after), the road
+      with a prize stop every 5th level and a milestone every 10th, Renown (the overall rating), the statistics, XP paid at the end of a
+      run, deeds recorded, and the train showing level, rank and Might beside every name (Changelog 0.38.0; Profile.md).
+- [ ] **Decide what the prizes of the road are** (levels 5, 10, ... 100; the tens bigger): `Experience.LevelRewards[level]`, then a claim
+      state (`profile`) and a hand-over where `RewardService` reports `prizeLevels`.
+- [ ] **Tune the curve with a real run:** a full victory pays about 2,300 XP on paper (`RunXp`); measure the real number and the minutes it
+      takes, then set `Experience.Curve` so level 30 is a few runs and level 100 is the long road meant.
+- [ ] The weapon level gates (3, 5, 8: `configs/Weapons`) were set when the top level was 10: they are reached in the first few runs now.
+- [ ] Use Might in the lobby and in `Scaling` (the party's average is shown on the train; the difficulty still scales by head count).
+- [ ] The admin panel: search by Company number (`PlayerId.decode`), read `profile.account` and the statistics.
+- [ ] A custom nickname (filtered, unique, changeable how often?).
 - [ ] Look at another player's roll (a party mate): consent and what is public first.
 - [ ] A crest per rank and a picture of each weapon on the Roll's arms list.
-- [ ] Look at the Roll on a phone (touch: the ROLL button) and with real runs behind it (it was seen with the profile of the test
-      account and with a synthetic card of level 6).
+- [ ] Look at the Roll and the train on a phone, with two or more people aboard, and the ending card's new XP line.
+- [ ] Cross-place session locking so a profile cannot be written from two servers at once (`Progression.md` §3).
 - [ ] Sounds for the work: pick on stone, rubble rolling back, the windlass's ratchet, the throw, plate. (No audio in the project yet.)
 - [ ] More poses in `WorkPoseController`: the forge's hammer, the woodyard's axe, nailing a board, untying a rope.
 - [ ] Look at the Hollow Knight's sweep and the digger from the front, in the real fog; tune the surges with two players.

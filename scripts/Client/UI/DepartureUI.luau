@@ -38,6 +38,9 @@ export type Status = {
 	seconds: number?,
 	wagon: number?,
 	members: { string }?,
+	-- one per member, in the same order: { name, level, title, might, renownTier, renown } (the Muster Roll's brief)
+	crew: { { [string]: any } }?,
+	partyMight: number?,
 	leader: string?,
 }
 
@@ -313,6 +316,7 @@ local function buildBottomStack(parent: ScreenGui)
 		Parent = card,
 	})
 	;(rosterText :: TextLabel).AutomaticSize = Enum.AutomaticSize.Y
+	;(rosterText :: TextLabel).RichText = true -- a name, and under it in a smaller hand who they are
 
 	chip = Components.label({
 		Name = "PartyChip",
@@ -499,8 +503,27 @@ function DepartureUI.setStatus(status: Status)
 
 	if rosterText then
 		local lines: { string } = {}
+		local crew = if typeof(status.crew) == "table" then status.crew else {}
+		local function escape(s: string): string
+			return (s:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"))
+		end
 		for index, name in members do
-			table.insert(lines, if index == 1 then ("%s  (leader)"):format(name) else name)
+			local who = crew[index]
+			local line = escape(name) .. (if index == 1 then "  (leader)" else "")
+			if who and who.level then
+				-- the name, and under it in a smaller, quieter hand:  Lv 12 · Sergeant · Might 5
+				local might = if who.might == math.floor(who.might) then tostring(math.floor(who.might)) else ("%.1f"):format(who.might)
+				line ..= ('\n<font size="17" color="#%s">Lv %d  ·  %s  ·  Might %s</font>'):format(
+					Theme.Color.Muted:ToHex(),
+					who.level,
+					escape(tostring(who.title or "")),
+					might
+				)
+			end
+			table.insert(lines, line)
+		end
+		if status.partyMight and #members > 1 then
+			table.insert(lines, ('<font size="17" color="#%s">Party Might %.1f of 10</font>'):format(Theme.Color.Gold:ToHex(), status.partyMight))
 		end
 		rosterText.Text = if #lines > 0 then table.concat(lines, "\n") else "—"
 	end

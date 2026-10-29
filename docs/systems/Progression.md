@@ -57,8 +57,9 @@ spend/upgrades, and client HUD replication. See `../Todo.md`.
 
 ## 3b. The player's page
 
-The Hub shows the profile as the **Muster Roll** (key `P`): level and rank title, Might (the TeamPower rating), arms, record,
-collection. See `Profile.md`.
+The Hub shows the profile as the **Muster Roll** (key `P`): the nickname and Company number, the level on the road to **100**
+(easy to 30, hard after) with its prizes, Renown (the overall rating), Might (the TeamPower rating), arms, statistics, collection. A
+run now pays experience when it ends (`Domain/RunXp`). See `Profile.md`.
 
 ## 4. Related
 

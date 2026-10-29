@@ -16,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Server = script.Parent.Parent
 local DataService = require(script.Parent.DataService)
 local Progression = require(Server.Domain.Progression)
+local LevelMilestones = require(Server.Domain.LevelMilestones)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
@@ -26,7 +27,9 @@ RewardService.Name = "RewardService"
 local log = Logger.new("RewardService")
 
 export type Reward = { summary: string?, currency: number?, xp: number? }
-export type Applied = { currency: number, xp: number, levelsGained: number, newLevel: number }
+-- `prizeLevels`: the levels with a prize that this gain passed (configs/Experience.Milestones); what the
+-- prize is, is not decided yet, so nothing is handed over, but the day it is, this is where it comes from.
+export type Applied = { currency: number, xp: number, levelsGained: number, newLevel: number, prizeLevels: { number } }
 
 -- Applies `reward` to one player's cached profile. Returns what was granted, or nil if
 -- the player has no loaded profile.
@@ -40,10 +43,12 @@ function RewardService.applyTo(player: Player, reward: Reward): Applied?
 	local xpAmount = math.max(0, reward.xp or 0)
 
 	profile.currency = (profile.currency or 0) + currency
+	local before = profile.level or 1
 	local newXp, newLevel, gained =
-		Progression.addXp(profile.xp or 0, profile.level or 1, xpAmount, Config.get("Experience"))
+		Progression.addXp(profile.xp or 0, before, xpAmount, Config.get("Experience"))
 	profile.xp = newXp
 	profile.level = newLevel
+	local prizeLevels = LevelMilestones.reachedBetween(before, newLevel, Config.get("Experience").Milestones)
 
 	log:info(("%s +%d gold +%d xp -> level %d (total %d gold)%s"):format(
 		player.Name,
@@ -53,8 +58,11 @@ function RewardService.applyTo(player: Player, reward: Reward): Applied?
 		profile.currency,
 		if gained > 0 then (" [+" .. gained .. " level(s)]") else ""
 	))
+	if #prizeLevels > 0 then
+		log:info(("%s passed the prize level(s) %s"):format(player.Name, table.concat(prizeLevels, ", ")))
+	end
 
-	return { currency = currency, xp = xpAmount, levelsGained = gained, newLevel = newLevel }
+	return { currency = currency, xp = xpAmount, levelsGained = gained, newLevel = newLevel, prizeLevels = prizeLevels }
 end
 
 -- Applies `reward` to many players. Returns a map of player -> what was granted.

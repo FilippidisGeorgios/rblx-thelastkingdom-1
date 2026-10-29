@@ -41,6 +41,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Server = script.Parent.Parent
 local BoardingRoster = require(Server.Domain.BoardingRoster)
+local TeamPower = require(Server.Domain.TeamPower)
+local ProfileService = require(script.Parent.ProfileService)
 local PartyService = require(Server.Services.PartyService)
 local MatchService = require(Server.Services.MatchService)
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -394,8 +396,19 @@ local function statusPayload(berth: Berth): { [string]: any }
 	-- Names, not user ids: the panel shows people you are about to fight beside,
 	-- and boarding order doubles as the party order (first aboard leads).
 	local members: { string } = {}
+	-- and beside each name what the Muster Roll says of them: level, rank, Might, Renown
+	local crew: { any } = {}
+	local mights: { number } = {}
 	for _, member in berth.roster:members() do
-		table.insert(members, (member :: Player).Name)
+		local player = member :: Player
+		table.insert(members, player.Name)
+		local brief = ProfileService.brief(player)
+		if brief then
+			table.insert(crew, brief)
+			table.insert(mights, brief.might)
+		else
+			table.insert(crew, { name = player.DisplayName })
+		end
 	end
 
 	return {
@@ -407,6 +420,9 @@ local function statusPayload(berth: Berth): { [string]: any }
 		tier = BoardingRoster.tierFor(berth.roster:count(), tiers) or "Normal",
 		seconds = remainingSeconds(berth),
 		members = members,
+		crew = crew,
+		-- the party is the average of its people (Domain/TeamPower): shown, not yet used to set the difficulty
+		partyMight = if #mights > 0 then TeamPower.partyRating(mights) else nil,
 		leader = members[1],
 	}
 end

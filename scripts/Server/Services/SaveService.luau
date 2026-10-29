@@ -59,6 +59,8 @@ function SaveService.load(player: Player)
 	else
 		profile = ProfileSchema.default()
 	end
+	-- who this is: the Company number (given once), the names, the time seen (Domain/ProfileSchema)
+	ProfileSchema.stamp(profile, { userId = player.UserId, name = player.Name, displayName = player.DisplayName }, os.time())
 	DataService.set(player, profile)
 end
 
