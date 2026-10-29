@@ -57,6 +57,10 @@ export type Perception = {
 	targetDistance: number?, -- to the nearest valid target; nil if none
 	distanceFromSpawn: number,
 	params: Params,
+	-- OPTIONAL: how much harder this target is to notice (a worn charm): the detection radius is
+	-- multiplied by it when a unit at rest, or heading home, takes the target in. 1 (or nil): as ever.
+	-- Only noticing is changed: once it is chasing, the leash and the attack range are the real ones.
+	noticeScale: number?,
 }
 
 export type EnemyBrain = typeof(setmetatable(
@@ -78,6 +82,7 @@ function EnemyBrain.update(self: EnemyBrain, p: Perception): string
 	local d = p.targetDistance
 	local params = p.params
 	local state = self.state
+	local notice = params.DetectionRadius * (p.noticeScale or 1)
 
 	-- Is the target uncomfortably close for something that fights at range?
 	-- Melee units have no MinRange, so this is always false for them and the
@@ -85,7 +90,7 @@ function EnemyBrain.update(self: EnemyBrain, p: Perception): string
 	local tooClose = params.MinRange ~= nil and d ~= nil and d < params.MinRange
 
 	if state == STATES.Idle then
-		if d ~= nil and d <= params.DetectionRadius then
+		if d ~= nil and d <= notice then
 			state = if tooClose then STATES.Reposition else STATES.Chase
 		end
 	elseif state == STATES.Chase then
@@ -120,7 +125,7 @@ function EnemyBrain.update(self: EnemyBrain, p: Perception): string
 			state = if d <= params.AttackRange then STATES.Attack else STATES.Chase
 		end
 	elseif state == STATES.Return then
-		if d ~= nil and d <= params.DetectionRadius then
+		if d ~= nil and d <= notice then
 			-- Re-aggro on the way home, and straight into a retreat if the
 			-- thing that re-aggroed it is already on top of it.
 			state = if tooClose then STATES.Reposition else STATES.Chase

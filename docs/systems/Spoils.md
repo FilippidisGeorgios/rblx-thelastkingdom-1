@@ -56,7 +56,8 @@ Names are period words; colours are the Theme's (parchment, verdigris, ember, go
 **Quest items** (never banked, spent in the same run): `torch` (burns 45 s), `winch_handle`, `oil_jar`,
 `plank`, `pickaxe`, `ingredient_*`, `cellar_key`, `scribe_key`.
 
-**Relics** (one charm slot, effects **[PROPOSED]**; the item exists now, the effect later):
+**Relics** (one charm slot; **[BUILT 0.36.0]** for the medal, stirrup, veil and lantern, via `configs/Chapel.luau → Charms` and
+`Server/World/CharmService`; the signet and the key are still proposals):
 
 | id | Name | Where | Effect |
 |---|---|---|---|
@@ -114,7 +115,8 @@ wants iron.
 ### 6.2 Between runs — the Hub **[BUILT 0.34.0 for the Chapel]** (`configs/Chapel.luau`, `Server/Hub/ChapelService`)
 *What was built, where it differs from the proposal:* the Tithe's shelf (six things, three a day, a pick goes to the next run's kit, or to the
 stash for grave silver); the Reliquary makes ONE kind of blessing (the Blessed Edge, +10% damage for a run: fire damage against the Hollow
-waits for fire damage to exist) and wears a charm (one slot; only the Saint's Medal does anything yet); the Altar takes shards one at a
+waits for fire damage to exist) and wears a charm (one slot; the Saint's Medal, the Brass Stirrup, the Mourner's Veil and the Hollow Lantern
+work since 0.36.0, see §3; the Signet and the Sexton's Key wait for the parry and the locked caches); the Altar takes shards one at a
 time; the Journal reads `configs/Pages`. The Forge's use of rusted iron (mending) is not built: there is no durability.
 - **The Tithe** (the chapel): bring **60 Bone Dust** → pick **one** from today's shelf of three Sound items
   (rotates daily). *Bone Dust is the commons' sink: a player with a full pack of it always has something to

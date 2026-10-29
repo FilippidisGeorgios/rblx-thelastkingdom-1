@@ -54,6 +54,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Server = script.Parent.Parent
 local CombatService = require(script.Parent.CombatService)
 local ProjectileService = require(script.Parent.ProjectileService)
+local RunModService = require(script.Parent.RunModService)
 local CombatEntity = require(Server.Domain.Combat.CombatEntity)
 local EnemyBrain = require(Server.Domain.AI.EnemyBrain)
 local Enums = require(ReplicatedStorage.Shared.Combat.Enums)
@@ -250,21 +251,33 @@ end
 	villagers from the kitchens fight on the Players side and the undead have
 	to be willing to attack them. Hard-coding the Players faction here would
 	have the dead walk straight past the allies to reach you.
+
+	A player wearing the Hollow Lantern is harder to notice (RunModService.notice, 0.8): they are
+	weighed by distance / that, so the dead turn to someone else first, and the scale goes to the
+	brain, which uses it only for taking a target in (EnemyBrain). Everyone else weighs 1, and the
+	nearest is chosen exactly as before. Returns the entity, its true distance, and its scale.
 ]]
-local function nearestHostile(pos: Vector3, myFaction: string): (CombatEntity.CombatEntity?, number?)
+local function nearestHostile(pos: Vector3, myFaction: string): (CombatEntity.CombatEntity?, number?, number)
 	local best: CombatEntity.CombatEntity? = nil
 	local bestDist: number? = nil
+	local bestScale = 1
+	local bestScore = math.huge
 	for _, entity in CombatService.getAllEntities() do
 		local hostile = entity.faction ~= myFaction and entity.faction ~= Enums.Faction.Neutral
 		if hostile and entity:isAlive() and entity.model then
 			local d = (positionOf(entity.model) - pos).Magnitude
-			if bestDist == nil or d < bestDist then
+			local owner = Players:GetPlayerFromCharacter(entity.model)
+			local scale = if owner then RunModService.notice(owner) else 1
+			local score = d / scale
+			if score < bestScore then
 				best = entity
 				bestDist = d
+				bestScale = scale
+				bestScore = score
 			end
 		end
 	end
-	return best, bestDist
+	return best, bestDist, bestScale
 end
 
 --[[
@@ -731,7 +744,7 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 	end
 	local selfPos = positionOf(model)
 
-	local target, targetDist = nearestHostile(selfPos, entity.faction)
+	local target, targetDist, noticeScale = nearestHostile(selfPos, entity.faction)
 
 	local followPos: Vector3? = nil
 	if agent.follow then
@@ -798,6 +811,7 @@ local function stepAgent(entityId: string, agent: Agent, dt: number)
 		targetDistance = targetDist,
 		distanceFromSpawn = (selfPos - agent.spawnPosition).Magnitude,
 		params = agent.params,
+		noticeScale = noticeScale,
 	})
 	local now = os.clock()
 	local States = EnemyBrain.States

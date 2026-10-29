@@ -59,7 +59,11 @@ function RunKitService.give(player: Player): { [string]: number }?
 		end
 	end
 	if kit.charm then
-		player:SetAttribute("Charm", kit.charm)
+		local charmDef = cfg.Charms[kit.charm]
+		if charmDef and charmDef.Mods then
+			RunModService.set(player, "charm:" .. kit.charm, charmDef.Mods)
+		end
+		player:SetAttribute("Charm", kit.charm) -- after the mods: CharmService and the pack read it
 	end
 	if kit.blessing then
 		local recipe = cfg.Recipes[kit.blessing]

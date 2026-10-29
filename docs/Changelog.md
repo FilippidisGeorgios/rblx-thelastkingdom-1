@@ -1,3 +1,33 @@
+## Version 0.36.0 — The charms work: the Veil, the Stirrup and the Lantern
+
+The Reliquary let a player wear a relic from the stash, and five of the six did nothing. Three of them now do what their words say.
+
+- **Mourner's Veil.** The first blow of a run that would have killed the wearer leaves one breath instead (`Charms.lastBreath`, a damage
+  modifier on the combat pipeline in `CharmService`). Once per player per run: spent until `DeathService.onRunBegin`; the spending is the
+  Player attribute `VeilSpent`, so leaving and coming back does not mend it. The player sees a banner with the veil's picture,
+  **THE VEIL HOLDS**, and a breath of gold across the view (`UI/CharmCue`, the `CharmEvent` remote).
+- **Brass Stirrup.** Five quiet seconds (no blow given or taken) and the wearer walks 8% faster, until the next blow. The charm takes a
+  *claim* on the Humanoid's `WalkSpeed` and gives it back (`Charms.calmSpeed`); it never writes over a speed somebody else set in between.
+  The King's frost, which does set the speed, now marks the Humanoid `SpeedHeld` (the stirrup stands back) and starts from the
+  `BaseWalkSpeed` the stirrup publishes while it holds a claim, so the two cannot fight or leave a player stuck fast or slow.
+- **Hollow Lantern.** The dead notice the wearer from a fifth less distance (`notice` 0.8). `EnemyBrain` takes an optional `noticeScale`
+  and uses it only for taking a target in (Idle and Return), never for the leash or the attack range, so a unit already on you
+  behaves as ever. `EnemyAIService` weighs each hostile by distance / scale, so in a party the dead turn to the unlit player first.
+- **Data.** `configs/Chapel.luau → Charms` now says, per charm, `Mods` (RunModService mods set at the gate by `RunKitService`) or `Pending`;
+  `RunModService` gains `calmSpeed`, `notice`, `lastBreath`. The Signet (parry) and the Sexton's Key (locked caches) stay `Pending`,
+  as before, because the parry and the caches do not exist.
+- **Pictures.** The pack (`B`) opens with **Charm worn**: the charm's card (name, picture, rank) and its state, READY or SPENT for the
+  veil, WORN for the others (`ItemCard` gained `Status`). The three item tips no longer say "not yet wrought".
+- **Tests.** `Charms.spec` (the veil's rule, the stirrup's claim: taken, kept, given back, never over somebody else's; the config), and
+  three `EnemyBrain.spec` cases for the lantern. 171 specs pass in both places; both projects build.
+- **Seen in the Forgotten Lands (2026-10-30, a harness script in a real playtest, since removed).** Veil: a blow of 500 dealt 99 and left 1
+  health, `VeilSpent` went true and the banner came up; the second blow killed. Stirrup: 16 became 17.28 half a second into a calm, went
+  back to 16 on a hit and was 17.28 again five seconds later; with `SpeedHeld` set it stayed at the King's 16 and then 8; a speed of 10
+  set by something else was taken as the base (10.8). Lantern: a shambler (radius 110) 100 studs away walked 20.4 studs in 4 s without
+  the charm and 0.0 with it, and 17.4 at 80 studs. The pack's "Charm worn" card (READY) and the banner were seen on screen.
+- **Not seen.** The handover from the Hub's Reliquary through `RunKitService` (it sets the same mods; read, not played end to end); the
+  stirrup's 8% by feel; the lantern in a crowd with two players; a veil saving a real hit in a real chamber.
+
 ## Version 0.35.0 — The UI gets its colour: warm palette, red ways out, green ways forward, X windows, and a picture of every item
 
 - **Palette (`UI/Theme`).** The blue-grey navy surfaces are now walnut and leather browns over warm black; gold is brighter, with a golden

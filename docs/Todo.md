@@ -169,8 +169,12 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] UI pass, next: the camp bench panel, the document page and the ending card still use their own parchment colours (they could follow the warm Theme); the intro Skip button; a shop (none exists yet) should use the X and the green buy button; pictures for the Forge's weapons, the camp bench's recipes and the quest items; redo the ember, page and veil meshes (docs/systems/ItemArt.md).
 - [x] The Hub was opened with this code (2026-10-25): BuildChapel run, four rings live, panel clicked with a real mouse (Tithe, Altar, Journal).
 - [ ] SAVE the Hub place (the Chapel models and the synced scripts are in the open Studio session only), and look at the chapel by day-to-day eyes: where it stands (25 studs in front of the Storyteller, 8 left), its lighting, whether it crowds the plaza.
-- [ ] The five charms that only sit there: signet (parry window), stirrup (speed out of combat), veil (survive the first blow), lantern
-      (the dead notice later), Sexton's key (one locked cache); and the Falling Star sigil on the tabard.
+- [x] Charms that work (Changelog 0.36.0): the Brass Stirrup (+8% walk after 5 quiet seconds), the Mourner's Veil (the first killing
+      blow of a run leaves one breath; a banner with its picture), the Hollow Lantern (the dead notice you from a fifth less distance).
+- [ ] Look at the veil's banner and the pack's "Charm worn" card in a real run (a hit that kills, with the charm on); feel the stirrup
+      (is +8% noticeable? raise `mods.calmSpeed` in `configs/Chapel.luau` if not) and the lantern against a crowd.
+- [ ] The two charms still waiting: the Company's Signet (needs the parry, Arsenal §6) and the Sexton's Key (needs the locked `cache_*`
+      tables); and the Falling Star sigil on the tabard.
 - [ ] Pages: only five Deeds give one; the Journal grows with the next chambers' deeds and the Story's other voices.
 - [ ] The Hub does not yet show currency, runs won and the stash outside the Chapel; the Forge still takes gold only (rusted iron's use, mending).
 - [ ] Look at the camp by eye (layout in the passage mouth of 1 to 8, the panel, the fire's light); tune: heal 3/s, radius 13,

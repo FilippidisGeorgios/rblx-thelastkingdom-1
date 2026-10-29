@@ -34,14 +34,19 @@ local Chapel = {
 		},
 	},
 
-	-- The one charm slot. `Kit` is what wearing it puts in the pack at the gate; `Pending` is a
-	-- charm whose effect waits for the stat it changes (Arsenal §6): it can be worn, and does nothing yet.
+	-- The one charm slot. `Kit` is what wearing it puts in the pack at the gate; `Mods` are RunModService
+	-- mods set at the gate and worn all run (Server/World/CharmService does the rest); `Pending` is a charm
+	-- whose effect waits for something that does not exist yet: it can be worn, and does nothing.
+	--   brass_stirrup   `calmSpeed` x1.08 walking, once `Calm` seconds have passed with no blow dealt or taken
+	--   mourners_veil   `lastBreath`: the first blow that would kill leaves one breath, once a run
+	--   hollow_lantern  `notice` x0.8: the dead's detection radius against you is a fifth shorter
+	--   company_signet  waits for the parry (Arsenal §6);  sextons_key  waits for the locked caches
 	Charms = {
 		saints_medal = { Kit = { bandage = 1 } },
 		company_signet = { Pending = true },
-		brass_stirrup = { Pending = true },
-		mourners_veil = { Pending = true },
-		hollow_lantern = { Pending = true },
+		brass_stirrup = { Mods = { calmSpeed = 1.08 }, Calm = 5 },
+		mourners_veil = { Mods = { lastBreath = true } },
+		hollow_lantern = { Mods = { notice = 0.8 } },
 		sextons_key = { Pending = true },
 	},
 

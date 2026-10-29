@@ -34,6 +34,9 @@ export type Props = {
 	Open: boolean?,
 	-- The card's width (default: the whole row).
 	Width: UDim?,
+	-- A word under the rank, in a colour of its own: a worn charm's state (READY / SPENT / WORN).
+	Status: string?,
+	StatusColour: Color3?,
 }
 
 local PICTURE = 92
@@ -145,6 +148,12 @@ function ItemCard.create(props: Props): Frame
 	rankLabel.Position = UDim2.fromOffset(PICTURE + 16, if props.Count then 52 else 12)
 	rankLabel.Size = UDim2.new(1, -(PICTURE + 16), 0, 18)
 	rankLabel.TextWrapped = false
+	if props.Status then
+		local status = label(body, props.Status:upper(), 15, props.StatusColour or Theme.Color.GoldBright, Theme.Role.Strong, 3)
+		status.Position = UDim2.fromOffset(PICTURE + 16, if props.Count then 74 else 36)
+		status.Size = UDim2.new(1, -(PICTURE + 16), 0, 18)
+		status.TextWrapped = false
+	end
 
 	-- the box under the arrow
 	local info = Instance.new("Frame")

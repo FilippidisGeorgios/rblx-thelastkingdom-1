@@ -173,6 +173,37 @@ return function(t: any)
 		assert(b:update(a(6, 100)) == S.Reposition, "re-aggroed at point blank")
 	end)
 
+	t.test("a target that is harder to notice is taken in from a shorter way off (Hollow Lantern)", function()
+		local lantern = p(26, 0)
+		lantern.noticeScale = 0.8 -- 30 x 0.8 = 24
+		assert(EnemyBrain.new():update(lantern) == S.Idle, "26 is outside 24: not noticed")
+		lantern.targetDistance = 22
+		assert(EnemyBrain.new():update(lantern) == S.Chase, "22 is inside 24: noticed")
+		assert(EnemyBrain.new():update(p(26, 0)) == S.Chase, "(without the lantern, 26 is inside 30)")
+	end)
+
+	t.test("the lantern changes only the noticing: a unit already chasing keeps the real leash and range", function()
+		local b = EnemyBrain.new()
+		b:update(p(20, 0)) -- Chase
+		local far = p(45, 20)
+		far.noticeScale = 0.8
+		assert(b:update(far) == S.Chase, "45 is inside the 50 leash, scale or not")
+		local near = p(5, 20)
+		near.noticeScale = 0.8
+		assert(b:update(near) == S.Attack, "attack range is the real one")
+	end)
+
+	t.test("a unit heading home takes a lantern-wearer in only from the shorter way", function()
+		local b = EnemyBrain.new()
+		b:update(p(20, 0)) -- Chase
+		b:update(p(nil, 40)) -- Return
+		local far = p(27, 40)
+		far.noticeScale = 0.8
+		assert(b:update(far) == S.Return, "27 is outside 24: it keeps going home")
+		far.targetDistance = 20
+		assert(b:update(far) == S.Chase, "20 is inside 24: it turns")
+	end)
+
 	t.test("a retreating enemy still counts as attacking", function()
 		assert(EnemyBrain.isAttacking(S.Attack), "Attack is attacking")
 		assert(EnemyBrain.isAttacking(S.Reposition), "so is Reposition — it shoots while backing off")

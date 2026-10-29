@@ -293,6 +293,32 @@ function BackpackHud.create(): Handle
 		end
 		summary.Text = ("%d of %d places used  -  %d gold"):format(set.used or 0, set.slots or 0, set.gold or 0)
 
+		-- the charm worn this run, first (set by the Hub's Reliquary; the veil says whether it is spent)
+		local worn = player:GetAttribute("Charm")
+		if typeof(worn) == "string" and items[worn] then
+			heading("Charm worn")
+			local status, statusColour = "Worn", Theme.Color.GoldBright
+			if worn == "mourners_veil" then
+				if player:GetAttribute("VeilSpent") == true then
+					status, statusColour = "Spent", Theme.Color.BordeauxSoft
+				else
+					status, statusColour = "Ready", Theme.Color.GreenLight
+				end
+			end
+			order += 1
+			ItemCard.create({
+				Parent = rows,
+				ItemId = worn,
+				Def = items[worn],
+				RankColour = rankColour(items[worn].Rank),
+				LayoutOrder = order,
+				Open = openIds[worn],
+				Status = status,
+				StatusColour = statusColour,
+			})
+			heading("In the pack")
+		end
+
 		-- Rank order first, then name, so the good things sit at the top.
 		local rankOrder = { Relic = 1, Hallowed = 2, Sound = 3, Worn = 4 }
 		local stacks: { { id: string, n: number } } = {}
@@ -513,6 +539,11 @@ function BackpackHud.create(): Handle
 	button.MouseButton1Click:Connect(function()
 		handle.toggle()
 	end)
+
+	-- the charm is an attribute the server sets at the gate (and the veil's spending): the pack follows it
+	for _, name in { "Charm", "VeilSpent" } do
+		player:GetAttributeChangedSignal(name):Connect(redraw)
+	end
 
 	return handle
 end

@@ -24,6 +24,7 @@ local UserInputService = game:GetService("UserInputService")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Config = require(ReplicatedStorage.Shared.Config)
 local BackpackHud = require(script.Parent.Parent.UI.BackpackHud)
+local CharmCue = require(script.Parent.Parent.UI.CharmCue)
 
 local LootController = {}
 
@@ -86,6 +87,17 @@ function LootController.Start()
 			ensureHud().gain(payload, ranks)
 		elseif kind == "full" then
 			ensureHud().full()
+		end
+	end)
+
+	-- a worn charm did something: the veil held
+	Net.getEvent("CharmEvent").OnClientEvent:Connect(function(payload)
+		if typeof(payload) == "table" and payload.kind == "cue" and typeof(payload.charm) == "string" then
+			CharmCue.show({
+				charm = payload.charm,
+				title = tostring(payload.title or ""),
+				line = if typeof(payload.line) == "string" then payload.line else nil,
+			})
 		end
 	end)
 

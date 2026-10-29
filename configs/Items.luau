@@ -241,7 +241,7 @@ local Items = {
 		Rank = "Relic",
 		Flavour = "No horse in this castle has worn it in forty years.",
 		Use = "Walk a little faster out of a fight.",
-		Tip = "A charm, worn at the Reliquary. Its effect, speed out of a fight, is not yet wrought.",
+		Tip = "A charm, worn at the Reliquary. After five quiet seconds, with no blow given or taken, you walk 8% faster until the next one.",
 		Look = look("Disc", Vector3.new(0.2, 0.8, 0.8), Color3.fromRGB(232, 196, 96), Enum.Material.Metal, true),
 	},
 	mourners_veil = {
@@ -251,7 +251,7 @@ local Items = {
 		Rank = "Relic",
 		Flavour = "Black lace. It remembers a face.",
 		Use = "Survive the first killing blow of a run.",
-		Tip = "A charm, worn at the Reliquary. Its effect, surviving the first killing blow, is not yet wrought.",
+		Tip = "A charm, worn at the Reliquary. The first blow of a run that would kill you leaves you one breath instead; then the veil is spent until the next run.",
 		Look = look("Block", Vector3.new(0.8, 0.12, 0.8), Color3.fromRGB(232, 196, 96), Enum.Material.Fabric, true),
 	},
 	hollow_lantern = {
@@ -261,7 +261,7 @@ local Items = {
 		Rank = "Relic",
 		Flavour = "Its light is not for you.",
 		Use = "The dead notice you a little later.",
-		Tip = "A charm, worn at the Reliquary. Its effect, the dead noticing you later, is not yet wrought.",
+		Tip = "A charm, worn at the Reliquary. The dead notice you from a fifth less distance. Once they are on you, nothing changes.",
 		Look = look("Block", Vector3.new(0.5, 0.9, 0.5), Color3.fromRGB(232, 196, 96), Enum.Material.Metal, true),
 	},
 	sextons_key = {

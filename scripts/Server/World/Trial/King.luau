@@ -595,8 +595,10 @@ function King.create(ctx: any, def: any)
 				end
 			end
 			if baseSpeed[info.player] == nil then
-				baseSpeed[info.player] = info.humanoid.WalkSpeed
+				-- a charm may be adding to the speed: the base is what it was before (CharmService)
+				baseSpeed[info.player] = (info.humanoid:GetAttribute("BaseWalkSpeed") :: number?) or info.humanoid.WalkSpeed
 			end
+			info.humanoid:SetAttribute("SpeedHeld", true) -- the frost sets the speed now; CharmService stands back
 			local base = baseSpeed[info.player]
 			local want = if inside then base * def.slow else base
 			if math.abs(info.humanoid.WalkSpeed - want) > 0.05 then
@@ -611,6 +613,7 @@ function King.create(ctx: any, def: any)
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 			if humanoid then
 				humanoid.WalkSpeed = base
+				humanoid:SetAttribute("SpeedHeld", nil)
 			end
 		end
 		baseSpeed = {}
