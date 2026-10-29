@@ -1,3 +1,32 @@
+## Version 0.37.0 — The Muster Roll: every player's own page in the Hub
+
+The first step of the profile work. The Hub now has a page for each player (key `P`, or the `ROLL` button in the corner), built from
+that player's own profile, and it shows the numbers the difficulty already works from, so the fairness rules can be seen.
+
+- **The page (`UI/ProfileUI`).** The portrait (the avatar's head), the name, a rank title from the level (`configs/Profile`: Recruit, Footman,
+  Man-at-Arms ... Warden of the Last Kingdom), the level and an xp bar, the gold held. **Might** `n of 10` with its band (Raw, Blooded,
+  Seasoned, Hardened, Veteran) and ten pips; what that means ("you strike 77% harder than a fresh blade, the dead grow only 39% for it,
+  so you keep an edge of x1.28"); **Arms** (every weapon with its forging as pips, a locked one saying when it opens); **the record**
+  (runs won and lost, the best run, deeds); **the collection** with pictures (pages copied, shards laid on the altar or the raised
+  star, kinds stashed) and the **charm worn** with its picture.
+- **Might is the rating that already existed.** `Domain/TeamPower.playerRating(levels, "Best")`: the best weapon forged, which owning more
+  can never lower; the party is the average; the dead grow by half of the gain. The page only reads it (`Domain/PlayerCard.build`,
+  pure, `PlayerCard.spec`). It was written and tested before and read by nothing; now a player can see it.
+- **Server-authoritative and private.** `Hub/ProfileService` answers `RequestProfile` with `ProfileEvent` built from the profile of the
+  asker. The request has no player id, so no one can ask for another's page; it is throttled and read-only.
+- **Hub only.** `ProfileController` stands down in the Forgotten Lands (the same Client tree boots in both).
+- **Docs.** `docs/systems/Profile.md` (what each number is built from, the four fairness rules, what is not built), the Progression and
+  systems index pointers, the backlog (profiles and fairness: the developer's ideas still to be told).
+- **Tests.** `PlayerCard.spec` (11 cases: new player, xp progress and the cap, Might as the best weapon, clamped levels from older
+  builds, the half rule and the edge, a tier for every level, locked arms and a stable best arm, record and collection, the charm only
+  while owned, the config). 182 specs pass in both places; both projects build.
+- **Seen in the Hub (2026-10-30, a real playtest).** The panel with the test account (level 1) and with a synthetic card (level 6, +7
+  sword, three pages, four shards, the veil): every section, the pictures, the X, `P` opening and closing, the corner button. Found and
+  fixed on screen: "0% as hard" wording; tile captions cut; the best arm of a new player was a locked spear (it is the sword now);
+  unlocked arms listed first.
+- **Not built, waiting on the design talk.** Points as a separate score beyond Might; another player's roll; the party's rating on the
+  train; a crest per rank; weapon pictures on the arms. Not seen: the Roll on a phone.
+
 ## Version 0.36.0 — The charms work: the Veil, the Stirrup and the Lantern
 
 The Reliquary let a player wear a relic from the stash, and five of the six did nothing. Three of them now do what their words say.

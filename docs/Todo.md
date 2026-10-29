@@ -176,7 +176,8 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] The two charms still waiting: the Company's Signet (needs the parry, Arsenal §6) and the Sexton's Key (needs the locked `cache_*`
       tables); and the Falling Star sigil on the tabard.
 - [ ] Pages: only five Deeds give one; the Journal grows with the next chambers' deeds and the Story's other voices.
-- [ ] The Hub does not yet show currency, runs won and the stash outside the Chapel; the Forge still takes gold only (rusted iron's use, mending).
+- [x] The Hub shows currency, runs won and lost, the stash and more outside the Chapel: the Muster Roll, key P (Changelog 0.37.0).
+- [ ] The Forge still takes gold only (rusted iron's use, mending: needs durability).
 - [ ] Look at the camp by eye (layout in the passage mouth of 1 to 8, the panel, the fire's light); tune: heal 3/s, radius 13,
       the bench's four recipes, the chest's one Sound find.
 - [x] Chamber 3: recipe, ingredients, the pot (minded), the pen, the five cured followers (Changelog 0.27.0).
@@ -195,7 +196,20 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [x] Chamber 9: the King (three faces, kneels, "Release him"), the keep door, the scribe, the key, the marshal's door, the stair and the walk, the arch and the ending card (Changelog 0.32.0). **All nine chambers are built.**
 - [ ] LOOK at chamber 9 (Studio stopped rendering during its playtest): the King's three faces and the frost rings, the doors, the hall and the stair, the ending card.
 - [x] The ending settles the run (Changelog 0.33.0).
-- [ ] The Hub does not yet show what was banked (currency, stash, runs won).
+- [x] The Hub shows what was banked: the Muster Roll (Changelog 0.37.0).
+
+## Profiles and fairness (design with the developer, 2026-10-30; Profile.md)
+- [x] The Muster Roll: a page per player in the Hub (rank title, level and xp, Might out of 10, arms, record, collection, charm), built
+      server-side from the player's own profile; shows the fairness rules already in `TeamPower`.
+- [ ] **Developer's ideas, to be told:** what "points" should be beyond Might (a renown or season score from deeds, runs, speed?), what
+      makes it fairer (anti-carry, anti-farm, late joiners), and what "machines per account" means for the design. Read them into
+      `docs/systems/Profile.md` §4 before building.
+- [ ] Use the rating in the lobby: the train shows the party's rating and tier before departure (`TeamPower.partyRating`/`enemyScale`
+      are written and tested; nothing reads them yet, and `Scaling` still scales by head count only).
+- [ ] Look at another player's roll (a party mate): consent and what is public first.
+- [ ] A crest per rank and a picture of each weapon on the Roll's arms list.
+- [ ] Look at the Roll on a phone (touch: the ROLL button) and with real runs behind it (it was seen with the profile of the test
+      account and with a synthetic card of level 6).
 - [ ] Sounds for the work: pick on stone, rubble rolling back, the windlass's ratchet, the throw, plate. (No audio in the project yet.)
 - [ ] More poses in `WorkPoseController`: the forge's hammer, the woodyard's axe, nailing a board, untying a rope.
 - [ ] Look at the Hollow Knight's sweep and the digger from the front, in the real fog; tune the surges with two players.

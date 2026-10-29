@@ -55,6 +55,11 @@ Implemented end-to-end (Changelog 0.9.0):
 Not yet: cross-place **session locking** (dupe protection), applying `RewardMult` scaling, Hub
 spend/upgrades, and client HUD replication. See `../Todo.md`.
 
+## 3b. The player's page
+
+The Hub shows the profile as the **Muster Roll** (key `P`): level and rank title, Might (the TeamPower rating), arms, record,
+collection. See `Profile.md`.
+
 ## 4. Related
 
 `Economy.md` · `Inventory.md` · `Missions.md` · `../Architecture.md` (§6 persistence) · `configs/Experience.luau`

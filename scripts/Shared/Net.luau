@@ -55,6 +55,8 @@ local EVENT_NAMES: { string } = {
 	"ChapelEvent", -- server -> client: the Hub chapel's state (the Tithe, the Reliquary, the Altar, the Journal)
 	"RequestChapel", -- client -> server: { action = "state"|"tithe"|"charm"|"forge"|"offer", id = string? }
 	"CharmEvent", -- server -> client: a worn charm just did something { kind = "cue", charm, title, line }
+	"RequestProfile", -- client -> server: "my muster roll" (no arguments: you can only ask for your own)
+	"ProfileEvent", -- server -> client: { kind = "card", card = PlayerCard } or { kind = "unavailable" }
 }
 local FUNCTION_NAMES: { string } = {}
 
