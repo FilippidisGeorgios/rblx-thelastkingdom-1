@@ -1,29 +1,34 @@
 --!strict
 --[[
 	CameraController
-	Client-side camera foundation. Owns custom camera behaviour used for
-	atmosphere and for special states (e.g. the cinematic death camera and the
-	60-second spectate window described in the design).
+	Client-side camera rules for play.
 
-	Responsibilities (future phases):
-	- Drive gameplay camera behaviour.
-	- Handle special camera states (spectate, death cinematic, cutscenes).
+	Today it does one thing: it limits how far the player can zoom OUT (`configs/Camera`). Roblox's own limit is 128
+	studs, far enough to turn the castle into a map; here the camera may come back only as far as the config says.
+	Zooming IN is untouched. The cinematic death camera and the arrival scene take the camera over themselves
+	(they set it to Scriptable), so this limit never gets in their way.
 
-	Place: shared client.
-	Phase: Core Systems / Polish.
-	Status: skeleton.
+	Place: client (boots in both places).
 ]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local CameraController = {}
 
 CameraController.Name = "CameraController"
 
-function CameraController.Init()
-	-- Reserved. No logic in Phase 1.
-end
+function CameraController.Init() end
 
 function CameraController.Start()
-	-- Reserved. No logic in Phase 1.
+	local cfg = Config.get("Camera")
+	local player = Players.LocalPlayer
+	-- A property of the Player, so it holds across respawns. The min is set first: the engine refuses a max that is
+	-- below the current min.
+	player.CameraMinZoomDistance = cfg.MinZoom
+	player.CameraMaxZoomDistance = math.max(cfg.MaxZoomOut, cfg.MinZoom + 1)
 end
 
 return CameraController

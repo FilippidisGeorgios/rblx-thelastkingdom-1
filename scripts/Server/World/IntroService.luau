@@ -29,6 +29,7 @@ local Workspace = game:GetService("Workspace")
 local Net = require(ReplicatedStorage.Shared.Net)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
+local SkipVote = require(script.Parent.Parent.Domain.SkipVote)
 
 local IntroService = {}
 
@@ -42,6 +43,7 @@ local state: State = "waiting"
 local finishedCallbacks: { () -> () } = {}
 local cast: { Player } = {}
 local skipVotes: { [Player]: boolean } = {}
+local ready: { [Player]: boolean } = {} -- whose loading screen has gone (the client says so with ClientReady)
 local endToken = 0
 
 --==========================================================================
@@ -214,13 +216,17 @@ local function playScene()
 	-- One entry per beat ("" where nobody speaks): a remote turns an array with
 	-- holes into a dictionary, so the list is kept dense.
 	local speakers: { string } = {}
+	local speakerIds: { number } = {} -- 0 where nobody speaks; the client frames the speaker's shot and face from it
 	local cursor = 0
 	for i, beat in cfg.Beats do
 		if beat.Line then
 			cursor += 1
-			speakers[i] = order[(cursor - 1) % #order + 1].DisplayName
+			local speaker = order[(cursor - 1) % #order + 1]
+			speakers[i] = speaker.DisplayName
+			speakerIds[i] = speaker.UserId
 		else
 			speakers[i] = ""
+			speakerIds[i] = 0
 		end
 	end
 
@@ -230,11 +236,18 @@ local function playScene()
 
 	local event = Net.getEvent("IntroEvent")
 	for _, player in cast do
-		event:FireClient(player, { kind = "start", speakers = speakers, votes = 0, needed = IntroService.votesNeeded() })
+		event:FireClient(player, {
+			kind = "start",
+			speakers = speakers,
+			speakerIds = speakerIds,
+			votes = 0,
+			needed = IntroService.votesNeeded(),
+		})
 	end
 	log:info(("scene started for %d player(s)"):format(#cast))
 
 	local token = endToken
+
 	task.delay(totalSeconds(cfg) + cfg.FadeInSeconds * 0.5, function()
 		if token == endToken then
 			endScene("timeline")
@@ -249,9 +262,9 @@ function IntroService.votesNeeded(): number
 			present += 1
 		end
 	end
-	-- "More than half": 1 of 1, 2 of 2, 2 of 3, 3 of 4.
-	local share = Config.get("Intro").SkipShare
-	return math.max(1, math.floor(present * share) + 1)
+	-- the developer's table (Intro.SkipVotes): 1 of 1, 2 of 2, 2 of 3, 3 of 4, 3 of 5 ... 7 of 10
+	local cfg = Config.get("Intro")
+	return SkipVote.needed(present, cfg.SkipVotes, cfg.SkipOverflowShare)
 end
 
 local function onSkip(player: Player)
@@ -287,9 +300,13 @@ end
 
 function IntroService.Start()
 	Net.getEvent("RequestIntroSkip").OnServerEvent:Connect(onSkip)
+	Net.getEvent("ClientReady").OnServerEvent:Connect(function(player)
+		ready[player] = true
+	end)
 
 	Players.PlayerRemoving:Connect(function(player)
 		skipVotes[player] = nil
+		ready[player] = nil
 		-- Somebody leaving can be the vote that was missing.
 		if state == "playing" then
 			local count = 0
@@ -357,6 +374,22 @@ function IntroService.Start()
 			task.wait(0.25)
 		end
 		conn:Disconnect()
+
+		-- Then until each of them has finished loading (their loading screen is gone), so nobody's first
+		-- seconds of the scene play behind a loading bar. A time limit keeps one slow connection from holding
+		-- the whole party at the gate.
+		local readyDeadline = os.clock() + cfg.WaitForLoadingSeconds
+		local function everyoneReady(): boolean
+			for _, player in Players:GetPlayers() do
+				if not ready[player] then
+					return false
+				end
+			end
+			return true
+		end
+		while os.clock() < readyDeadline and not everyoneReady() do
+			task.wait(0.25)
+		end
 		playScene()
 	end)
 

@@ -222,9 +222,15 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] The engine's quality level may not be settable from a script (not verified); decide if Low/Ultra need anything beyond what is done.
 - [ ] **The Crawler is built but placed nowhere:** choose its first chamber and how it arrives (a drain, a crack in the floor); a dedicated crawl clip
       (alternate arms, a drag of the hips) and its sound. The shambler's clips are borrowed for now.
-- [ ] **Forest, catacombs and a bigger run (developer's idea, 2026-10-30):** a pitch-dark forest area (light only around you, black fog, hiding in
-      wardrobes, fuses and tools to find, one or two hunters, no weapons until the armoury), then catacombs from below (a maze, the dead digging up
-      through the floor). Needs a design talk first: the run is short for a player with good weapons. See the notes in the session summary.
+- [x] Loading screen with a real bar, hold-to-skip with the developer's vote table, a livelier arrival scene, the camera's zoom-out limit (30), graphics
+      that change something in the Hub too (Changelog 0.40.0).
+- [ ] **Look at 0.40.0 with real players:** the vote table with 2 to 10 (only `SkipVote.spec` and one player were run), the loading bar on a slow
+      connection and on a phone, the arrival scene's shots with different avatars (hats, wings), the zoom limit of 30 (the developer will say more or less).
+- [ ] **The bigger run (developer's idea, 2026-10-30; design written in `docs/systems/BigRun.md`, waiting for the developer's answers):** a dark forest
+      before the gate (your lantern is the only light, a hunter you cannot kill, no weapon until the lodge), the catacombs under the graveyard (a maze, a
+      mine, low tunnels you crouch through, the Crawlers digging up), bigger areas with search / do / hold / secret, real ceilings where there are buildings
+      and an "entering scene" for the big yards. Build order: crouch, entering scene and light zones, the forest, the catacombs, bigger areas, the mark key.
+- [ ] Simple words: say "area" (the nine yards) and "room" (inside a building), never "chamber"; keep it plain in the game's own text too.
 - [ ] The admin panel: search by Company number (`PlayerId.decode`), read `profile.account` and the statistics.
 - [ ] A custom nickname (filtered, unique, changeable how often?).
 - [ ] Look at another player's roll (a party mate): consent and what is public first.

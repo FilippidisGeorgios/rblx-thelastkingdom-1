@@ -23,13 +23,22 @@
 	state the instance had when it arrived is. Setting `Enabled` directly still
 	works for as long as the camera is near it.
 
-	Place: client (boots in both places; nothing in the Hub carries the tag).
+	IN THE HUB there is no tag (the Hub was built by hand, not by the castle tool), so here the controller takes
+	EVERY light and emitter in the world that is not on a character, as it arrives. This is what lets the picture
+	quality in Settings change something in the lobby too (how far lanterns and fires stay lit, and on Ultra the
+	lights near you casting shadows). Those entries are "dynamic": the Hub has things that move (the train), so
+	a light's position is read again at every step, and what a light was doing when it was cut is what it goes
+	back to.
+
+	Place: client (boots in both places; tagged things in the castle, everything in the Hub).
 	Phase: Performance.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+
+local Constants = require(game:GetService("ReplicatedStorage").Shared.Constants)
 
 local DetailLodController = {}
 
@@ -53,6 +62,7 @@ type Entry = {
 	cut: boolean, -- true while this controller is holding it off
 	arrivedShadows: boolean?, -- a Light's own Shadows as it arrived
 	shadowed: boolean, -- true while this controller is making the light cast shadows (Ultra)
+	dynamic: boolean, -- the Hub's: position re-read each step, and "on" is whatever it was when it was cut
 }
 
 local entries: { [Instance]: Entry } = {}
@@ -90,7 +100,7 @@ local function wanted(entry: Entry): boolean
 	return entry.arrivedOn
 end
 
-local function register(instance: Instance)
+local function register(instance: Instance, dynamic: boolean?)
 	if entries[instance] then
 		return
 	end
@@ -111,7 +121,21 @@ local function register(instance: Instance)
 		cut = false,
 		arrivedShadows = if instance:IsA("Light") then (instance :: any).Shadows else nil,
 		shadowed = false,
+		dynamic = dynamic == true,
 	}
+end
+
+-- A light or emitter in the Hub: any that is not part of a character (a player's torch moves with them and is
+-- not scenery), taken when it arrives.
+local function registerHub(instance: Instance)
+	if not (instance:IsA("Light") or instance:IsA("ParticleEmitter")) then
+		return
+	end
+	local model = instance:FindFirstAncestorOfClass("Model")
+	if model and model:FindFirstChildOfClass("Humanoid") then
+		return
+	end
+	register(instance, true)
 end
 
 local function unregister(instance: Instance)
@@ -132,6 +156,12 @@ local function step()
 	end
 	local eye = camera.CFrame.Position
 	for _, entry in entries do
+		if entry.dynamic then
+			local at = worldPosition(entry.instance)
+			if at then
+				entry.position = at
+			end
+		end
 		local distance = (entry.position - eye).Magnitude
 		local range = entry.range * rangeScale
 		if entry.cut then
@@ -140,6 +170,10 @@ local function step()
 				setOn(entry.instance, wanted(entry))
 			end
 		elseif distance > range + HYSTERESIS then
+			if entry.dynamic then
+				-- remember what it was doing, so a fire the Hub put out is not lit again when you come back
+				entry.arrivedOn = isOn(entry.instance)
+			end
 			entry.cut = true
 			setOn(entry.instance, false)
 		end
@@ -170,8 +204,31 @@ function DetailLodController.Start()
 	for _, instance in CollectionService:GetTagged(TAG) do
 		register(instance)
 	end
-	CollectionService:GetInstanceAddedSignal(TAG):Connect(register)
+	CollectionService:GetInstanceAddedSignal(TAG):Connect(function(instance)
+		register(instance)
+	end)
 	CollectionService:GetInstanceRemovedSignal(TAG):Connect(unregister)
+
+	-- the Hub: everything that is a light or a fire (see the header)
+	local inHub = game.PlaceId == Constants.PlaceIds.KingdomHub
+		or (game.PlaceId == 0 and Workspace:FindFirstChild("Lobby") ~= nil and Workspace:FindFirstChild("Gameplay") == nil)
+	if inHub then
+		task.spawn(function()
+			if not game:IsLoaded() then
+				game.Loaded:Wait()
+			end
+			local n = 0
+			for _, instance in Workspace:GetDescendants() do
+				registerHub(instance)
+				n += 1
+				if n % 3000 == 0 then
+					task.wait()
+				end
+			end
+		end)
+		Workspace.DescendantAdded:Connect(registerHub)
+		Workspace.DescendantRemoving:Connect(unregister)
+	end
 
 	task.spawn(function()
 		while true do

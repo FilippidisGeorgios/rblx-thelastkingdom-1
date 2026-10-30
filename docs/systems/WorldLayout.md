@@ -81,7 +81,12 @@ arrival scene, shot from the hill, and a player inside looking at the skyline ov
 ## Arrival
 
 `IntroService` runs the scene once per server: the party on the hill, six lines said by the players
-(by display name), then black, then the arrival pad. See `configs/Intro.luau`.
+(by display name), then black, then the arrival pad. See `configs/Intro.luau`. It begins when every player's loading screen
+has gone (`ClientReady`; 30 seconds at most), so nobody misses the opening. The shots (the long look, over the speaker's
+shoulder, the speaker's face), the hand-held camera, the soft focus, the ash and the lightning are in `UI/IntroCinema`.
+**SKIP is a hold of 3 seconds**, and the scene is skipped when enough of the party have held it: 1 player 1, 2 players 2,
+3 players 2, 4 players 3, 5 players 3, 6 players 4, 7 players 5, 8 players 5, 9 players 6, 10 players 7
+(`Intro.SkipVotes`, `Domain/SkipVote`).
 
 ## Towers
 

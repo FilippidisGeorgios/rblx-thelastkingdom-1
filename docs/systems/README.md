@@ -26,6 +26,7 @@ These are the **per-system design documents**. Responsibilities are split three 
 | `Spoils.md` | What the dead leave: ranks, items, the backpack, co-op loot | §2 · §5 | **Design (2026-10-21)** — roll, pack and pickups built |
 | `ItemArt.md` | The picture of every item: AI meshes, the card, the prompts | §2 | **Built (0.35.0)** |
 | `Profile.md` | The Muster Roll: a player's own page, Might, the fairness rules it shows | §1.2 · §5 | **Built (0.37.0)**; points beyond Might wait for the developer's ideas |
+| `BigRun.md` | The bigger run: areas that are searched, the dark forest, the catacombs, crouching, ceilings | §1.2 Pillars 1, 3, 4 | **Design (2026-10-30)**, waiting for the developer's answers; nothing built |
 
 > The **GDD is the source of truth for vision**. These docs must not contradict it. Where a
 > doc adds detail beyond the GDD, that detail is the **design-of-record** for that system.

@@ -36,6 +36,11 @@ and its fog, the colour grading and every authored light's colour and reach are 
 
 (`Domain` test `PlayerSettings.spec` checks that the table carries only these keys: a quality cannot be given a way to change visibility.)
 
+**In the Hub too (0.40.0).** The castle's lights and fires carry a tag the Hub does not, so at first only the glow, the rays and the particles
+changed in the lobby. Now `DetailLodController` takes every light and fire in the Hub that is not on a character, so the same rows apply:
+measured in a Hub playtest, Low switched 50 of 111 lights off by distance (High 20, Ultra 13) and Ultra gave 16 near lights their shadows.
+The cog is in both places; the arrival scene hides it while it plays and returns it.
+
 **The shadows switch does not turn the world's shadows off.** That would let the sun through every roof and light the dark rooms, which
 is an advantage and the end of the mood. OFF means **simple shadows**: walls, roofs and floors keep casting; the small things (parts under 5
 studs: props, people, the dead) stop. The dark rooms are exactly as dark either way; the machine has far fewer shadows to draw.

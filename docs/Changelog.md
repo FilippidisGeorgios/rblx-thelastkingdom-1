@@ -1,3 +1,42 @@
+## Version 0.40.0 — A loading screen with a real bar, a camera that stops at 30, a longer and livelier arrival scene, skip by holding, and graphics that work in the Hub
+
+What the developer asked for (2026-10-30), built; and the design for the bigger run written down (`docs/systems/BigRun.md`).
+
+- **The loading screen (`ReplicatedFirst/TitleScreen`, `ReplicatedFirst/Loading`).** Black, a castle drawn in gold from UI pieces (a keep with its flag
+  and battlements, two towers with red roofs, the wall, a gate with its portcullis; the flag waves and two windows flicker), THE LAST KINGDOM under it,
+  and a bar. The old card (a question and a PLAY button, a blur of the world) is gone: nobody presses anything, the screen leaves by itself when the
+  bar is full. The bar is the real work: the game loaded (10%), then every picture, mesh, sound and animation the world uses, found by looking
+  through Workspace, Lighting, SoundService and ReplicatedStorage, listed once each and fetched 24 at a time, six requests at once (to 80%), then the
+  player's body and the ground round it (`RequestStreamAroundAsync`, to 95%), then two drawn frames. Limits so a bad connection is never a locked
+  one: 25 seconds for the assets, 12 for the body, 8 for the ground, 45 for the whole screen; and at least 3.5 seconds so the name can be read. The
+  line under the bar says where it is in simple words ("Opening the gates...", "Raising the walls...", "Lighting the torches...").
+- **The arrival scene waits for it.** `Loading` sets `ReplicatedFirst:TLKLoaded`; the new `Controllers/LoadingController` turns that into
+  `ClientReady` (new in `Net`); `IntroService` begins only when every player in the server has said so (30 seconds at most, `WaitForLoadingSeconds`),
+  so nobody's first seconds of the scene play behind a loading bar.
+- **Hold to skip (`UI/IntroUI`, `Intro.SkipHoldSeconds = 3`).** A tap does nothing: the SKIP plate fills with gold while it is held and sends the vote
+  when full; let go early and it empties. The votes needed are the developer's table (`Intro.SkipVotes`, tested by the new `Domain/SkipVote` and
+  `SkipVote.spec`): 1 player 1, 2 players 2, 3 players 2, 4 players 3, 5 players 3, 6 players 4, 7 players 5, 8 players 5, 9 players 6, 10 players 7
+  (past ten, 70% of the party). The plate shows how many have held so far ("HOLD TO SKIP 1 / 3", then "WAITING 1 / 3").
+- **The arrival scene looks like a film (`UI/IntroCinema`, `Controllers/IntroController`, `Intro.Beats`).** Beats now have a SHOT: the long look from a
+  mark to a mark (as before), OVER THE SHOULDER of the one who speaks (their head low in the frame, the castle behind it), or their FACE, three-quarters,
+  on a long lens with everything behind it soft. The speaker's Roblox head is in the dialogue box beside their name. The camera is hand-held (Perlin
+  sway, a breathing field of view), a depth-of-field lens focuses differently for each kind of shot (`Intro.Focus`), a slightly cooler grade is laid
+  over the scene, ash and a few sparks drift across the frame, and a double flash of lightning lights the hill at the line "Something is still moving
+  behind those walls". The title card settles from a little too large and draws its gold rule from the middle. All of it is made when the scene
+  starts and removed when it ends (counted: three effects in, three out). The depth blur is a post effect like the others, so Low and Medium switch it off.
+- **The camera stops at 30 studs (`configs/Camera`, `Controllers/CameraController`).** Roblox allowed 128. Zooming IN is untouched. A number to tune by playing.
+- **Graphics in the Hub (`Controllers/DetailLodController`).** The picture quality changed little in the lobby: only the castle's lights and fires carry the
+  `TLK_Lod` tag, and the Hub has none. In the Hub the controller now takes every light and fire that is not on a character, as it arrives, re-reading its
+  position each time (the train moves) and remembering what it was doing when it was cut. Measured in a Hub playtest: Low switches 50 of the 111 lights off
+  by distance (High 20, Ultra 13) and Ultra gives 16 near lights their shadows (High and Low 0).
+- **The settings cog in the castle.** It was already there (both places run `HudController`); the arrival scene hides it and gives it back when it ends
+  (seen in the playtest). If it is missing from the published game, that place has not been saved with the 0.39.0 scripts yet.
+- **Found and fixed while testing.** A portrait sized by a `UIAspectRatioConstraint` with a zero width was 0 by 0 (it is squared to the box in code now).
+  The depth-of-field tween (0.9 s) left the first second of a face shot blurred by the lens of the shot before it (0.3 s now). The first shoulder shot put
+  the speaker's hair against the lens (further back and lower now; a player's hat or wings can be any size). Roblox's `Humanoid:PlayEmote("point")` did
+  not play for the speaker in a Studio playtest, so the gesture was taken out rather than left as a feature that does nothing. Preloading the Hub's door
+  sounds prints two warnings ("Asset type does not match requested type"): the sounds' ids are wrong in the Toolbox model, not our code.
+
 ## Version 0.39.0 — Danger, the Settings panel, the Inventory tab, names over heads, the roll of honour, and gold as a coin
 
 What the developer asked for (2026-10-30), built.
