@@ -33,6 +33,9 @@ could not draw a picture: everything below was measured with rays, terrain reads
   through it. Cuts are now rounded out to whole cells with a cell of margin, ceilings sit at -6.3 (under where the ground hangs), the trench's walls
   are three studs thick on the outside. `Humanoid:PlayEmote` and a ProximityPrompt both need a rendering client, so a script cannot press a prompt
   while the PC is locked: the deed has a `dev` table for tests.
+- **The realism test (`docs/systems/Realism.md`).** Five models made with `generate_mesh` to see what it can give for the weapons and the dead
+  (kept in `ServerStorage.Assets.RealismTests` of the Forgotten Lands, not in the game): a vague prompt gave a broken bow and a cartoon head, a precise one
+  gave a clean strung longbow and a realistic undead head with burial wraps (smooth, with a face). Nothing is wired into the game yet.
 - **Not built yet:** the entering scene for the big areas (a banner and a change of light as the party crosses in), the mark (ping) key, the forest,
   the catacombs, the other big areas. `docs/systems/BigRun.md` §10 has the order.
 
