@@ -29,11 +29,13 @@ Theme.Color = {
 	Navy = Color3.fromRGB(52, 36, 24),
 	NavyLight = Color3.fromRGB(104, 72, 44),
 
-	-- Bordeaux: the royal red. Every way OUT (leave, close, abandon) is this, whatever the screen.
-	Bordeaux = Color3.fromRGB(98, 16, 30),
-	BordeauxLight = Color3.fromRGB(176, 38, 54),
+	-- Bordeaux: the royal red, DEEP burgundy (it was a bright red on a button and read like an arcade).
+	-- Every way OUT (leave, close, abandon) is this, whatever the screen. Light is the top of a button,
+	-- Soft is only for red TEXT on a dark panel (a warning, "Hard"), never for a fill.
+	Bordeaux = Color3.fromRGB(58, 8, 18),
+	BordeauxLight = Color3.fromRGB(108, 20, 38),
 	BordeauxSoft = Color3.fromRGB(206, 74, 84),
-	BordeauxMid = Color3.fromRGB(128, 24, 40),
+	BordeauxMid = Color3.fromRGB(82, 14, 28),
 
 	-- Gold, and the golden brown that sits between it and the walnut.
 	GoldDim = Color3.fromRGB(128, 88, 30),
@@ -49,8 +51,10 @@ Theme.Color = {
 	Grey = Color3.fromRGB(184, 170, 148), -- the "Normal" mode grey, warm
 	Muted = Color3.fromRGB(176, 156, 126),
 
-	-- The one green: every way FORWARD (depart, buy, confirm). Alive, but still a banner and not an arcade button.
-	Green = Color3.fromRGB(38, 102, 56),
+	-- The one green: every way FORWARD (depart, buy, confirm). DEEP forest green, never lime: Green is the foot of a
+	-- button and GreenTop its top. GreenLight/GreenBright are for green TEXT and thin lines on a dark panel only.
+	Green = Color3.fromRGB(16, 50, 28),
+	GreenTop = Color3.fromRGB(36, 90, 52),
 	GreenLight = Color3.fromRGB(88, 170, 94),
 	GreenBright = Color3.fromRGB(150, 226, 150),
 

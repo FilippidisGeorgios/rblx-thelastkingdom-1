@@ -214,11 +214,11 @@ local VARIANTS = {
 		bottom = Theme.Color.BronzeDark,
 		text = Theme.onDark(Theme.Color.GoldBright, 0.88),
 	},
-	-- Forward: depart, buy, confirm.
+	-- Forward: depart, buy, confirm. Deep green, and the word on it is CREAM (white with a breath of yellow, not gold).
 	green = {
-		top = Theme.Color.GreenLight,
+		top = Theme.Color.GreenTop,
 		bottom = Theme.Color.Green,
-		text = Theme.onDark(Theme.Color.GreenBright, 0.85),
+		text = Theme.Color.Cream,
 	},
 	-- A quiet button on a dark panel.
 	ghost = {
@@ -233,11 +233,11 @@ local VARIANTS = {
 		bottom = Theme.Color.Navy,
 		text = Theme.Color.White,
 	},
-	-- Out: leave, close, abandon. Always bordeaux.
+	-- Out: leave, close, abandon. Always deep burgundy, and the word on it is cream.
 	danger = {
 		top = Theme.Color.BordeauxLight,
 		bottom = Theme.Color.Bordeaux,
-		text = Theme.onDark(Theme.Color.BordeauxSoft, 0.88),
+		text = Theme.Color.Cream,
 	},
 	-- The forge's own action: buying a level of steel.
 	ember = {

@@ -41,8 +41,8 @@ local GOLD_DIM = Color3.fromRGB(112, 84, 30)
 local PARCHMENT = Color3.fromRGB(237, 227, 206)
 local MUTED = Color3.fromRGB(146, 130, 118)
 local CREAM = Color3.fromRGB(249, 240, 218)
-local GREEN = Color3.fromRGB(44, 88, 56)
-local GREEN_LIGHT = Color3.fromRGB(74, 132, 84)
+local GREEN = Color3.fromRGB(16, 50, 28) -- the same deep forest green as the Theme's buttons
+local GREEN_LIGHT = Color3.fromRGB(36, 90, 52)
 
 local SERIF = "rbxasset://fonts/families/Merriweather.json"
 local DISPLAY = "rbxasset://fonts/families/Fondamento.json"
@@ -93,12 +93,20 @@ local function reveal(target: GuiObject, delay: number)
 	end
 	local wasBackground = target.BackgroundTransparency
 	target.BackgroundTransparency = 1
+	-- a button's word lives in a child label (see the Play button); it rises and fades in with it
+	local word = target:FindFirstChild("Label")
+	if word and word:IsA("TextLabel") then
+		word.TextTransparency = 1
+	end
 
 	task.delay(delay, function()
 		if not target.Parent then
 			return
 		end
 		TweenService:Create(target, RISE, { Position = home }):Play()
+		if word and word:IsA("TextLabel") then
+			TweenService:Create(word, RISE, { TextTransparency = 0 }):Play()
+		end
 		if target:IsA("TextLabel") or target:IsA("TextButton") then
 			TweenService:Create(target, RISE, { TextTransparency = 0 }):Play()
 		end
@@ -262,18 +270,29 @@ function TitleScreen.show(): Handle
 
 	local play = Instance.new("TextButton")
 	play.Name = "Play"
-	play.Text = "PLAY"
-	play.TextSize = 30
-	play.TextColor3 = CREAM
+	play.Text = ""
 	play.AutoButtonColor = false
-	play.BackgroundColor3 = GREEN
+	-- white: the gradient below multiplies the background, so a dark colour here would darken the green twice
+	play.BackgroundColor3 = Color3.new(1, 1, 1)
 	play.BorderSizePixel = 0
 	play.Size = UDim2.fromOffset(340, 66)
 	play.AnchorPoint = Vector2.new(0.5, 0)
 	play.Position = UDim2.fromScale(0.5, 0)
 	play.ZIndex = 4
-	font(play, SERIF, Enum.FontWeight.Bold)
 	play.Parent = holder(content, 6, 66)
+
+	-- The word is a CHILD label: a UIGradient tints the text of the very object it paints, which turned cream
+	-- lettering on a deep green plate into dark green on dark green (the same reason Components.button does it).
+	local playLabel = Instance.new("TextLabel")
+	playLabel.Name = "Label"
+	playLabel.Text = "PLAY"
+	playLabel.TextSize = 30
+	playLabel.TextColor3 = CREAM
+	playLabel.BackgroundTransparency = 1
+	playLabel.Size = UDim2.fromScale(1, 1)
+	playLabel.ZIndex = 5
+	font(playLabel, SERIF, Enum.FontWeight.Bold)
+	playLabel.Parent = play
 
 	local playGradient = Instance.new("UIGradient")
 	playGradient.Color = ColorSequence.new(GREEN_LIGHT, GREEN)
