@@ -20,6 +20,7 @@ local Workspace = game:GetService("Workspace")
 local Server = script.Parent.Parent
 local CombatService = require(script.Parent.CombatService)
 local EnemyAIService = require(script.Parent.EnemyAIService)
+local CrawlerBody = require(script.Parent.CrawlerBody)
 local HumanoidAdapter = require(Server.Domain.Combat.HumanoidAdapter)
 local Enums = require(ReplicatedStorage.Shared.Combat.Enums)
 local Constants = require(ReplicatedStorage.Shared.Constants)
@@ -151,6 +152,10 @@ local function buildBody(def: any): (Model?, Humanoid?)
 	model:SetAttribute("HitCount", 0)
 	if def.Cured then
 		livingTint(model)
+	end
+	-- no legs: it drags itself along on its arms (a body made at spawn from a standing one)
+	if def.Crawler then
+		CrawlerBody.make(model)
 	end
 	-- A body arrives whole or not at all (a limb without its torso is worse than nothing).
 	model.ModelStreamingMode = Enum.ModelStreamingMode.Atomic

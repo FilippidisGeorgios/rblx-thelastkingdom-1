@@ -557,6 +557,7 @@ local ATTACKS: { [string]: Attack } = {
 -- Which attack each type uses.
 local KIND: { [string]: string } = {
 	undead_shambler = "shove",
+	undead_crawler = "shove", -- the same reach, from the floor
 	undead_runner = "lunge",
 	undead_brute_heavy = "overhead",
 	undead_spearman = "thrust",

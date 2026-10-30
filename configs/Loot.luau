@@ -90,6 +90,15 @@ local Loot = {
 			},
 		},
 
+		-- The crawler: little to take from what is left of it, but the bone dust is plentiful (it shows its bones).
+		undead_crawler = {
+			Gold = { Chance = 0.35, Min = 1, Max = 2 },
+			Drops = {
+				{ Item = "bone_dust", Chance = 0.6, Min = 1, Max = 2 },
+				{ Item = "grave_cloth", Chance = 0.12, Min = 1, Max = 1 },
+			},
+		},
+
 		undead_runner = {
 			Gold = { Chance = 0.4, Min = 1, Max = 2 },
 			Drops = {

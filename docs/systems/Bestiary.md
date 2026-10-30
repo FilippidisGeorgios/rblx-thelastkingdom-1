@@ -213,6 +213,21 @@ Each of these exists to put a *question* to the player that the five above do no
 - A quadruped needs its own rig and gait, so it is the last of the proposed units, and optional: build
   only if the pack-of-hounds moment is wanted in the Stables.
 
+**The Crawler** — `undead_crawler` · Standard · **[BUILT 0.39.0, NOT PLACED YET]**
+- HP 36 · speed 8.5 · 7 damage · reach 5 · notices you from 70 studs (a shambler: 110) · windup 0.8 (the shambler's)
+- *Silhouette:* a body with no legs. A torso sloping up from the hips along the ground, the head lifted, the
+  arms planted in front, the ribs and spine showing and two short thighbones broken off at the hips. It is
+  low enough to be lost in a crowd of standing dead, which is its purpose.
+- *How it is made:* at spawn, from a shambler body (`Crawler = true`; `World/CrawlerBody`): everything joined
+  to a leg is found by following the joints out from the thighs and removed, the torso is laid down by the
+  Root joint's C1 so the standing clips still read (a lean is a rise and fall of the front, a lurch goes forward),
+  the head is lifted and the arms turned to reach. No new model, no new clip: it plays the shambler's walk
+  (the arms drag) and shove (a reach from the floor).
+- *Question:* "do you look down?" — it goes for the ankles of a party that is watching the doors.
+- *Where:* not in any wave or area yet (`Difficulty.Areas.*.Unlocks`): its first appearance, and whether a
+  chamber gets a dozen of them from a drain or a crack in the floor, is the developer's call.
+- *Still to do:* a dedicated crawl clip (alternate arms, a drag of the hips) and a low hiss for the sound.
+
 ### 5.3 The cured **[BUILT]**
 `cured_villager` (melee ×3) and `cured_villager_bow` (×2): the same bodies as the dead, restored (§2),
 that follow the party through chambers 4–6. They share the living-skin palette and simple tool-weapons

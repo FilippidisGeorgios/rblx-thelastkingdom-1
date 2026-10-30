@@ -23,6 +23,7 @@
 			Armour      = number?,  -- OPTIONAL 0..1: the share of an ordinary blow turned aside (ArmourService)
 			Abilities   = { string },
 			Body        = { string }?, -- OPTIONAL: bodies in ServerStorage.Assets.Undead it may wear; absent = the plain box
+			Crawler     = boolean?,    -- OPTIONAL: lose the legs and lie down on the arms (World/CrawlerBody)
 
 			AI = {   -- OPTIONAL; present = this unit uses the AI brain
 				-- Acquire a target within this. READ BEFORE LOWERING ONE: a
@@ -125,6 +126,43 @@ local Enemies = {
 			Strike = 0.15,
 			Recover = 0.6, -- open to a counter
 			AttackDamage = 8,
+			AttackDamageType = "Physical",
+		},
+	},
+
+	--[[
+		The crawler: a body with no legs, dragging itself along the stones on its arms, its ribs and spine showing.
+		It is made at spawn from a shambler's body (`Crawler = true`: World/CrawlerBody takes the legs away and lays the
+		torso down), so there is no new model; it is low to the ground, hard to see in a crowd and quick for what it is,
+		and it breaks easily. It notices you later than a shambler does (it is looking along the floor), and it fights
+		with the shambler's reach (they share the clip, so the timings are the shambler's).
+
+		NOT PLACED IN ANY CHAMBER YET: no wave names it and no area unlocks it (configs/Difficulty `Areas`). It is built
+		and tested; where it first appears is a decision for the developer (docs/systems/Bestiary.md).
+	]]
+	undead_crawler = {
+		DisplayName = "Crawler",
+		Faction = "Enemies",
+		Archetype = "Undead",
+		MaxHealth = 36,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Standard",
+		Abilities = {},
+		Crawler = true,
+		Body = { "undead_shambler", "undead_shambler_scullion" },
+		AI = {
+			DetectionRadius = 70,
+			AttackRange = 5,
+			LeashRadius = 200,
+			ArrivalRadius = 2.5,
+			MoveSpeed = 8.5,
+			AttackCooldown = 1.4,
+			Windup = 0.8, -- the shambler's own: the same clip plays, so the picture and the damage line up
+			Strike = 0.15,
+			Recover = 0.6,
+			AttackDamage = 7,
 			AttackDamageType = "Physical",
 		},
 	},
