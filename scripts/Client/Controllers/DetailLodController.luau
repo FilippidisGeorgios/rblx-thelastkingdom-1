@@ -51,9 +51,18 @@ type Entry = {
 	range: number,
 	arrivedOn: boolean,
 	cut: boolean, -- true while this controller is holding it off
+	arrivedShadows: boolean?, -- a Light's own Shadows as it arrived
+	shadowed: boolean, -- true while this controller is making the light cast shadows (Ultra)
 }
 
 local entries: { [Instance]: Entry } = {}
+
+-- The picture quality (UI/SettingsUI, Controllers/GraphicsController) stretches or shrinks how far lights and
+-- fires stay lit, and on Ultra lets the lights near the camera cast shadows. Neither changes how bright a
+-- lit light is: only how far away it is still drawn.
+local rangeScale = 1
+local lightShadows = false
+local SHADOW_RANGE = 45
 
 local function worldPosition(instance: Instance): Vector3?
 	local parent = instance.Parent
@@ -100,6 +109,8 @@ local function register(instance: Instance)
 		range = (if instance:IsA("Light") then LIGHT_RANGE else FX_RANGE) * scale,
 		arrivedOn = isOn(instance),
 		cut = false,
+		arrivedShadows = if instance:IsA("Light") then (instance :: any).Shadows else nil,
+		shadowed = false,
 	}
 end
 
@@ -122,16 +133,35 @@ local function step()
 	local eye = camera.CFrame.Position
 	for _, entry in entries do
 		local distance = (entry.position - eye).Magnitude
+		local range = entry.range * rangeScale
 		if entry.cut then
-			if distance <= entry.range then
+			if distance <= range then
 				entry.cut = false
 				setOn(entry.instance, wanted(entry))
 			end
-		elseif distance > entry.range + HYSTERESIS then
+		elseif distance > range + HYSTERESIS then
 			entry.cut = true
 			setOn(entry.instance, false)
 		end
+
+		if entry.arrivedShadows ~= nil then
+			local want = lightShadows and not entry.cut and distance <= SHADOW_RANGE
+			if want ~= entry.shadowed then
+				entry.shadowed = want
+				;(entry.instance :: any).Shadows = if want then true else entry.arrivedShadows
+			end
+		end
 	end
+end
+
+-- How far lights and fires stay lit, as a share of the authored distance (Graphics.Tiers.*.LodScale).
+function DetailLodController.setScale(scale: number)
+	rangeScale = math.clamp(scale, 0.3, 3)
+end
+
+-- Ultra: the lights near the camera cast shadows (while the player's shadows switch is on).
+function DetailLodController.setLightShadows(on: boolean)
+	lightShadows = on
 end
 
 function DetailLodController.Init() end

@@ -10,10 +10,14 @@
 	            Relic is gold before the words are read. A Sound-or-better find
 	            also gets its line of flavour, once.
 
-	  THE PACK  A parchment panel (key B, or the small button for touch): the
-	            stacks you carry, the gold, the charm, and what each thing is
-	            FOR. This is the only place the economy is explained, so every
-	            row says its use.
+	  THE PACK  A parchment panel (key B, or the INVENTORY tab on the left edge,
+	            which is also the touch way in): the stacks you carry, the
+	            gold, the charm, and what each thing is FOR. This is the only
+	            place the economy is explained, so every row says its use.
+
+	  IN THE HUB the same panel is the INVENTORY: the stash the runs brought home,
+	            the purse, the charm, and the PRIZES OF THE ROAD waiting to be
+	            claimed (the server marks that `set` with `hub = true`).
 
 	It owns no state of its own: the controller hands it the server's `set` and
 	`gain` messages and it draws them.
@@ -27,6 +31,8 @@ local Players = game:GetService("Players")
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local ItemCard = require(script.Parent.ItemCard)
+local Icons = require(script.Parent.Icons)
+local IconButton = require(script.Parent.IconButton)
 
 local BackpackHud = {}
 
@@ -41,6 +47,11 @@ export type Handle = {
 	gain: (payload: any, ranks: any) -> (),
 	full: () -> (),
 	toggle: () -> (),
+	isOpen: () -> boolean,
+	-- called each time the panel is opened (the Hub asks the server for a fresh inventory)
+	onOpen: (handler: () -> ()) -> (),
+	-- called with the level when the player presses CLAIM on a prize of the road
+	onClaim: (handler: (level: number) -> ()) -> (),
 	destroy: () -> (),
 }
 
@@ -68,23 +79,20 @@ function BackpackHud.create(): Handle
 	gui.Parent = player:WaitForChild("PlayerGui")
 
 	--------------------------------------------------------------------------
-	-- The button. Small, bottom right, always there: it is also the touch way in.
+	-- The tab. Small, on the left edge, always there: a backpack with its one word. It is also the touch way in.
 	--------------------------------------------------------------------------
-	local button = Instance.new("TextButton")
-	button.Name = "PackButton"
-	button.AnchorPoint = Vector2.new(1, 1)
-	button.Position = UDim2.new(1, -LOG_MARGIN, 1, -LOG_MARGIN)
-	button.Size = UDim2.fromOffset(46, 46)
-	button.BackgroundColor3 = Theme.Color.Ink
-	button.BackgroundTransparency = 0.25
-	button.AutoButtonColor = false
-	button.Text = "PACK"
-	button.TextSize = 11
-	button.TextColor3 = Theme.Color.Gold
-	button.Parent = gui
-	Theme.applyFont(button, Theme.Role.Strong)
-	Theme.corner(button)
-	Theme.goldStroke(button, 1.2)
+	local tab = IconButton.create({
+		Name = "InventoryTab",
+		Parent = gui,
+		Icon = "backpack",
+		Caption = "INVENTORY",
+		CaptionSize = 9,
+		IconSize = 30,
+		Size = UDim2.fromOffset(62, 62),
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 12, 0.5, 0),
+	})
+	local button = tab.button
 
 	--------------------------------------------------------------------------
 	-- The log: lines stack upward from just above the button.
@@ -108,7 +116,7 @@ function BackpackHud.create(): Handle
 	local goldLine = Instance.new("TextLabel")
 	goldLine.Name = "Gold"
 	goldLine.AnchorPoint = Vector2.new(1, 1)
-	goldLine.Position = UDim2.new(1, -(LOG_MARGIN + 54), 1, -(LOG_MARGIN + 6))
+	goldLine.Position = UDim2.new(1, -LOG_MARGIN, 1, -(LOG_MARGIN + 6))
 	goldLine.Size = UDim2.fromOffset(160, 24)
 	goldLine.BackgroundTransparency = 1
 	goldLine.TextXAlignment = Enum.TextXAlignment.Right
@@ -126,9 +134,9 @@ function BackpackHud.create(): Handle
 	--------------------------------------------------------------------------
 	local panel = Instance.new("Frame")
 	panel.Name = "Pack"
-	-- Sits above the button it opens from, not over it.
-	panel.AnchorPoint = Vector2.new(1, 1)
-	panel.Position = UDim2.new(1, -LOG_MARGIN, 1, -(LOG_MARGIN + 54))
+	-- Opens beside the tab it comes from, on the left (see PANEL_SHOWN / PANEL_HIDDEN below).
+	panel.AnchorPoint = Vector2.new(0, 0.5)
+	panel.Position = UDim2.new(0, 86, 0.5, 0)
 	-- as tall as the screen allows (the list scrolls), never taller than 600
 	panel.Size = UDim2.new(0, 430, 0.78, 0)
 	local limit = Instance.new("UISizeConstraint")
@@ -154,15 +162,19 @@ function BackpackHud.create(): Handle
 	title.Text = "THE PACK"
 	title.Parent = panel
 	Theme.applyFont(title, Theme.Role.Heading)
-	-- the way out: the red X in the corner
+	-- the way out: the burgundy X in the corner (closePanel is defined below)
+	local closePanel: () -> () = function() end
 	Components.closeButton(title, function()
-		panel.Visible = false
+		closePanel()
 	end)
+
+	-- the purse: a coin, then the words
+	local coin = Icons.coin({ Size = 18, Position = UDim2.fromOffset(0, 32), Parent = panel })
 
 	local summary = Instance.new("TextLabel")
 	summary.Name = "Summary"
-	summary.Position = UDim2.fromOffset(0, 30)
-	summary.Size = UDim2.new(1, 0, 0, 20)
+	summary.Position = UDim2.fromOffset(26, 30)
+	summary.Size = UDim2.new(1, -26, 0, 20)
 	summary.BackgroundTransparency = 1
 	summary.TextXAlignment = Enum.TextXAlignment.Left
 	summary.TextSize = 15
@@ -261,6 +273,87 @@ function BackpackHud.create(): Handle
 		end
 	end
 
+	local claimHandler: ((level: number) -> ())? = nil
+
+	-- One prize of the road waiting to be taken: the level in a round seal (gold for a milestone), what it
+	-- gives in words, a picture of each thing, and the green CLAIM.
+	local function addPrize(prize: any)
+		order += 1
+		local row = Instance.new("Frame")
+		row.Name = "Prize" .. tostring(prize.level)
+		row.Size = UDim2.new(1, -6, 0, 62)
+		row.BackgroundColor3 = Theme.Color.Navy
+		row.BackgroundTransparency = 0.3
+		row.BorderSizePixel = 0
+		row.LayoutOrder = order
+		row.Parent = rows
+		Theme.corner(row)
+		local edge = Instance.new("UIStroke")
+		edge.Color = if prize.milestone then Theme.Color.Gold else Theme.Color.GoldDim
+		edge.Thickness = if prize.milestone then 1.6 else 1
+		edge.Parent = row
+
+		local seal = Instance.new("TextLabel")
+		seal.Position = UDim2.fromOffset(8, 10)
+		seal.Size = UDim2.fromOffset(42, 42)
+		seal.BackgroundColor3 = if prize.milestone then Theme.Color.Gold else Theme.Color.Bronze
+		seal.TextColor3 = Theme.Color.Void
+		seal.TextSize = 18
+		seal.Text = tostring(prize.level)
+		seal.Parent = row
+		Theme.applyFont(seal, Theme.Role.Heading)
+		Theme.corner(seal, UDim.new(0.5, 0))
+
+		local words: { string } = {}
+		if (prize.gold or 0) > 0 then
+			table.insert(words, ("%d gold"):format(prize.gold))
+		end
+		for _, thing in prize.items or {} do
+			table.insert(words, ("%s x%d"):format(thing.name, thing.count))
+		end
+		if prize.title then
+			table.insert(words, ('the title "%s"'):format(prize.title))
+		end
+		local head = Instance.new("TextLabel")
+		head.Position = UDim2.fromOffset(60, 8)
+		head.Size = UDim2.new(1, -168, 0, 20)
+		head.BackgroundTransparency = 1
+		head.TextXAlignment = Enum.TextXAlignment.Left
+		head.TextSize = 16
+		head.TextColor3 = if prize.milestone then Theme.Color.GoldBright else Theme.Color.Cream
+		head.Text = if prize.milestone then ("Level %d  -  a milestone"):format(prize.level) else ("Level %d"):format(prize.level)
+		head.Parent = row
+		Theme.applyFont(head, Theme.Role.Strong)
+		local gives = Instance.new("TextLabel")
+		gives.Position = UDim2.fromOffset(60, 28)
+		gives.Size = UDim2.new(1, -168, 0, 28)
+		gives.BackgroundTransparency = 1
+		gives.TextXAlignment = Enum.TextXAlignment.Left
+		gives.TextYAlignment = Enum.TextYAlignment.Top
+		gives.TextWrapped = true
+		gives.TextSize = 13
+		gives.TextColor3 = Theme.Color.Parchment
+		gives.Text = if #words > 0 then table.concat(words, "   ·   ") else "A gift of the Company."
+		gives.Parent = row
+		Theme.applyFont(gives, Theme.Role.Body)
+
+		local claim = Components.button({
+			Name = "Claim",
+			Text = "CLAIM",
+			Variant = "green",
+			TextSize = 15,
+			Size = UDim2.fromOffset(86, 34),
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -8, 0.5, 0),
+			Parent = row,
+		})
+		claim.Activated:Connect(function()
+			if claimHandler then
+				claimHandler(prize.level)
+			end
+		end)
+	end
+
 	local function heading(text: string)
 		order += 1
 		local h = Instance.new("TextLabel")
@@ -291,14 +384,40 @@ function BackpackHud.create(): Handle
 		if not set or not items then
 			return
 		end
-		summary.Text = ("%d of %d places used  -  %d gold"):format(set.used or 0, set.slots or 0, set.gold or 0)
+		title.Text = if set.hub then "INVENTORY" else "THE PACK"
+		if set.hub then
+			local kinds = 0
+			for _ in set.stacks or {} do
+				kinds += 1
+			end
+			summary.Text = ("%d gold   ·   %d %s in the stash"):format(set.gold or 0, kinds, if kinds == 1 then "kind of thing" else "kinds of thing")
+		else
+			summary.Text = ("%d gold   ·   %d of %d places used"):format(set.gold or 0, set.used or 0, set.slots or 0)
+		end
 
-		-- the charm worn this run, first (set by the Hub's Reliquary; the veil says whether it is spent)
-		local worn = player:GetAttribute("Charm")
+		-- the prizes of the road (the Hub only): first, because they are the one thing here to act on
+		if set.hub and set.prizes then
+			heading("Prizes of the road")
+			local waiting = set.prizes.waiting or {}
+			if #waiting == 0 then
+				local line = if set.prizes.defined
+					then "No prize is waiting for you."
+					else "The prizes of the road are still being forged."
+				local use = if set.prizes.nextLevel then ("The next stop is level %d."):format(set.prizes.nextLevel) else nil
+				addRow(line, nil, use, Theme.Color.Muted)
+			else
+				for _, prize in waiting do
+					addPrize(prize)
+				end
+			end
+		end
+
+		-- the charm worn (set by the Hub's Reliquary; in the castle the veil says whether it is spent)
+		local worn = if set.hub then set.charm else player:GetAttribute("Charm")
 		if typeof(worn) == "string" and items[worn] then
 			heading("Charm worn")
 			local status, statusColour = "Worn", Theme.Color.GoldBright
-			if worn == "mourners_veil" then
+			if not set.hub and worn == "mourners_veil" then
 				if player:GetAttribute("VeilSpent") == true then
 					status, statusColour = "Spent", Theme.Color.BordeauxSoft
 				else
@@ -486,6 +605,50 @@ function BackpackHud.create(): Handle
 	end
 
 	--==========================================================================
+	-- Opening and closing: the page slides out from the tab and settles, and slides back
+	--==========================================================================
+	local PANEL_SHOWN = UDim2.new(0, 86, 0.5, 0)
+	local PANEL_HIDDEN = UDim2.new(0, 50, 0.5, 0)
+	local panelScale = Instance.new("UIScale")
+	panelScale.Scale = 0.94
+	panelScale.Parent = panel
+	local panelOpen = false
+	local panelToken = 0
+	local openHandler: (() -> ())? = nil
+
+	local function openPanel()
+		if panelOpen then
+			return
+		end
+		panelOpen = true
+		panelToken += 1
+		panel.Visible = true
+		panel.Position = PANEL_HIDDEN
+		panelScale.Scale = 0.94
+		TweenService:Create(panel, Theme.Motion.Enter, { Position = PANEL_SHOWN }):Play()
+		TweenService:Create(panelScale, Theme.Motion.Enter, { Scale = 1 }):Play()
+		redraw()
+		if openHandler then
+			openHandler()
+		end
+	end
+
+	closePanel = function()
+		if not panelOpen then
+			return
+		end
+		panelOpen = false
+		panelToken += 1
+		local mine = panelToken
+		TweenService:Create(panel, Theme.Motion.Exit, { Position = PANEL_HIDDEN }):Play()
+		TweenService:Create(panelScale, Theme.Motion.Exit, { Scale = 0.94 }):Play()
+		task.delay(0.18, function()
+			if panelToken == mine and not panelOpen then
+				panel.Visible = false
+			end
+		end)
+	end
+
 	local handle: Handle
 	handle = {
 		gui = gui,
@@ -494,10 +657,13 @@ function BackpackHud.create(): Handle
 			lastSet = payload
 			lastItems = items
 			lastRanks = ranks
-			if panel.Visible then
+			if panelOpen then
 				redraw()
 			end
-			if typeof(payload.gold) == "number" and payload.gold ~= goldTotalShown then
+			-- (the Hub's set carries the purse every time; only a CHANGE in the castle is news)
+			if payload.hub then
+				goldTotalShown = payload.gold or 0
+			elseif typeof(payload.gold) == "number" and payload.gold ~= goldTotalShown then
 				-- Only the change is news: the first set after joining is not.
 				if goldTotalShown ~= 0 or payload.gold ~= 0 then
 					showGold(payload.gold)
@@ -525,10 +691,23 @@ function BackpackHud.create(): Handle
 		end,
 
 		toggle = function()
-			panel.Visible = not panel.Visible
-			if panel.Visible then
-				redraw()
+			if panelOpen then
+				closePanel()
+			else
+				openPanel()
 			end
+		end,
+
+		isOpen = function()
+			return panelOpen
+		end,
+
+		onOpen = function(handler: () -> ())
+			openHandler = handler
+		end,
+
+		onClaim = function(handler: (level: number) -> ())
+			claimHandler = handler
 		end,
 
 		destroy = function()
@@ -536,7 +715,7 @@ function BackpackHud.create(): Handle
 		end,
 	}
 
-	button.MouseButton1Click:Connect(function()
+	button.Activated:Connect(function()
 		handle.toggle()
 	end)
 
@@ -544,6 +723,14 @@ function BackpackHud.create(): Handle
 	for _, name in { "Charm", "VeilSpent" } do
 		player:GetAttributeChangedSignal(name):Connect(redraw)
 	end
+
+	-- a prize waiting in the Hub: a small gold number on the tab
+	local function drawBadge()
+		local n = player:GetAttribute("PrizesWaiting")
+		tab.setBadge(if type(n) == "number" and n > 0 then tostring(n) else nil)
+	end
+	player:GetAttributeChangedSignal("PrizesWaiting"):Connect(drawBadge)
+	drawBadge()
 
 	return handle
 end

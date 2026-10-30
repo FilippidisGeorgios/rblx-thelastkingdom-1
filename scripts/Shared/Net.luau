@@ -57,6 +57,9 @@ local EVENT_NAMES: { string } = {
 	"CharmEvent", -- server -> client: a worn charm just did something { kind = "cue", charm, title, line }
 	"RequestProfile", -- client -> server: "my muster roll" (no arguments: you can only ask for your own)
 	"ProfileEvent", -- server -> client: { kind = "card", card = PlayerCard } or { kind = "unavailable" }
+	"RequestSettings", -- client -> server: { graphics = "Low"|"Medium"|"High"|"Ultra"?, shadows = boolean? } (checked by Shared/PlayerSettings)
+	"RequestInventory", -- client -> server: "my inventory" (the Hub fills the left-hand panel with the stash and the road's prizes)
+	"RequestClaimPrize", -- client -> server: the level of the road's prize to take (Domain/Prizes decides if it may be taken)
 }
 local FUNCTION_NAMES: { string } = {}
 

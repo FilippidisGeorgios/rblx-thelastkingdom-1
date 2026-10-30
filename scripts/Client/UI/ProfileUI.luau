@@ -24,6 +24,7 @@ local TweenService = game:GetService("TweenService")
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
 local ItemArt = require(script.Parent.ItemArt)
+local Icons = require(script.Parent.Icons)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 
@@ -189,7 +190,10 @@ local function tile(parent: Instance, order: number, value: string, caption: str
 	Theme.padding(frame, 10)
 
 	local left = 0
-	if itemId then
+	if itemId == "coin" then
+		-- gold is counted with a coin in the corner, not with a word
+		Icons.coin({ Size = 26, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Parent = frame })
+	elseif itemId then
 		local picture = Instance.new("Frame")
 		picture.Size = UDim2.fromOffset(60, 60)
 		picture.Position = UDim2.fromOffset(0, 2)
@@ -531,8 +535,10 @@ local function drawRecord(c: any, order: number)
 	tile(h, 6, if s.deepestChamber > 0 then tostring(s.deepestChamber) else "-", "DEEPEST CHAMBER", nil, Theme.Color.Parchment, 4)
 	tile(h, 7, duration(s.playSeconds), "TIME IN THE CASTLE", nil, Theme.Color.Parchment, 4)
 	tile(h, 8, if s.fastestWinSeconds then duration(s.fastestWinSeconds) else "-", "FASTEST VICTORY", nil, Theme.Color.GreenBright, 4)
-	tile(h, 9, thousands(s.goldBanked), "GOLD BROUGHT HOME", nil, Theme.Color.GoldBright, 4)
-	tile(h, 10, thousands(r.bestRunGold), "BEST RUN (GOLD)", nil, Theme.Color.GoldBright, 4)
+	tile(h, 9, thousands(s.goldBanked), "GOLD BROUGHT HOME", "coin", Theme.Color.GoldBright, 4)
+	tile(h, 10, thousands(r.bestRunGold), "BEST RUN (GOLD)", "coin", Theme.Color.GoldBright, 4)
+	tile(h, 11, thousands(s.assists or 0), "ASSISTS", nil, Theme.Color.Parchment, 4)
+	tile(h, 12, thousands(s.revives or 0), "FRIENDS RAISED", nil, Theme.Color.GreenBright, 4)
 end
 
 local function drawCollection(c: any, order: number)

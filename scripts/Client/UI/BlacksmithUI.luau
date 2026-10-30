@@ -21,6 +21,7 @@ local TweenService = game:GetService("TweenService")
 
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
+local Icons = require(script.Parent.Icons)
 
 local BlacksmithUI = {}
 
@@ -188,13 +189,19 @@ local function buildRow(entry: Entry, order: number)
 
 	local button = Components.button({
 		Name = "Upgrade",
-		Text = ("%d GOLD"):format(entry.cost),
+		Text = tostring(entry.cost),
 		Variant = if entry.affordable then "green" else "ghost",
 		TextSize = Theme.TextSize.Small,
 		Size = UDim2.fromOffset(190, 44),
 		LayoutOrder = 2,
 		Parent = action,
 	})
+
+	-- the price is a coin and a figure
+	local priceLabel = button:FindFirstChild("Label")
+	if priceLabel and priceLabel:IsA("TextLabel") then
+		Icons.beside(priceLabel, "coin", 24)
+	end
 
 	if not entry.affordable then
 		Components.setTextColor(button, Theme.Color.Muted)
@@ -266,6 +273,8 @@ local function build(parent: ScreenGui)
 		LayoutOrder = 2,
 		Parent = root,
 	})
+	-- the purse is counted with a coin before the figure
+	Icons.beside(goldLabel :: TextLabel, "coin", 26)
 
 	Components.divider(root, 3)
 
@@ -350,7 +359,7 @@ function BlacksmithUI.setState(state: State)
 	lastState = state
 
 	if goldLabel then
-		goldLabel.Text = ("%d GOLD        LEVEL %d"):format(state.gold, state.playerLevel)
+		goldLabel.Text = ("%d           LEVEL %d"):format(state.gold, state.playerLevel)
 	end
 
 	clearList()

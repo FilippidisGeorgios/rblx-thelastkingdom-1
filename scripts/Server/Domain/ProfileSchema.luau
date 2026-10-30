@@ -15,6 +15,9 @@
 	Roblox user id, the name and display name last seen, when it began and when it was last loaded), for the
 	Muster Roll and the admin panel to come. `stamp` writes it on every load.
 
+	v6 adds `settings` (the quality of the picture and the shadows switch, Domain/PlayerSettings) and `prizes`
+	(which prizes of the road to level 100 were claimed, and the titles they gave, Domain/Prizes).
+
 	Location: ServerScriptService.Server.Domain.ProfileSchema
 ]]
 
@@ -45,11 +48,13 @@ export type Profile = {
 	stats: { [string]: any },
 	unlockedLore: { [string]: boolean },
 	achievements: { [string]: boolean },
+	settings: { graphics: string?, shadows: boolean? },
+	prizes: { claimed: { [string]: number }, titles: { [string]: boolean } },
 }
 
 local ProfileSchema = {}
 
-ProfileSchema.VERSION = 5
+ProfileSchema.VERSION = 6
 
 -- Returns a fresh default profile for a brand-new player.
 function ProfileSchema.default(): Profile
@@ -67,6 +72,8 @@ function ProfileSchema.default(): Profile
 		stats = {},
 		unlockedLore = {},
 		achievements = {},
+		settings = {},
+		prizes = { claimed = {}, titles = {} },
 	}
 end
 
@@ -90,6 +97,10 @@ function ProfileSchema.migrate(profile: Profile): Profile
 	profile.stats = profile.stats or {}
 	profile.unlockedLore = profile.unlockedLore or {}
 	profile.achievements = profile.achievements or {}
+	profile.settings = profile.settings or {}
+	profile.prizes = profile.prizes or { claimed = {}, titles = {} }
+	profile.prizes.claimed = profile.prizes.claimed or {}
+	profile.prizes.titles = profile.prizes.titles or {}
 	profile.version = ProfileSchema.VERSION
 	return profile
 end

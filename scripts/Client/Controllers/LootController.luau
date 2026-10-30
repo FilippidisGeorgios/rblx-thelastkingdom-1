@@ -23,6 +23,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local Config = require(ReplicatedStorage.Shared.Config)
+local Constants = require(ReplicatedStorage.Shared.Constants)
 local BackpackHud = require(script.Parent.Parent.UI.BackpackHud)
 local CharmCue = require(script.Parent.Parent.UI.CharmCue)
 
@@ -75,6 +76,22 @@ function LootController.Start()
 
 	local ranks = Config.get("Loot").Ranks
 	local items = Config.get("Items")
+
+	-- the INVENTORY tab on the left edge is always there, before anything has been picked up
+	local tab = ensureHud()
+	local inHub = game.PlaceId == 0 or game.PlaceId == Constants.PlaceIds.KingdomHub
+	if inHub then
+		-- in the Hub the panel is the inventory: it asks the server for a fresh one whenever it opens, and a
+		-- prize of the road is claimed from it
+		local askInventory = Net.getEvent("RequestInventory")
+		local claimPrize = Net.getEvent("RequestClaimPrize")
+		tab.onOpen(function()
+			askInventory:FireServer()
+		end)
+		tab.onClaim(function(level: number)
+			claimPrize:FireServer(level)
+		end)
+	end
 
 	Net.getEvent("BackpackEvent").OnClientEvent:Connect(function(payload)
 		if typeof(payload) ~= "table" then

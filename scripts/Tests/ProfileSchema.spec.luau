@@ -56,9 +56,28 @@ return function(t: any)
 		old.currency = 77
 		old.stash = { bone_dust = 3 }
 		local migrated = ProfileSchema.migrate(old)
-		assert(migrated.version == 5 and ProfileSchema.VERSION == 5, "the schema is at 5")
+		assert(migrated.version == ProfileSchema.VERSION and ProfileSchema.VERSION >= 5, "the schema is up to date")
 		assert(type(migrated.account) == "table" and next(migrated.account) == nil, "an empty account")
 		assert(migrated.currency == 77 and migrated.stash.bone_dust == 3, "nothing else touched")
+	end)
+
+	t.test("a v5 profile migrates to v6 with empty settings and no prizes claimed, keeping everything it had", function()
+		local old: any = ProfileSchema.default()
+		old.version = 5
+		old.settings = nil
+		old.prizes = nil
+		old.currency = 12
+		old.account = { id = "TLK-0000-0001-X" }
+		local migrated = ProfileSchema.migrate(old)
+		assert(migrated.version == 6 and ProfileSchema.VERSION == 6, "the schema is at 6")
+		assert(type(migrated.settings) == "table" and next(migrated.settings) == nil, "no choices yet")
+		assert(next(migrated.prizes.claimed) == nil and next(migrated.prizes.titles) == nil, "no prizes taken")
+		assert(migrated.currency == 12 and migrated.account.id == "TLK-0000-0001-X", "nothing else touched")
+		-- and a half-written prizes table is mended, not replaced
+		local half: any = ProfileSchema.default()
+		half.prizes = { claimed = { ["5"] = 100 } }
+		local mended = ProfileSchema.migrate(half)
+		assert(mended.prizes.claimed["5"] == 100 and mended.prizes.titles ~= nil, "claimed kept, titles added")
 	end)
 
 	t.test("stamp gives the Company number once, never changes it, and follows the names", function()
