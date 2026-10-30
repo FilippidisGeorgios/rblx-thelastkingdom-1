@@ -23,7 +23,7 @@
 			Armour      = number?,  -- OPTIONAL 0..1: the share of an ordinary blow turned aside (ArmourService)
 			Abilities   = { string },
 			Body        = { string }?, -- OPTIONAL: bodies in ServerStorage.Assets.Undead it may wear; absent = the plain box
-			Crawler     = boolean?,    -- OPTIONAL: lose the legs and lie down on the arms (World/CrawlerBody)
+			Crawler     = boolean?,    -- OPTIONAL: lose the legs and lie down on the arms (Domain/CrawlerBody)
 
 			AI = {   -- OPTIONAL; present = this unit uses the AI brain
 				-- Acquire a target within this. READ BEFORE LOWERING ONE: a
@@ -132,7 +132,7 @@ local Enemies = {
 
 	--[[
 		The crawler: a body with no legs, dragging itself along the stones on its arms, its ribs and spine showing.
-		It is made at spawn from a shambler's body (`Crawler = true`: World/CrawlerBody takes the legs away and lays the
+		It is made at spawn from a shambler's body (`Crawler = true`: Domain/CrawlerBody takes the legs away and lays the
 		torso down), so there is no new model; it is low to the ground, hard to see in a crowd and quick for what it is,
 		and it breaks easily. It notices you later than a shambler does (it is looking along the floor), and it fights
 		with the shambler's reach (they share the clip, so the timings are the shambler's).

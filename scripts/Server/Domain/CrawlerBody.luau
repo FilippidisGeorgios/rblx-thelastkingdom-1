@@ -19,9 +19,9 @@
 	Nothing here changes how it fights: its AI, its health and its attacks are in configs/Enemies (`undead_crawler`).
 	It uses the standing clips: the shambler's shove, as a lunge of the arm, and the walk, as a drag.
 
-	Place: Forgotten Lands ONLY (Server/World). Phase: Enemy AI / Presentation.
+	Place: used by the Forgotten Lands (EnemyService); lives in Domain, which both places carry, so its spec runs in both. Phase: Enemy AI / Presentation.
 
-	Location: ServerScriptService.Server.World.CrawlerBody
+	Location: ServerScriptService.Server.Domain.CrawlerBody
 ]]
 
 local CrawlerBody = {}

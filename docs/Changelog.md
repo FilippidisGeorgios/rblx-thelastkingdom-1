@@ -34,7 +34,7 @@ What the developer asked for (2026-10-30), built.
   picture of each thing, the charm, and a CLAIM button for each prize of the road that is waiting; claiming puts gold in the purse and items in the
   stash, marks the level taken (`profile.prizes`, schema v6) and saves at once. `Experience.LevelRewards` is still empty, so nothing waits yet.
 - **Gold is a coin.** `Icons.coin` in the pack, the inventory, the forge's purse and prices and the statistics tiles.
-- **The Crawler (`World/CrawlerBody`, `undead_crawler`, Bestiary 5.2).** A legless dead that drags itself along on its arms, made at spawn from
+- **The Crawler (`Domain/CrawlerBody`, `undead_crawler`, Bestiary 5.2).** A legless dead that drags itself along on its arms, made at spawn from
   a shambler body: everything joined to a leg is found by following the joints out from the thighs and removed, the torso is laid down by the Root
   joint's C1 (so the standing clips still read), the head lifted, the arms turned to reach, two thighbones broken off at the hips. 36 health, speed
   8.5, notices you from 70 studs; it shares the shambler's attack clip. Tested live (it chases, attacks, dies and sinks) and by `CrawlerBody.spec`.

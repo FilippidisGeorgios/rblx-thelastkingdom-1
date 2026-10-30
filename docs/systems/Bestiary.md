@@ -218,7 +218,7 @@ Each of these exists to put a *question* to the player that the five above do no
 - *Silhouette:* a body with no legs. A torso sloping up from the hips along the ground, the head lifted, the
   arms planted in front, the ribs and spine showing and two short thighbones broken off at the hips. It is
   low enough to be lost in a crowd of standing dead, which is its purpose.
-- *How it is made:* at spawn, from a shambler body (`Crawler = true`; `World/CrawlerBody`): everything joined
+- *How it is made:* at spawn, from a shambler body (`Crawler = true`; `Domain/CrawlerBody`): everything joined
   to a leg is found by following the joints out from the thighs and removed, the torso is laid down by the
   Root joint's C1 so the standing clips still read (a lean is a rise and fall of the front, a lurch goes forward),
   the head is lifted and the arms turned to reach. No new model, no new clip: it plays the shambler's walk

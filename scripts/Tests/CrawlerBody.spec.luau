@@ -10,7 +10,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local CrawlerBody = require(ServerScriptService.Server.World.CrawlerBody)
+local CrawlerBody = require(ServerScriptService.Server.Domain.CrawlerBody)
 local ZombieAnims = require(ReplicatedStorage.Shared.Anim.ZombieAnims)
 local Enemies: any = require(ReplicatedStorage.Config.Enemies)
 
