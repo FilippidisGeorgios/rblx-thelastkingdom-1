@@ -8,6 +8,16 @@ fight), some of them frightening; ceilings or a better way to make the dark; a f
 a space inside a building. *Layer* = a level above or below the ground. *Hunter* = a monster you cannot kill, only
 escape. *Crouch* = ducking down to fit a low passage.
 
+## 0. What is built so far (0.41.0, 2026-10-30)
+
+| Piece | Where | State |
+|---|---|---|
+| Crouching (key C, a button on a phone, the server decides when you can stand) | `configs/Crouch`, `World/CrouchService`, `Controllers/CrouchController` | **built and tested** |
+| Light zones (a dark room, the same for everyone) | `configs/LightZones`, `Shared/LightZone`, `Controllers/LightZoneController` | **built and tested** |
+| The Kitchens' cellar: search for a key, a door, a larder, a low passage, a flooded vault, the Crawlers | `tools/BuildCellar.luau`, `Trial/Cellar`, `configs/Trials` area 3 | **built; seen by measurement, not yet by eye** |
+| The camera's zoom limit (25 studs) | `configs/Camera` | built |
+| The entering scene, the mark key, the forest, the catacombs, the other big areas | | not built |
+
 ## 1. What there is today (counted in the Forgotten Lands place, 2026-10-30)
 
 | | |
@@ -137,8 +147,9 @@ Great Hall 8, the Rows 10, Inner Ward 6, keep and King 8. Tune with real runs.
 
 ## 10. The order I would build in
 
-1. **Crouch** and low passages (small; everything underground needs it).
-2. **The entering scene** and light zones (works in every area at once).
+1. ~~**Crouch** and low passages~~ **(done, 0.41.0)**.
+2. **The entering scene** (light zones are done, 0.41.0; the scene itself is not).
+2b. ~~The first big area~~ **the Kitchens' cellar (done, 0.41.0)**: the model for the others (search, do, crawl, fear, a prize).
 3. **The Forest** (it is outside the castle, so nothing existing is touched).
 4. **The Catacombs** and the Crawler's first appearance.
 5. **Bigger areas**, one at a time: the Rows, the Great Hall roof, the kitchens' cellar, the mine.

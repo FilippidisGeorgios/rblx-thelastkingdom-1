@@ -1,3 +1,41 @@
+## Version 0.41.0 — Crouching, rooms that are dark, and the Kitchens' cellar: the first step of the bigger run
+
+What the developer asked for (2026-10-30): start on the areas; a camera that zooms out less; "ducking through low passages, a maze, a mine, fear".
+The design is `docs/systems/BigRun.md`; this is its first built slice, tested in Studio end to end except by eye (the PC was locked, so Studio
+could not draw a picture: everything below was measured with rays, terrain reads and a character that walked it).
+
+- **The camera stops at 25 studs** (`configs/Camera.MaxZoomOut`, was 30, the engine's was 128).
+- **Crouching (`configs/Crouch`, `Domain/Crouch`, `World/CrouchService`, `Controllers/CrouchController`).** Key C (a picture button on a phone,
+  a small ducking figure, gold-edged while crouched: `Icons.crouch`, `IconButton.setActive`). The body shortens to a BodyHeightScale of 0.5 for
+  every player (measured on the tallest avatar scale: 5.15 studs standing, 2.97 crouched, so a 3.4 passage fits everyone and stops a standing
+  body), the walk is half speed (a CLAIM on WalkSpeed, so the Brass Stirrup and the King's frost are not trampled), and `Crouching` is published
+  on the Player for the hunters to come. **The server decides when you stand:** five rays straight up from the head; under a ceiling you stay
+  down and a line says "There is no room to stand." A first version on purpose: a shorter, slower body. A real crouch (bent knees) is an animation
+  for the animation pass. `Crouch.spec` tests the claim, the key gap and the room.
+- **Light zones (`configs/LightZones`, `Shared/LightZone`, `Controllers/LightZoneController`).** A real ceiling stops the sun but not Roblox's flat
+  ambient light, so a built cellar would still glow. A tagged, invisible box (`TLK_LightZone`, attribute `Profile`) turns the ambient light, the sky
+  reflection and the haze down while a player is inside and gives the place's own values back when they leave, over a fade. Measured: ambient from
+  (40, 41, 50) to (6, 6, 8), sky reflection 0.6 to 0.05. The same for every player whatever picture quality they chose (the fairness rule), and a
+  spec checks a zone may change nothing but those properties. `LightZone.spec` tests the geometry (also a turned box) and which of two zones wins.
+- **The Kitchens' cellar (`tools/BuildCellar.luau`, `Trial/Cellar`, a Deed of area 3).** An open stone stair beside the kitchen hall down to a locked
+  door; behind it a larder (shelves, casks, hams, a table, a chest); then a LOW passage (3.4 high, two bends: you must crouch); then a flooded
+  vault under the Dairy with a hoard on a dais and three mounds of rubble where the dead dig up through the floor. 252 parts, cut out of the
+  terrain. **The errand:** five of the yard's seven buildings get a thing to search (a sack, a crock, a bucket, a cask; hold the prompt), one of
+  them holds the key (rolled each run; some of the rest hold a bandage), the door opens for any hand, the larder's chest is the ordinary reward,
+  and lifting the hoard's lid wakes the **Crawlers**, which come up behind you as much as in front (three, scaled by party and depth); when the last
+  falls the hoard's prize drops for everyone. Never needed for the gate. First place the Crawler is used.
+  `Items.cellar_key`, `Loot.deed_kitchen_larder` and `deed_kitchen_hoard`, `Gather.BUILDERS` (the props, shared), `TrialService.devHandle`
+  (a development seam). Tested live: the stair walks down, the closed door stops you, a standing body stops at the low opening and a crouched one
+  walks A, B, C into the vault, standing under the low roof is refused and in the vault allowed, the key is found, the door swings, the chest opens,
+  four crawlers rise (one player, x1.3) and the deed completes when they fall.
+- **Found and fixed while building it.** Smooth terrain reaches half a cell (2 studs) beyond a full cell toward an empty one, and a box that covers
+  only part of a cell only lowers its fill: cutting the stair in one-stud slices cut nothing, and a ceiling at y -3 had terrain at -5 hanging
+  through it. Cuts are now rounded out to whole cells with a cell of margin, ceilings sit at -6.3 (under where the ground hangs), the trench's walls
+  are three studs thick on the outside. `Humanoid:PlayEmote` and a ProximityPrompt both need a rendering client, so a script cannot press a prompt
+  while the PC is locked: the deed has a `dev` table for tests.
+- **Not built yet:** the entering scene for the big areas (a banner and a change of light as the party crosses in), the mark (ping) key, the forest,
+  the catacombs, the other big areas. `docs/systems/BigRun.md` §10 has the order.
+
 ## Version 0.40.0 — A loading screen with a real bar, a camera that stops at 30, a longer and livelier arrival scene, skip by holding, and graphics that work in the Hub
 
 What the developer asked for (2026-10-30), built; and the design for the bigger run written down (`docs/systems/BigRun.md`).

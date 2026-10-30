@@ -315,6 +315,14 @@ local Loot = {
 			Always = { { Item = "tallow", Min = 2, Max = 3 }, { Item = "rusted_iron", Min = 2, Max = 4 }, { Item = "page_smithy_tally", Min = 1, Max = 1 } },
 			Sound = { Chance = 1.0, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 }, { Item = "hearty_dish", Weight = 1, Min = 1, Max = 1 } } },
 		},
+		-- The Kitchens' cellar: the larder's chest is the ordinary reward, the hoard under the Dairy the one worth the crawl.
+		deed_kitchen_larder = {
+			Always = { { Item = "bandage", Min = 2, Max = 3 }, { Item = "tallow", Min = 2, Max = 3 }, { Item = "hearty_dish", Min = 1, Max = 1 } },
+		},
+		deed_kitchen_hoard = {
+			Always = { { Item = "grave_silver", Min = 3, Max = 4 }, { Item = "hollow_ember", Min = 1, Max = 1 } },
+			Sound = { Chance = 0.5, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 } } },
+		},
 		deed_graveyard_bell = {
 			Always = {
 				{ Item = "grave_silver", Min = 3, Max = 5 },

@@ -61,6 +61,7 @@ local EVENT_NAMES: { string } = {
 	"RequestInventory", -- client -> server: "my inventory" (the Hub fills the left-hand panel with the stash and the road's prizes)
 	"RequestClaimPrize", -- client -> server: the level of the road's prize to take (Domain/Prizes decides if it may be taken)
 	"ClientReady", -- client -> server: this player's loading screen has gone (the world is drawn); the arrival scene waits for it
+	"RequestCrouch", -- client -> server: a boolean, duck down (true) or stand up (false); the server checks there is room to stand
 }
 local FUNCTION_NAMES: { string } = {}
 

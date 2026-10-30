@@ -225,7 +225,12 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [x] Loading screen with a real bar, hold-to-skip with the developer's vote table, a livelier arrival scene, the camera's zoom-out limit (30), graphics
       that change something in the Hub too (Changelog 0.40.0).
 - [ ] **Look at 0.40.0 with real players:** the vote table with 2 to 10 (only `SkipVote.spec` and one player were run), the loading bar on a slow
-      connection and on a phone, the arrival scene's shots with different avatars (hats, wings), the zoom limit of 30 (the developer will say more or less).
+      connection and on a phone, the arrival scene's shots with different avatars (hats, wings), the zoom limit of 25 (the developer asked for 25; he will say more or less).
+- [x] Crouching, light zones, the Kitchens' cellar (the first step of the bigger run), the zoom limit at 25 (Changelog 0.41.0).
+- [ ] **Look at the cellar with eyes** (the PC was locked, so it was only measured): the stair, the door, the larder's look, the crawl, the vault, the
+      dark; then tune `LightZones.Cellar`, the torches, the number of crawlers (`Trials` area 3 deed `crawlers`) and the search count.
+- [ ] A real crouch pose (bent knees, a lowered back) in the animation pass; today the body is shorter and slower.
+- [ ] The entering scene for the big areas, and the mark (ping) key ("show"), from `BigRun.md`.
 - [ ] **The bigger run (developer's idea, 2026-10-30; design written in `docs/systems/BigRun.md`, waiting for the developer's answers):** a dark forest
       before the gate (your lantern is the only light, a hunter you cannot kill, no weapon until the lodge), the catacombs under the graveyard (a maze, a
       mine, low tunnels you crouch through, the Crawlers digging up), bigger areas with search / do / hold / secret, real ceilings where there are buildings

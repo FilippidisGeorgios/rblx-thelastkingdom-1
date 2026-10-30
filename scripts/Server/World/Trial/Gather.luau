@@ -113,6 +113,9 @@ local function glow(adornee: Instance): Highlight
 	return h
 end
 
+-- The props above, for the deeds that scatter small things of their own (Trial/Cellar searches among them).
+Gather.BUILDERS = BUILDERS
+
 --==========================================================================
 function Gather.create(ctx: any, def: any)
 	local nodes: { { prompt: ProximityPrompt, model: Model, taken: boolean, pick: any } } = {}

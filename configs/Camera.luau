@@ -7,15 +7,16 @@
 	dead seen from far above, nothing close enough to be afraid of. This puts a limit on zooming OUT only. Zooming
 	in is left as it is (first person, over the shoulder, as close as the player likes).
 
-	The number is a distance in studs from the character. The camera starts at about 12 studs; 30 lets a player
+	The number is a distance in studs from the character. The camera starts at about 12 studs; 25 lets a player
 	step back far enough to see a fight round them, and no further. If it feels too near, raise it; too far, lower
-	it. The developer said to try a smaller number than the engine's and tune it by playing.
+	it. The developer asked for a smaller number than the engine's and tunes it by playing: 30 at first, then 25
+	(2026-10-30, "a round number").
 
 	Read via: Config.get("Camera")   (applied by Client/Controllers/CameraController, in both places)
 ]]
 
 local Camera = {
-	MaxZoomOut = 30,
+	MaxZoomOut = 25,
 	-- the closest the camera may come (the engine's default is 0.5)
 	MinZoom = 0.5,
 }

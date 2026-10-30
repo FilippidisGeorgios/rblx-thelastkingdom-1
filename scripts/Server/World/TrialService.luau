@@ -82,6 +82,7 @@ local TASKS: { [string]: any } = {
 	unseal = require(script.Parent.Trial.Unseal),
 	scribe = require(script.Parent.Trial.Scribe),
 	exit = require(script.Parent.Trial.Exit),
+	cellar = require(script.Parent.Trial.Cellar),
 }
 
 local PRESSURE: { [string]: any } = {
@@ -417,6 +418,12 @@ function TrialService.devDone(area: number, id: string)
 	if trial then
 		onTaskDone(trial, id)
 	end
+end
+
+-- Development: the running handle of task or deed `id` of area `area` (a task module may carry a `dev` table of its own).
+function TrialService.devHandle(area: number, id: string): any?
+	local trial = live[area]
+	return trial and trial.tasks[id]
 end
 
 function TrialService.openSections(area: number): number?

@@ -121,8 +121,9 @@ plan, in the order they will be written. Numbers are provisional.
   them to the hearth. The pot is where you *must* stand, so you must fight there.
 - **Carries:** the five cured villagers follow the party through 4–6 (the existing `cured_villager`
   types). Co-op: more hands = more penned dead fed at once.
-- **Deeds:** *The cellar* — a locked door (the key is a Search find); inside, the larder: bandages, a tallow
-  cake (Spoils), a rare knife.
+- **Deeds:** *The cellar* **[BUILT 0.41.0, `Trial/Cellar`, `tools/BuildCellar`]** — a locked door (the key is a Search find among five
+  spots in the yard, one holds it); inside, the larder (bandages, tallow, a dish), a LOW passage you crouch through, and a flooded vault
+  under the Dairy with the hoard (Grave Silver, a Hollow Ember) guarded by the Crawlers who dig up through the floor. See `BigRun.md`.
 - **Rolled:** the recipe's four ingredients (from a pool of seven: it can ask for turnips, or for mead).
 
 ### 4 — Graveyard · *Carry the fire* **[FIRST, being built]**

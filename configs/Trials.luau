@@ -125,6 +125,35 @@ local Trials = {
 				},
 			},
 		},
+
+		--[[
+			The cellar (BigRun.md, built by tools/BuildCellar.luau; the verb is Trial/Cellar): a stair beside the kitchen
+			hall, a door that wants a key, a larder, a LOW passage you must crouch through, and a flooded vault under the
+			Dairy where the dead dig up through the floor. The key is somewhere in the yard (five spots, one holds it,
+			rolled each run). Never needed for the gate; paid in the hoard's prize.
+		]]
+		deeds = {
+			{
+				id = "cellar",
+				kind = "cellar",
+				root = "Decorations.Area3.Cellar",
+				places = {
+					"Decorations.Area3.Store",
+					"Decorations.Area3.Smokehouse",
+					"Decorations.Area3.Granary",
+					"Decorations.Area3.CooksHouse",
+					"Decorations.Area3.Bakehouse",
+					"Decorations.Area3.Garden",
+					"Decorations.Area3.Sty",
+				},
+				searches = 5,
+				radius = 24,
+				searchHold = 1.4,
+				crawlers = 3,
+				larderPrize = "deed_kitchen_larder",
+				prize = "deed_kitchen_hoard",
+			},
+		},
 	},
 
 	--======================================================================

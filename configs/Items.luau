@@ -198,6 +198,7 @@ local Items = {
 	unlit_torch = { DisplayName = "Unlit Torch", Category = "QuestItem", Stackable = false, Banked = false, Use = "Light it at the forge." },
 	axe = { DisplayName = "Woodsman's Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the dead trees in the yard." },
 	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "To board the doors of the Great Hall." },
+	cellar_key = { DisplayName = "Cellar Key", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the door at the foot of the cellar stair, beside the kitchen." },
 	keep_key = { DisplayName = "Key of the Marshal's Door", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the little door in the west of the keep's hall: the way up and out." },
 	mangonel_stone = { DisplayName = "Mangonel Stone", Category = "QuestItem", Stackable = false, Banked = false, Use = "Load it in the sling of the mangonel in the Inner Ward." },
 	pickaxe = { DisplayName = "Miner's Pickaxe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For rubble. Keep it." },

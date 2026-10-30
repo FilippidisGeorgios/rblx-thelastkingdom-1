@@ -6,7 +6,8 @@
 	A black plate with a dark-grey edge; it lifts a little when the cursor is on it (the edge turns lighter) and
 	sinks when pressed.
 
-	Presentation only: it reports a click and nothing else.
+	Presentation only: it reports a click and nothing else. A button that stands for something switched on (crouching)
+	can be lit with `setActive(true)`: its edge turns gold.
 
 	Location: StarterPlayer.StarterPlayerScripts.Client.UI.IconButton
 ]]
@@ -23,6 +24,7 @@ local PLATE_TOP = Color3.fromRGB(30, 30, 33)
 local PLATE_BOTTOM = Color3.fromRGB(5, 5, 7)
 local EDGE = Color3.fromRGB(78, 78, 84)
 local EDGE_LIT = Color3.fromRGB(132, 132, 140)
+local ACTIVE = Color3.fromRGB(198, 158, 66) -- the gold edge of a button that is switched on
 
 export type Props = {
 	Name: string?,
@@ -36,7 +38,7 @@ export type Props = {
 	OnClick: (() -> ())?,
 }
 
-export type Handle = { button: TextButton, setBadge: (text: string?) -> () }
+export type Handle = { button: TextButton, setBadge: (text: string?) -> (), setActive: (on: boolean) -> () }
 
 function IconButton.create(props: Props): Handle
 	local button = Instance.new("TextButton")
@@ -98,17 +100,22 @@ function IconButton.create(props: Props): Handle
 		TweenService:Create(scale, Theme.Motion.Fast, { Scale = target }):Play()
 		TweenService:Create(stroke, Theme.Motion.Fast, { Thickness = thickness, Color = edge }):Play()
 	end
+	-- a button that is "on" (crouched, say) keeps a gold edge
+	local active = false
+	local function lit(): Color3
+		return if active then ACTIVE else EDGE_LIT
+	end
 	button.MouseEnter:Connect(function()
-		pose(1.07, 2.2, EDGE_LIT)
+		pose(1.07, 2.2, lit())
 	end)
 	button.MouseLeave:Connect(function()
-		pose(1, 1.6, EDGE)
+		pose(1, if active then 2.2 else 1.6, if active then ACTIVE else EDGE)
 	end)
 	button.MouseButton1Down:Connect(function()
-		pose(0.93, 2.2, EDGE_LIT)
+		pose(0.93, 2.2, lit())
 	end)
 	button.MouseButton1Up:Connect(function()
-		pose(1.07, 2.2, EDGE_LIT)
+		pose(1.07, 2.2, lit())
 	end)
 	if props.OnClick then
 		button.Activated:Connect(props.OnClick)
@@ -119,6 +126,13 @@ function IconButton.create(props: Props): Handle
 		setBadge = function(text: string?)
 			badge.Visible = text ~= nil
 			badge.Text = text or ""
+		end,
+		setActive = function(on: boolean)
+			active = on
+			TweenService:Create(stroke, Theme.Motion.Fast, {
+				Color = if on then ACTIVE else EDGE,
+				Thickness = if on then 2.2 else 1.6,
+			}):Play()
 		end,
 	}
 end

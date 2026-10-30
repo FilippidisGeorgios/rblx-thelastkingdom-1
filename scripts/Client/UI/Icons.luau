@@ -211,6 +211,38 @@ function Icons.person(props: Props): Frame
 end
 
 --============================================================================
+-- Crouch: a figure ducking, head low, back bent, knees up (the crouch button on a phone)
+--============================================================================
+function Icons.crouch(props: Props): Frame
+	local r = root(props)
+	r.Name = "Crouch"
+	local cloth = props.Tint or Theme.Color.Parchment
+	local dark = cloth:Lerp(Color3.new(0, 0, 0), 0.5)
+	local edge = dark:Lerp(Color3.new(0, 0, 0), 0.4)
+	local px = math.max(1, (props.Size or 24) / 20)
+
+	-- the shin, standing; the thigh, going forward from the hip; the back, leaning over the knees
+	local shin = frame(r, 0.72, 0.78, 0.15, 0.34)
+	round(shin, 0.4)
+	shade(shin, cloth, dark)
+	stroke(shin, edge, px)
+	local thigh = frame(r, 0.52, 0.6, 0.4, 0.17)
+	round(thigh, 0.4)
+	shade(thigh, cloth, dark)
+	stroke(thigh, edge, px)
+	local back = frame(r, 0.43, 0.42, 0.18, 0.4)
+	back.Rotation = -28
+	round(back, 0.4)
+	shade(back, cloth:Lerp(Color3.new(1, 1, 1), 0.1), dark)
+	stroke(back, edge, px)
+	local head = frame(r, 0.55, 0.2, 0.25, 0.25)
+	round(head)
+	shade(head, cloth:Lerp(Color3.new(1, 1, 1), 0.15), dark:Lerp(cloth, 0.3))
+	stroke(head, edge, px)
+	return r
+end
+
+--============================================================================
 -- Laurel
 --============================================================================
 function Icons.laurel(props: Props): Frame
