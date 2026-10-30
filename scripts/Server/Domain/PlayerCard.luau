@@ -82,6 +82,8 @@ export type Card = {
 		playSeconds: number,
 		fastestWinSeconds: number?,
 		goldBanked: number,
+		assists: number,
+		revives: number,
 		winRate: number?, -- a fraction of the runs that ended; nil before the first
 	},
 	collection: {
@@ -295,6 +297,8 @@ function PlayerCard.build(profile: any, ctx: Context): Card
 			playSeconds = stats.playSeconds or 0,
 			fastestWinSeconds = stats.fastestWinSeconds,
 			goldBanked = stats.goldBanked or 0,
+			assists = stats.assists or 0,
+			revives = stats.revives or 0,
 			winRate = if ended > 0 then runsWon / ended else nil,
 		},
 		collection = {

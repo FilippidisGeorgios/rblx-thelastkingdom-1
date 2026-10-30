@@ -59,6 +59,29 @@ local Experience = {
 		Chamber = { Base = 30, PerChamber = 10 },
 		Deed = 60, -- each deed done in the run (the party shares it)
 		Won = 300, -- the castle is taken
+		-- the rest of a good run: standing beside the party, and helping it
+		Assist = 3, -- each dead enemy someone else finished, that this player had struck in the last seconds
+		Revive = 40, -- each fallen friend this player raised
+		Time = { PerMinute = 6, CapMinutes = 60 }, -- minutes spent on their feet in the run, up to the cap
+		--[[
+			A player who took no part (barely struck, helped nobody) is paid the SHARED prizes (chambers, deeds, the
+			victory) at `IdleShare` of their value, and no time pay: a stand-in at the gate is not carried to a level.
+			"Took part" is a contribution of `MinContribution`: damage dealt + 25 per assist + 100 per revive, which is
+			a couple of good blows, so no one who plays comes near the line.
+		]]
+		Participation = { MinContribution = 100, IdleShare = 0.3, AssistWorth = 25, ReviveWorth = 100 },
+	},
+
+	--[[
+		THE ROLL OF HONOUR on the closing card of a won run (Domain/Mvp): everyone aboard, in order of what they
+		did. The weights are in "points of doing", nothing to do with XP. It is kept quiet on purpose: names, one
+		line each, a small laurel for the first. A run with one player shows their tally and no laurel.
+	]]
+	Mvp = {
+		Kill = { Standard = 1, Elite = 5, Boss = 30 },
+		Assist = 0.5,
+		Revive = 15,
+		Damage = 0.01, -- per point dealt
 	},
 
 	--[[

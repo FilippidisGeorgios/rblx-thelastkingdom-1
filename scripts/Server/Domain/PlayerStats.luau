@@ -19,6 +19,8 @@
 	  fastestWinSeconds              the shortest victory
 	  goldBanked                     gold carried out, summed over runs
 	  xpEarned                       experience earned in runs
+	  assists                        dead enemies finished by someone else after this player struck them
+	  revives                        fallen friends this player raised
 
 	Location: ServerScriptService.Server.Domain.PlayerStats
 ]]
@@ -31,6 +33,8 @@ export type RunRecord = {
 	downs: number,
 	cleared: { number },
 	seconds: number,
+	assists: number?,
+	revives: number?,
 }
 
 local function add(stats: { [string]: any }, key: string, amount: number)
@@ -47,6 +51,8 @@ function PlayerStats.addRun(stats: { [string]: any }, run: RunRecord, outcome: s
 	add(stats, "bossKills", math.max(0, run.kills.Boss or 0))
 	add(stats, "damageDealt", math.floor(math.max(0, run.damage)))
 	add(stats, "downs", math.max(0, run.downs))
+	add(stats, "assists", math.max(0, run.assists or 0))
+	add(stats, "revives", math.max(0, run.revives or 0))
 
 	local seen: { [number]: boolean } = {}
 	local deepest = stats.deepestChamber or 0

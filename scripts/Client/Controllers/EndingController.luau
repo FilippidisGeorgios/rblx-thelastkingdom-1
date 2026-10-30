@@ -33,6 +33,7 @@ function EndingController.Start()
 			lines = if typeof(payload.lines) == "table" then payload.lines else nil,
 			ledgerTitle = if typeof(payload.ledgerTitle) == "string" then payload.ledgerTitle else nil,
 			ledger = if typeof(payload.ledger) == "table" then payload.ledger else nil,
+			mvp = if typeof(payload.mvp) == "table" then payload.mvp else nil, -- the roll of honour of a won run
 			footer = if typeof(payload.footer) == "string" then payload.footer else nil,
 		})
 	end)

@@ -52,4 +52,63 @@ return function(t: any)
 		local xp = RunXp.compute({ kills = kills, cleared = cleared, deeds = 9 }, "won", Experience.Sources)
 		assert(xp.total > 1500 and xp.total < 4000, "a full run pays a few thousand: " .. xp.total)
 	end)
+
+	local full = Experience.Sources
+
+	t.test("helping pays: an assist and a fallen friend raised", function()
+		local run = { kills = {}, cleared = {}, deeds = 0, damage = 500, assists = 10, revives = 2, activeSeconds = 0 }
+		local xp = RunXp.compute(run, "wiped", full)
+		assert(xp.assists == 10 * full.Assist and xp.revives == 2 * full.Revive, "ten assists, two raised")
+		assert(xp.total == xp.assists + xp.revives, "nothing else was done")
+	end)
+
+	t.test("time on their feet pays by the minute, whole minutes only, up to the cap", function()
+		local function timePay(seconds: number): number
+			return RunXp.compute({ kills = {}, cleared = {}, deeds = 0, damage = 1000, activeSeconds = seconds }, "wiped", full).time
+		end
+		assert(timePay(59) == 0, "a part minute pays nothing")
+		assert(timePay(60) == full.Time.PerMinute, "one minute")
+		assert(timePay(10 * 60 + 30) == 10 * full.Time.PerMinute, "ten whole minutes")
+		assert(timePay(500 * 60) == full.Time.CapMinutes * full.Time.PerMinute, "the cap: standing there all day is not a career")
+	end)
+
+	t.test("a player who took no part is paid the shared prizes at a share, and no time", function()
+		local run = { kills = {}, cleared = { 1, 2 }, deeds = 2, damage = 0, assists = 0, revives = 0, activeSeconds = 1800 }
+		local idle = RunXp.compute(run, "won", full)
+		assert(not idle.tookPart and idle.time == 0, "no part, no time pay")
+		local played = RunXp.compute({ kills = run.kills, cleared = run.cleared, deeds = 2, damage = 800, activeSeconds = 1800 }, "won", full)
+		assert(played.tookPart and played.time > 0, "this one played")
+		local sharedIdle = idle.chambers + idle.deeds + idle.won
+		local sharedPlayed = played.chambers + played.deeds + played.won
+		assert(math.abs(sharedIdle - sharedPlayed * full.Participation.IdleShare) < 1e-6, "the shared prizes at the idle share")
+		assert(idle.total > 0, "still something: they are not made to lose what the party earned")
+	end)
+
+	t.test("a few blows, or a single raised friend, are enough to count as playing", function()
+		local rules = full
+		assert(RunXp.tookPart({ kills = {}, cleared = {}, deeds = 0, damage = rules.Participation.MinContribution }, rules), "the line itself")
+		assert(not RunXp.tookPart({ kills = {}, cleared = {}, deeds = 0, damage = rules.Participation.MinContribution - 1 }, rules), "a hair under")
+		assert(RunXp.tookPart({ kills = {}, cleared = {}, deeds = 0, damage = 0, revives = 1 }, rules), "raising a friend is playing")
+		assert(RunXp.tookPart({ kills = {}, cleared = {}, deeds = 0, damage = 0, assists = 4 }, rules), "four assists too")
+	end)
+
+	t.test("the old shape of a run (no damage count) still counts as playing", function()
+		local xp = RunXp.compute({ kills = {}, cleared = { 1 }, deeds = 0 }, "wiped", full)
+		assert(xp.tookPart and xp.chambers == full.Chamber.Base + full.Chamber.PerChamber, "paid in full")
+	end)
+
+	t.test("a full, well-played victory with helping and time still lands in the tuned range", function()
+		local run = {
+			kills = { Standard = 350, Elite = 25, Boss = 3 },
+			cleared = { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+			deeds = 9,
+			damage = 60000,
+			assists = 60,
+			revives = 2,
+			activeSeconds = 42 * 60,
+		}
+		local xp = RunXp.compute(run, "won", full)
+		assert(xp.total > 2500 and xp.total < 4500, "a few thousand: " .. xp.total)
+		assert(xp.time == 42 * full.Time.PerMinute, "forty-two minutes")
+	end)
 end

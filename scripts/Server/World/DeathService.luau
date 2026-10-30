@@ -55,6 +55,7 @@ local runActive = false
 local onWipeCb: (() -> ())? = nil
 local runOverHandlers: { (players: { Player }) -> () } = {}
 local runBeginHandlers: { () -> () } = {}
+local raisedHandlers: { (downed: Player, reviver: Player) -> () } = {}
 
 -- Where a fallen player is put back: the last camp the party lit (CampService), else the arrival spawn.
 local respawnAt: CFrame? = nil
@@ -250,12 +251,12 @@ local function updateTeammateRevive(dt: number)
 		local s = status[downed]
 		local pos = downedPosition[downed]
 		if (s == Status.Down or s == Status.Waiting) and pos then
-			local reviverNear = false
+			local reviverNear: Player? = nil
 			for _, other in runPlayers do
 				if other ~= downed and status[other] == Status.Alive then
 					local root = rootOf(other)
 					if root and (root.Position - pos).Magnitude <= radius then
-						reviverNear = true
+						reviverNear = other
 						break
 					end
 				end
@@ -265,6 +266,10 @@ local function updateTeammateRevive(dt: number)
 				if reviveProgress[downed] >= holdTime then
 					revive(downed, revCfg.ReviveHealthPercent or 0.5)
 					log:info(downed.Name .. " was revived by a teammate")
+						-- the friend who knelt beside them is credited (experience, the roll of honour)
+						for _, handler in raisedHandlers do
+							task.spawn(handler, downed, reviverNear)
+						end
 				end
 			else
 				reviveProgress[downed] = 0
@@ -300,6 +305,11 @@ end
 -- Called each time a run begins (the first, and every Play Again): what belongs to the last run is put away.
 function DeathService.onRunBegin(handler: () -> ())
 	table.insert(runBeginHandlers, handler)
+end
+
+-- Called when a teammate raises a fallen player (the free revive; a player paying to get up alone is not credited).
+function DeathService.onRaised(handler: (downed: Player, reviver: Player) -> ())
+	table.insert(raisedHandlers, handler)
 end
 
 -- A camp was lit: this is where the fallen come back to.

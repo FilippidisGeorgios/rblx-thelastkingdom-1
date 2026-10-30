@@ -31,6 +31,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Server = script.Parent.Parent
 local Settlement = require(Server.Domain.Settlement)
 local RunXp = require(Server.Domain.RunXp)
+local Mvp = require(Server.Domain.Mvp)
 local PlayerStats = require(Server.Domain.PlayerStats)
 local PlayerCard = require(Server.Domain.PlayerCard)
 local DataService = require(Server.Services.DataService)
@@ -40,6 +41,7 @@ local TeleportService = require(Server.Services.TeleportService)
 local RewardService = require(Server.Services.RewardService)
 local BackpackService = require(script.Parent.BackpackService)
 local RunStatsService = require(script.Parent.RunStatsService)
+local RunDifficultyService = require(script.Parent.RunDifficultyService)
 local DeathService = require(script.Parent.DeathService)
 local RunModService = require(script.Parent.RunModService)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -79,6 +81,11 @@ local function ledgerLines(ledger: Settlement.Ledger, prisonerAlive: boolean): {
 		end
 		table.insert(lines, text)
 	end
+	-- how hard the run was, when it was harder than the bare numbers (the train showed the same figure)
+	local run = RunDifficultyService.get()
+	if run and run.total >= 1 then
+		table.insert(lines, ("Danger of the run: +%d  (%s)"):format(math.floor(run.total + 0.5), run.tier))
+	end
 	local names: { string } = {}
 	for itemId in ledger.items do
 		table.insert(names, itemId)
@@ -91,10 +98,37 @@ local function ledgerLines(ledger: Settlement.Ledger, prisonerAlive: boolean): {
 	return lines
 end
 
+--[[
+	The roll of honour for a won run: everyone who went up the keep, best first (Domain/Mvp). What the card needs
+	of each: who, their place, the quiet line under the name, the bar's length, and whether they carry the laurel.
+]]
+local function honourRoll(group: { Player }): { any }
+	local entries: { Mvp.Entry } = {}
+	for _, player in group do
+		if player.Parent then
+			local snap = RunStatsService.snapshot(player)
+			table.insert(entries, {
+				userId = player.UserId,
+				name = player.DisplayName,
+				kills = snap.kills,
+				damage = snap.damage,
+				assists = snap.assists,
+				revives = snap.revives,
+			})
+		end
+	end
+	local rows: { any } = {}
+	for _, row in Mvp.rank(entries, Config.get("Experience").Mvp) do
+		table.insert(rows, { userId = row.userId, name = row.name, rank = row.rank, line = row.line, share = row.share, mvp = row.mvp })
+	end
+	return rows
+end
+
 -- The card for one player.
-local function cardFor(outcome: string, ledger: Settlement.Ledger, prisonerAlive: boolean): any
+local function cardFor(outcome: string, ledger: Settlement.Ledger, prisonerAlive: boolean, honour: { any }?): any
 	if outcome == "won" then
 		return {
+			mvp = honour,
 			title = "The Last Kingdom",
 			subtitle = "Book One: the Return",
 			lines = {
@@ -133,6 +167,10 @@ local function cardSeconds(card: any): number
 	if #card.ledger > 0 then
 		t += math.clamp(#card.ledger * 0.9, 5, 14) + 1.4
 	end
+	-- the roll of honour (UI/EndingUi holds it for this long, then lets it go)
+	if card.mvp and #card.mvp > 0 then
+		t += math.clamp(#card.mvp * 0.9 + 4, 6, 13) + 2.8
+	end
 	return t + 2.6
 end
 
@@ -153,6 +191,8 @@ function RunSettlement.finish(outcome: Settlement.Outcome, players: { Player }?)
 	local event = Net.getEvent("EndingEvent")
 	local out: { [Player]: Settlement.Ledger } = {}
 	local cardTime = 0
+	-- the roll of honour belongs to a victory ("everyone who went up the keep"), and is the same card for everyone
+	local honour = if outcome == "won" then honourRoll(group) else nil
 
 	for _, player in group do
 		if player.Parent then
@@ -162,11 +202,15 @@ function RunSettlement.finish(outcome: Settlement.Outcome, players: { Player }?)
 				Settlement.apply(profile :: any, ledger)
 				-- what the run was worth in experience, and what they did in it (World/RunStatsService)
 				local snap = RunStatsService.snapshot(player)
-				local xp = RunXp.compute(
-					{ kills = snap.kills, cleared = snap.cleared, deeds = snap.deeds },
-					outcome,
-					Config.get("Experience").Sources
-				)
+				local xp = RunXp.compute({
+					kills = snap.kills,
+					cleared = snap.cleared,
+					deeds = snap.deeds,
+					damage = snap.damage,
+					assists = snap.assists,
+					revives = snap.revives,
+					activeSeconds = snap.activeSeconds,
+				}, outcome, Config.get("Experience").Sources)
 				local paid = RewardService.applyTo(player, { xp = xp.total })
 				ledger.xp = xp.total
 				ledger.level = (profile :: any).level
@@ -178,7 +222,7 @@ function RunSettlement.finish(outcome: Settlement.Outcome, players: { Player }?)
 			end
 			BackpackService.reset(player)
 			out[player] = ledger
-			local card = cardFor(outcome, ledger, prisonerAlive)
+			local card = cardFor(outcome, ledger, prisonerAlive, honour)
 			cardTime = math.max(cardTime, cardSeconds(card))
 			event:FireClient(player, card)
 			log:info(("%s: %s, %d gold + %d bonus, %d kinds of thing"):format(player.Name, outcome, ledger.gold, ledger.bonusGold, (function()
