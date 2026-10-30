@@ -76,9 +76,9 @@ function TrainController.Start()
 	departRequest = Net.getEvent("RequestTrainDepart")
 
 	DepartureUI.mount({
-		onCreate = function(size)
+		onCreate = function(size, hard)
 			closeWindow()
-			boardRequest:FireServer(size)
+			boardRequest:FireServer(size, hard)
 		end,
 		onJoin = function()
 			closeWindow()
@@ -100,6 +100,7 @@ function TrainController.Start()
 
 		if kind == "prompt" then
 			local mode = payload.mode
+			DepartureUI.setYourLevel(payload.yourLevel)
 			if mode == "create" then
 				DepartureUI.setFace("create")
 				startWindow(tonumber(payload.windowSeconds) or 20)

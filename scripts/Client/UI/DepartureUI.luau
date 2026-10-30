@@ -5,10 +5,20 @@
 	wagon.
 
 	Three faces, one screen:
-		"create" — this wagon is empty. Pick a party size (1-8), read the mode the
-		           game picked for you, and call it.
+		"create" — this wagon is empty. Pick a party size (1-8) and a mode, read the
+		           DANGER it makes, and call it.
 		"join"   — a party is already forming in this wagon. Take a seat.
 		"aboard" — you are on board. One action left: Leave.
+
+	THE MODE. A party of five or more plays Hard and Normal is shut to it (the button is
+	dimmed and says why); a smaller party may choose Hard, and Normal is the default.
+
+	THE DANGER is one figure from 0 to 100, "+34 of 100 harder": the mode's points plus
+	the veterans' (the party's average level, kept small by the new players' shield). It
+	is drawn as a thin meter that warms from green to red, with a line under it saying
+	where the points come from. The server works it out from who is really aboard
+	(Shared/Danger) and sends it; before anyone has boarded, the create face previews it
+	from the caller's own level with the very same module.
 
 	The primary action always lives at the BOTTOM CENTRE of the screen, whatever
 	the face — the player's eye never has to go looking for it.
@@ -23,18 +33,32 @@
 ]]
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
+local Config = require(ReplicatedStorage.Shared.Config)
+local Danger = require(ReplicatedStorage.Shared.Danger)
 
 local DepartureUI = {}
+
+export type DangerInfo = {
+	total: number,
+	mode: number,
+	veteran: number,
+	avgLevel: number,
+	keep: number,
+	shielded: boolean,
+}
 
 export type Status = {
 	state: string?,
 	count: number?,
 	capacity: number?,
 	tier: string?,
+	normalClosed: boolean?,
+	danger: DangerInfo?,
 	seconds: number?,
 	wagon: number?,
 	members: { string }?,
@@ -45,14 +69,25 @@ export type Status = {
 }
 
 export type Callbacks = {
-	onCreate: (size: number) -> (),
+	onCreate: (size: number, hard: boolean) -> (),
 	onJoin: () -> (),
 	onLeave: () -> (),
 	onDepartNow: () -> (),
 }
 
+type Meter = {
+	frame: Frame,
+	value: TextLabel,
+	fill: Frame,
+	note: TextLabel,
+}
+
 local MIN_PARTY = 1
 local MAX_PARTY = 8
+
+-- The whole panel is drawn a little smaller than its natural size: it was too big on the screen.
+local PANEL_SCALE = 0.9
+local STACK_SCALE = 0.92
 
 -- Leave is a smaller commitment than boarding, and its button should read that
 -- way: same type, narrower plate, so the label is not marooned in empty space.
@@ -74,31 +109,195 @@ local isLeader = false
 
 local wagonLabel: TextLabel? = nil
 local modeValue: TextLabel? = nil
+local modeButtons: Frame? = nil
+local normalButton: TextButton? = nil
+local hardButton: TextButton? = nil
+local modeHint: TextLabel? = nil
 local subtitle: TextLabel? = nil
 local timerLabel: TextLabel? = nil
 local stepper: Components.Stepper? = nil
 local stepperGroup: Frame? = nil
 local modeGroup: Frame? = nil
+local panelMeter: Meter? = nil
+local rosterMeter: Meter? = nil
 
 local face = "hidden"
 local lastStatus: Status = {}
+local wantsHard = false
+local yourLevel = 1
+local partySize = 4
+
+local screenGui: ScreenGui? = nil
+local fitScale = PANEL_SCALE
+local enterUntil = 0 -- while the panel is rising into place its own tween owns the scale
+
+--[[
+	Keeps the panel whole on a short screen. It is drawn at PANEL_SCALE, and smaller still if it would not fit
+	between the top of the screen and the action button under it (a phone held sideways, a small Studio window):
+	its natural height is measured, not guessed, so adding a row later never needs this touched.
+]]
+local function fit()
+	local root, gui = panel, screenGui
+	if not root or not gui then
+		return
+	end
+	local scale = root:FindFirstChildOfClass("UIScale")
+	if not scale or gui.AbsoluteSize.Y <= 0 then
+		return
+	end
+	local natural = root.AbsoluteSize.Y / math.max(scale.Scale, 0.01)
+	if natural <= 0 then
+		return
+	end
+	local room = gui.AbsoluteSize.Y - 170 -- the button below, and a margin
+	fitScale = math.clamp(room / natural, 0.5, PANEL_SCALE)
+	root.Position = UDim2.new(0.5, 0, 0, math.floor(room / 2 + 12))
+	if os.clock() >= enterUntil then
+		scale.Scale = fitScale
+	end
+end
 
 --============================================================================
 -- Helpers
 --============================================================================
 
-local function tierFor(size: number): string
-	return if size <= 4 then "NORMAL" else "HARD"
+local function rules(): any
+	return Config.get("Difficulty").Danger
+end
+
+local function tiers(): any
+	return Config.get("Difficulty").Tiers
 end
 
 local function tierColor(tier: string): Color3
 	-- Normal is deliberately grey: it is the absence of danger.
-	return if tier:upper() == "HARD" then Theme.Color.BordeauxLight else Theme.Color.Grey
+	return if tier:upper() == "HARD" then Theme.Color.BordeauxSoft else Theme.Color.Grey
 end
 
 local function clock(seconds: number): string
 	local whole = math.max(math.floor(seconds), 0)
 	return ("%d:%02d"):format(whole // 60, whole % 60)
+end
+
+local function round(x: number): number
+	return math.floor(x + 0.5)
+end
+
+-- The meter warms as the danger climbs: forest, then brass, then red.
+local function dangerColor(total: number): Color3
+	local t = math.clamp(total / 100, 0, 1)
+	if t < 0.4 then
+		return Theme.Color.GreenLight:Lerp(Theme.Color.Gold, t / 0.4)
+	end
+	return Theme.Color.Gold:Lerp(Theme.Color.BordeauxSoft, (t - 0.4) / 0.6)
+end
+
+-- Where the points came from, in one quiet line.
+local function dangerNote(d: DangerInfo): string
+	local parts: { string } = {}
+	if d.mode > 0 then
+		table.insert(parts, ("Hard +%d"):format(round(d.mode)))
+	end
+	if d.veteran >= 0.5 then
+		table.insert(parts, ("veterans +%d"):format(round(d.veteran)))
+	end
+	if d.shielded then
+		table.insert(parts, ("new players' shield keeps %d%%"):format(round(d.keep * 100)))
+	end
+	if #parts == 0 then
+		return "A quiet start."
+	end
+	return table.concat(parts, "  ·  ")
+end
+
+--============================================================================
+-- The danger meter
+--============================================================================
+
+local function buildMeter(parent: Instance, order: number, compact: boolean): Meter
+	local frame = Components.group({
+		Name = "DangerMeter",
+		Size = UDim2.new(1, 0, 0, if compact then 46 else 58),
+		LayoutOrder = order,
+		Parent = parent,
+	})
+
+	Components.label({
+		Name = "DangerCaption",
+		Text = Components.spaced("DANGER"),
+		Role = Theme.Role.Heading,
+		TextSize = Theme.TextSize.Micro,
+		TextColor = Theme.Color.Gold,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Size = UDim2.new(0.4, 0, 0, 22),
+		Parent = frame,
+	})
+
+	local value = Components.label({
+		Name = "DangerValue",
+		Text = "",
+		Role = Theme.Role.Heading,
+		TextSize = Theme.TextSize.Body,
+		TextColor = Theme.Color.Cream,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		RichText = true,
+		Position = UDim2.fromScale(0.4, 0),
+		Size = UDim2.new(0.6, 0, 0, 22),
+		Parent = frame,
+	})
+
+	local rail = Instance.new("Frame")
+	rail.Name = "Rail"
+	rail.Position = UDim2.fromOffset(0, 26)
+	rail.Size = UDim2.new(1, 0, 0, 8)
+	rail.BackgroundColor3 = Theme.Color.Void
+	rail.BorderSizePixel = 0
+	rail.ZIndex = 3
+	rail.Parent = frame
+	Theme.corner(rail, UDim.new(0.5, 0))
+	local edge = Instance.new("UIStroke")
+	edge.Color = Theme.Color.GoldDim
+	edge.Thickness = 1
+	edge.Parent = rail
+
+	local fill = Instance.new("Frame")
+	fill.Name = "Fill"
+	fill.Size = UDim2.fromScale(0, 1)
+	fill.BackgroundColor3 = Theme.Color.GreenLight
+	fill.BorderSizePixel = 0
+	fill.ZIndex = 4
+	fill.Parent = rail
+	Theme.corner(fill, UDim.new(0.5, 0))
+
+	local note = Components.label({
+		Name = "DangerNote",
+		Text = "",
+		TextSize = Theme.TextSize.Micro - 3,
+		TextColor = Theme.Color.Muted,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(0, 37),
+		Size = UDim2.new(1, 0, 0, 16),
+		Parent = frame,
+	})
+	note.TextTruncate = Enum.TextTruncate.AtEnd
+
+	return { frame = frame, value = value, fill = fill, note = note }
+end
+
+local function drawMeter(meter: Meter?, d: DangerInfo, note: string?)
+	if not meter then
+		return
+	end
+	local total = math.clamp(d.total, 0, 100)
+	meter.value.Text = ('<font size="%d">+%d</font> <font size="%d" color="#%s">of 100 harder</font>'):format(
+		Theme.TextSize.Body,
+		round(total),
+		Theme.TextSize.Micro - 2,
+		Theme.Color.Muted:ToHex()
+	)
+	meter.note.Text = note or dangerNote(d)
+	meter.fill.BackgroundColor3 = dangerColor(total)
+	TweenService:Create(meter.fill, Theme.Motion.Normal, { Size = UDim2.fromScale(math.max(total / 100, 0.02), 1) }):Play()
 end
 
 --============================================================================
@@ -121,7 +320,7 @@ local function buildPanel(parent: ScreenGui)
 	sizeConstraint.Parent = root
 
 	Theme.padding(root, Theme.Size.Pad)
-	Components.list(root, 12)
+	Components.list(root, 10)
 	Theme.shadow(root)
 
 	-- Brand. At this size the wordmark carries itself; letter-spacing it would
@@ -189,11 +388,11 @@ local function buildPanel(parent: ScreenGui)
 	-- Party size.
 	stepperGroup = Components.group({
 		Name = "PartySize",
-		Size = UDim2.new(1, 0, 0, 116),
+		Size = UDim2.new(1, 0, 0, 106),
 		LayoutOrder = 6,
 		Parent = root,
 	})
-	Components.list(stepperGroup :: Frame, 4)
+	Components.list(stepperGroup :: Frame, 2)
 
 	Components.label({
 		Name = "PlayersCaption",
@@ -208,32 +407,36 @@ local function buildPanel(parent: ScreenGui)
 	stepper = Components.stepper({
 		Min = MIN_PARTY,
 		Max = MAX_PARTY,
-		Value = 4,
+		Value = partySize,
 		LayoutOrder = 2,
 		Parent = stepperGroup,
 		OnChanged = function(value)
-			DepartureUI.setPreviewTier(tierFor(value))
+			partySize = value
+			DepartureUI.refreshPreview()
 		end,
 	})
 
-	-- Mode, chosen for the player rather than by them.
+	-- The mode: chosen by a small party, forced on a big one; and the danger it makes.
 	modeGroup = Components.group({
 		Name = "Mode",
-		Size = UDim2.new(1, 0, 0, 70),
+		Size = UDim2.new(1, 0, 0, 0),
 		LayoutOrder = 7,
 		Parent = root,
 	})
-	Components.list(modeGroup :: Frame, 2)
+	;(modeGroup :: Frame).AutomaticSize = Enum.AutomaticSize.Y
+	Components.list(modeGroup :: Frame, 6)
 
 	Components.label({
 		Name = "ModeCaption",
-		Text = "GAME MODE  (AUTOMATED)",
-		TextSize = Theme.TextSize.Micro,
-		TextColor = Theme.Color.Muted,
+		Text = Components.spaced("GAME MODE"),
+		Role = Theme.Role.Heading,
+		TextSize = Theme.TextSize.Small,
+		TextColor = Theme.Color.Gold,
 		LayoutOrder = 1,
 		Parent = modeGroup,
 	})
 
+	-- for a party already forming: the mode it plays, plainly
 	modeValue = Components.label({
 		Name = "ModeValue",
 		Text = "NORMAL",
@@ -243,6 +446,59 @@ local function buildPanel(parent: ScreenGui)
 		LayoutOrder = 2,
 		Parent = modeGroup,
 	})
+
+	-- for the one calling the party: two buttons
+	modeButtons = Components.group({ Name = "ModeButtons", Size = UDim2.new(1, 0, 0, 42), LayoutOrder = 3, Parent = modeGroup })
+	local buttons = modeButtons :: Frame
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 8)
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.Parent = buttons
+
+	normalButton = Components.button({
+		Name = "Normal",
+		Text = "NORMAL",
+		Variant = "gold",
+		TextSize = Theme.TextSize.Small,
+		Size = UDim2.new(0.5, -4, 1, 0),
+		LayoutOrder = 1,
+		Parent = buttons,
+	})
+	hardButton = Components.button({
+		Name = "Hard",
+		Text = "HARD",
+		Variant = "ghost",
+		TextSize = Theme.TextSize.Small,
+		Size = UDim2.new(0.5, -4, 1, 0),
+		LayoutOrder = 2,
+		Parent = buttons,
+	})
+	;(normalButton :: TextButton).Activated:Connect(function()
+		local _, closed = Danger.modeFor(partySize, false, tiers())
+		if closed then
+			return -- a party this big cannot play Normal
+		end
+		wantsHard = false
+		DepartureUI.refreshPreview()
+	end)
+	;(hardButton :: TextButton).Activated:Connect(function()
+		wantsHard = true
+		DepartureUI.refreshPreview()
+	end)
+
+	modeHint = Components.label({
+		Name = "ModeHint",
+		Text = "",
+		TextSize = Theme.TextSize.Micro - 3,
+		TextColor = Theme.Color.Muted,
+		LayoutOrder = 4,
+		Size = UDim2.new(1, 0, 0, 16),
+		Parent = modeGroup,
+	})
+
+	panelMeter = buildMeter(modeGroup :: Frame, 5, false)
 
 	Components.divider(root, 8)
 
@@ -254,6 +510,10 @@ local function buildPanel(parent: ScreenGui)
 		LayoutOrder = 9,
 		Parent = root,
 	})
+
+	local scale = Instance.new("UIScale")
+	scale.Scale = PANEL_SCALE
+	scale.Parent = root
 
 	panel = root
 end
@@ -271,6 +531,9 @@ local function buildBottomStack(parent: ScreenGui)
 	})
 	stack.AutomaticSize = Enum.AutomaticSize.Y
 	Components.list(stack, 10)
+	local stackScale = Instance.new("UIScale")
+	stackScale.Scale = STACK_SCALE
+	stackScale.Parent = stack
 
 	notice = Components.label({
 		Name = "Notice",
@@ -287,7 +550,7 @@ local function buildBottomStack(parent: ScreenGui)
 	-- first thing a player looks for.
 	rosterCard = Components.panel({
 		Name = "RosterCard",
-		Size = UDim2.new(0, 300, 0, 0),
+		Size = UDim2.new(0, 320, 0, 0),
 		LayoutOrder = 2,
 		Parent = stack,
 	})
@@ -318,6 +581,9 @@ local function buildBottomStack(parent: ScreenGui)
 	;(rosterText :: TextLabel).AutomaticSize = Enum.AutomaticSize.Y
 	;(rosterText :: TextLabel).RichText = true -- a name, and under it in a smaller hand who they are
 
+	Components.divider(card, 3)
+	rosterMeter = buildMeter(card, 4, true)
+
 	chip = Components.label({
 		Name = "PartyChip",
 		Text = "",
@@ -328,6 +594,13 @@ local function buildBottomStack(parent: ScreenGui)
 		LayoutOrder = 3,
 		Parent = stack,
 	})
+	-- it sits over the world, not over a panel: a dark outline keeps it readable against a bright platform
+	local chipStroke = Instance.new("UIStroke")
+	chipStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	chipStroke.Color = Color3.new(0, 0, 0)
+	chipStroke.Thickness = 1.8
+	chipStroke.Transparency = 0.2
+	chipStroke.Parent = chip
 
 	departButton = Components.button({
 		Name = "DepartNow",
@@ -361,7 +634,9 @@ local function buildBottomStack(parent: ScreenGui)
 			return
 		end
 		if face == "create" then
-			handlers.onCreate(if stepper then stepper.get() else 4)
+			-- a party too big for Normal is Hard whatever the buttons say; the server decides again anyway
+			local _, closed = Danger.modeFor(partySize, wantsHard, tiers())
+			handlers.onCreate(if stepper then stepper.get() else partySize, wantsHard or closed)
 		elseif face == "join" then
 			handlers.onJoin()
 		elseif face == "aboard" then
@@ -374,6 +649,40 @@ end
 -- Faces
 --============================================================================
 
+-- Redraws the mode buttons, the hint and the Danger preview of the create face from the party size, the chosen
+-- mode and the caller's own level.
+function DepartureUI.refreshPreview()
+	if face ~= "create" then
+		return
+	end
+	local tier, closed = Danger.modeFor(partySize, wantsHard, tiers())
+	local normal, hard = normalButton, hardButton
+	if normal and hard then
+		Components.setVariant(normal, if tier == "Normal" then "gold" else "ghost")
+		Components.setVariant(hard, if tier == "Hard" then "danger" else "ghost")
+		-- Normal is shut to a party too big for it: dim it, so it reads as unavailable, not as unchosen
+		normal.BackgroundTransparency = if closed then 0.55 else 0
+		local label = normal:FindFirstChild("Label")
+		if label and label:IsA("TextLabel") then
+			label.TextTransparency = if closed then 0.55 else 0
+		end
+	end
+	if modeHint then
+		modeHint.Text = if closed
+			then ("A party of %d or more fights only in Hard."):format(tiers()[1].maxPlayers + 1)
+			elseif tier == "Hard" then "Hard: the dead are tougher and the spoils richer."
+			else "Normal. A small party may choose Hard."
+	end
+	local d = Danger.compute({ yourLevel }, tier, rules())
+	drawMeter(panelMeter, d, if d.veteran >= 0.5 or tier == "Hard" then dangerNote(d) .. "  ·  grows with who joins" else "Grows with the levels of who joins.")
+end
+
+function DepartureUI.setYourLevel(level: number?)
+	yourLevel = if type(level) == "number" then math.max(1, level) else 1
+	DepartureUI.refreshPreview()
+end
+
+-- The mode of a party already forming (join and aboard).
 function DepartureUI.setPreviewTier(tier: string)
 	if modeValue then
 		modeValue.Text = tier:upper()
@@ -390,8 +699,11 @@ local function setPanelVisible(visible: boolean)
 	if visible then
 		local scale = root:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
 		scale.Parent = root
-		scale.Scale = 0.92
-		TweenService:Create(scale, Theme.Motion.Enter, { Scale = 1 }):Play()
+		fit()
+		enterUntil = os.clock() + 0.45
+		scale.Scale = fitScale - 0.08
+		TweenService:Create(scale, Theme.Motion.Enter, { Scale = fitScale }):Play()
+		task.delay(0.5, fit)
 	end
 end
 
@@ -404,8 +716,7 @@ local function setAction(text: string, variant: string, visible: boolean)
 	Components.setText(button, text)
 
 	-- Repaint and resize for the variant without rebuilding the button, taking the
-	-- label colour from the same table every other button uses — mostly white,
-	-- lightly tinted. See the contrast rule in Theme.
+	-- label colour from the same table every other button uses — cream on deep green or burgundy.
 	local spec = Components.Variants[variant] or Components.Variants.green
 	local gradient = button:FindFirstChildOfClass("UIGradient")
 	if gradient then
@@ -432,6 +743,19 @@ local function setBottom(showRoster: boolean, showChip: boolean)
 	end
 end
 
+-- The centre panel shows either the buttons (the caller choosing) or the plain mode (a party already forming).
+local function setModeEditable(editable: boolean)
+	if modeButtons then
+		modeButtons.Visible = editable
+	end
+	if modeHint then
+		modeHint.Visible = editable
+	end
+	if modeValue then
+		modeValue.Visible = not editable
+	end
+end
+
 -- `mode` is one of "hidden" | "create" | "join" | "aboard".
 function DepartureUI.setFace(mode: string)
 	face = mode
@@ -452,9 +776,8 @@ function DepartureUI.setFace(mode: string)
 		if subtitle then
 			subtitle.Text = "Board the train to the Forgotten Lands"
 		end
-		if stepper then
-			DepartureUI.setPreviewTier(tierFor(stepper.get()))
-		end
+		setModeEditable(true)
+		DepartureUI.refreshPreview()
 		setAction("CREATE PARTY", "green", true)
 		setBottom(false, false)
 	elseif mode == "join" then
@@ -466,6 +789,7 @@ function DepartureUI.setFace(mode: string)
 		if subtitle then
 			subtitle.Text = "A party is forming in this wagon"
 		end
+		setModeEditable(false)
 		setAction("JOIN PARTY", "green", true)
 		setBottom(true, false)
 	elseif mode == "aboard" then
@@ -537,6 +861,11 @@ function DepartureUI.setStatus(status: Status)
 
 	if face == "join" or face == "aboard" then
 		DepartureUI.setPreviewTier(tier)
+		-- the figure the server worked out for who is really aboard
+		if status.danger then
+			drawMeter(panelMeter, status.danger)
+			drawMeter(rosterMeter, status.danger)
+		end
 	end
 
 	if timerLabel then
@@ -583,8 +912,14 @@ function DepartureUI.mount(handlers: Callbacks, brandConfig: { Title: string?, D
 
 	localName = Players.LocalPlayer.Name
 
+	screenGui = gui
 	buildPanel(gui)
 	buildBottomStack(gui)
+	-- the panel's height changes with its face; the screen's with the window: keep it whole either way
+	if panel then
+		panel:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
+	end
+	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
 	DepartureUI.setFace("hidden")
 end
 

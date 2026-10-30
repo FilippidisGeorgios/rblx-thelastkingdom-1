@@ -10,8 +10,14 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
+local Danger = require(script.Parent.Danger)
 
 local Scaling = {}
+
+-- The run's DANGER (0..100, Shared/Danger): set once by the server when a run begins, folded into every
+-- `forPlayers` answer so the waves, the trials, the King and the pay all feel it without being edited.
+-- It is 0 in the Hub, and the client never sets it.
+local runDanger = 0
 
 export type Params = {
 	enemyCountMult: number,
@@ -48,12 +54,39 @@ function Scaling.forPlayers(playerCount: number): Params
 		return DEFAULT
 	end
 
-	return {
+	local params: Params = {
 		enemyCountMult = entry.EnemyCountMult or 1,
 		enemyHealthMult = entry.EnemyHealthMult or 1,
 		eliteWeight = entry.EliteWeight or 0,
 		rewardMult = entry.RewardMult or 1,
 	}
+	if runDanger > 0 then
+		local extra = Scaling.forDanger(runDanger)
+		params = {
+			enemyCountMult = params.enemyCountMult * extra.enemyCountMult,
+			enemyHealthMult = params.enemyHealthMult * extra.enemyHealthMult,
+			eliteWeight = params.eliteWeight + extra.eliteWeight,
+			rewardMult = params.rewardMult * extra.rewardMult,
+		}
+	end
+	return params
+end
+
+--[[
+	What `total` points of Danger do to the enemies and the pay (see configs/Difficulty.Danger). Pure of the
+	run: `forPlayers` adds the run's own figure; this answers for any figure, so the train can preview one.
+]]
+function Scaling.forDanger(total: number): Params
+	return Danger.multipliers(total, Config.get("Difficulty").Danger)
+end
+
+-- The server sets the run's Danger when the run begins (World/RunDifficultyService); 0 clears it.
+function Scaling.setRunDanger(total: number)
+	runDanger = math.max(0, total)
+end
+
+function Scaling.getRunDanger(): number
+	return runDanger
 end
 
 --[[

@@ -9,9 +9,9 @@
 	a card built from THAT player's profile (a request carries no player id, so nobody can ask for another
 	player's page). Opening a friend's roll is a later feature with its own consent rules.
 
-	Place: Kingdom Hub only. Phase: Profiles.
+	Place: shared (both places: the Roll opens in the Hub and in the castle). Phase: Profiles.
 
-	Location: ServerScriptService.Server.Hub.ProfileService
+	Location: ServerScriptService.Server.Services.ProfileService
 ]]
 
 local Players = game:GetService("Players")

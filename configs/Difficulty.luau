@@ -146,6 +146,36 @@ local Difficulty = {
 		{ id = "Normal", maxPlayers = 4 },
 		{ id = "Hard", maxPlayers = 8 },
 	},
+
+	--[[
+		DANGER: the third curve, on top of the party size and the depth. One number from 0 to 100 that the train
+		shows ("+34 of 100 harder") and the run uses (Shared/Danger, Shared/Scaling.setRunDanger).
+
+		It has two parts:
+		  the mode      Hard adds `Mode.Hard` points. A party of 5 or more is Hard whatever it chooses; a smaller
+		                one may choose Hard, never the other way round (a big party cannot play Normal).
+		  the veterans  the AVERAGE level of the party, from level 1 (0 points) to MaxLevel (`LevelPoints`). So a
+		                pair of level-100 players is +100, and a level-50 pair about +50.
+
+		THE SHIELD keeps a new player from being buried by their friends' levels. The third-weakest player of the
+		party decides it: if three or more are rookies (level 5 or less) only `Keep` (15%) of the veterans' points
+		count; from level 5 to level 20 of that third player the shield fades out (a third player at level 12 keeps
+		about half), and from level 20 the average counts in full. Fewer than three players is never shielded: two
+		level-0 players among veterans still take the average, as they chose to.
+		  Example: four level-0 and four level-100 players, an average of 50, three or more rookies: the veterans
+		  add 50 x 0.15 = 7.5 points, plus Hard's 25 for eight players.
+
+		`AtFull` is what the enemies get at 100 points; any lower is a share of it. Health and numbers only: damage is
+		left alone so a hard run is long and tense, not a run where one hit is a down. Provisional, like all of this.
+	]]
+	Danger = {
+		Max = 100,
+		MaxLevel = 100,
+		LevelPoints = 100, -- the points of a party whose average level is MaxLevel
+		Mode = { Normal = 0, Hard = 25 },
+		Shield = { Need = 3, RookieBelow = 5, FreeFrom = 20, Keep = 0.15 },
+		AtFull = { EnemyHealth = 0.6, EnemyCount = 0.4, Elite = 0.2, Reward = 0.5 },
+	},
 }
 
 return table.freeze(Difficulty)

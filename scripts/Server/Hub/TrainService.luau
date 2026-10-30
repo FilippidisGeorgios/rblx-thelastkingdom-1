@@ -42,11 +42,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Server = script.Parent.Parent
 local BoardingRoster = require(Server.Domain.BoardingRoster)
 local TeamPower = require(Server.Domain.TeamPower)
-local ProfileService = require(script.Parent.ProfileService)
+local ProfileService = require(Server.Services.ProfileService)
 local PartyService = require(Server.Services.PartyService)
 local MatchService = require(Server.Services.MatchService)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Constants = require(ReplicatedStorage.Shared.Constants)
+local Danger = require(ReplicatedStorage.Shared.Danger)
 local Net = require(ReplicatedStorage.Shared.Net)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
@@ -77,6 +78,7 @@ type Berth = {
 	barrier: Folder?,
 	lastSeconds: number,
 	attempts: number, -- teleports tried for this party, successful or not
+	wantsHard: boolean, -- the caller chose Hard (or called a party too big for Normal); the party departs on it
 }
 
 local cfg: any = nil
@@ -287,6 +289,7 @@ local function resolveStation(): boolean
 			barrier = nil,
 			lastSeconds = -1,
 			attempts = 0,
+			wantsHard = false,
 		})
 	end
 
@@ -399,6 +402,7 @@ local function statusPayload(berth: Berth): { [string]: any }
 	-- and beside each name what the Muster Roll says of them: level, rank, Might, Renown
 	local crew: { any } = {}
 	local mights: { number } = {}
+	local levels: { number } = {}
 	for _, member in berth.roster:members() do
 		local player = member :: Player
 		table.insert(members, player.Name)
@@ -406,10 +410,16 @@ local function statusPayload(berth: Berth): { [string]: any }
 		if brief then
 			table.insert(crew, brief)
 			table.insert(mights, brief.might)
+			table.insert(levels, brief.level)
 		else
 			table.insert(crew, { name = player.DisplayName })
+			table.insert(levels, 1)
 		end
 	end
+
+	-- the mode this party will play, and how much harder than the bare numbers it is (Shared/Danger)
+	local tier, normalClosed = Danger.modeFor(math.max(berth.roster:count(), 1), berth.wantsHard, tiers)
+	local danger = Danger.compute(levels, tier, Config.get("Difficulty").Danger)
 
 	return {
 		kind = "status",
@@ -417,7 +427,16 @@ local function statusPayload(berth: Berth): { [string]: any }
 		state = berth.state,
 		count = berth.roster:count(),
 		capacity = berth.roster.capacity,
-		tier = BoardingRoster.tierFor(berth.roster:count(), tiers) or "Normal",
+		tier = tier,
+		normalClosed = normalClosed or berth.roster.capacity > tiers[1].maxPlayers,
+		danger = {
+			total = danger.total,
+			mode = danger.mode,
+			veteran = danger.veteran,
+			avgLevel = danger.avgLevel,
+			keep = danger.keep,
+			shielded = danger.shielded,
+		},
 		seconds = remainingSeconds(berth),
 		members = members,
 		crew = crew,
@@ -468,11 +487,14 @@ local function sendPrompt(player: Player, berth: Berth)
 		promptExpires[player] = os.clock() + cfg.PromptWindowSeconds
 	end
 
+	-- the create panel previews the Danger from the caller's own level until others board
+	local brief = ProfileService.brief(player)
 	trainEvent:FireClient(player, {
 		kind = "prompt",
 		mode = mode,
 		wagon = berth.index,
 		windowSeconds = cfg.PromptWindowSeconds,
+		yourLevel = if brief then brief.level else 1,
 	})
 end
 
@@ -499,6 +521,7 @@ local function resetBerth(berth: Berth)
 	berth.locked = false
 	berth.lastSeconds = -1
 	berth.attempts = 0
+	berth.wantsHard = false
 	clearBarrier(berth)
 
 	for _, player in Players:GetPlayers() do
@@ -535,7 +558,8 @@ local function depart(berth: Berth)
 		return
 	end
 
-	local tier = BoardingRoster.tierFor(#travellers, tiers) or "Normal"
+	-- the mode the leader chose, and Hard whenever the party is too big for Normal (Shared/Danger)
+	local tier = Danger.modeFor(#travellers, berth.wantsHard, tiers)
 	local leader = travellers[1]
 
 	for _, player in travellers do
@@ -618,7 +642,7 @@ end
 -- Requests
 --============================================================================
 
-local function onBoardRequest(player: Player, requestedSize: any)
+local function onBoardRequest(player: Player, requestedSize: any, requestedHard: any)
 	if boardedAt[player] then
 		return
 	end
@@ -636,6 +660,10 @@ local function onBoardRequest(player: Player, requestedSize: any)
 
 		berth.state = State.Forming
 		berth.roster:setCapacity(size)
+		-- Hard when the caller chose it, or when the party is too big to play Normal; a small party may choose
+		-- Hard, and no party may be made easier than its size allows
+		local _, tooBig = Danger.modeFor(size, requestedHard == true, tiers)
+		berth.wantsHard = requestedHard == true or tooBig
 		berth.roster:add(player)
 		berth.departAt = os.clock() + cfg.DepartureSeconds
 		berth.locked = false
