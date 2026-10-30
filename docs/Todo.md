@@ -230,7 +230,8 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [ ] **Look at the cellar with eyes** (the PC was locked, so it was only measured): the stair, the door, the larder's look, the crawl, the vault, the
       dark; then tune `LightZones.Cellar`, the torches, the number of crawlers (`Trials` area 3 deed `crawlers`) and the search count.
 - [ ] A real crouch pose (bent knees, a lowered back) in the animation pass; today the body is shorter and slower.
-- [ ] **The realism pass (developer, 2026-10-30):** the zombies, bows and arrows look "built from blocks". Plan, in order: (1) a bow, an arrow and a quiver
+- [ ] **The realism pass (developer, 2026-10-30; first test done, see `docs/systems/Realism.md`: a clean bow and a realistic head came out of
+      `generate_mesh` when the prompt was precise):** the zombies, bows and arrows look "built from blocks". Plan, in order: (1) a bow, an arrow and a quiver
       by `generate_mesh` + `generate_texture` (see `ItemArt.md`) to judge the quality before committing; (2) a sculpted HEAD with a face for the dead (the
       body keeps its R15-named joints so every clip still fits), then limbs and clothes as meshes with textures; (3) the full bodies by an artist
       (rigged, PBR textures), uploaded by the developer. Then the animation, design and sound passes (the project has no audio yet).
