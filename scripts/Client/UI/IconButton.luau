@@ -1,9 +1,10 @@
 --!strict
 --[[
 	IconButton
-	The small square buttons that sit on the edge of the screen (Settings, Profile, Inventory): a picture from
-	`Icons` with a one-word caption under it, in a dark leather plate with a thin brass edge. It lifts a little when
-	the cursor is on it, sinks when pressed, and says what it is even on a phone, where there is no cursor to hover.
+	The small square buttons that sit on the edge of the screen (Settings, Profile, Inventory): a picture from `Icons`
+	and NOTHING ELSE. No word, ever: the developer's rule for these buttons is that the picture says what it is.
+	A black plate with a dark-grey edge; it lifts a little when the cursor is on it (the edge turns lighter) and
+	sinks when pressed.
 
 	Presentation only: it reports a click and nothing else.
 
@@ -17,16 +18,21 @@ local Icons = require(script.Parent.Icons)
 
 local IconButton = {}
 
+-- The plate and its edge: black and dark grey (the picture inside keeps its own colours).
+local PLATE_TOP = Color3.fromRGB(30, 30, 33)
+local PLATE_BOTTOM = Color3.fromRGB(5, 5, 7)
+local EDGE = Color3.fromRGB(78, 78, 84)
+local EDGE_LIT = Color3.fromRGB(132, 132, 140)
+
 export type Props = {
 	Name: string?,
 	Parent: Instance?,
 	Icon: string,
-	Caption: string,
+	Tint: Color3?, -- the picture's own colour, where it takes one (the cog is grey)
 	Size: UDim2?,
 	Position: UDim2?,
 	AnchorPoint: Vector2?,
 	IconSize: number?,
-	CaptionSize: number?,
 	OnClick: (() -> ())?,
 }
 
@@ -39,24 +45,29 @@ function IconButton.create(props: Props): Handle
 	button.AutoButtonColor = false
 	button.AnchorPoint = props.AnchorPoint or Vector2.zero
 	button.Position = props.Position or UDim2.new()
-	button.Size = props.Size or UDim2.fromOffset(54, 58)
+	button.Size = props.Size or UDim2.fromOffset(50, 50)
 	button.BackgroundColor3 = Color3.new(1, 1, 1)
-	button.BackgroundTransparency = 0.08
+	button.BackgroundTransparency = 0.04
 	button.BorderSizePixel = 0
 	button.ZIndex = 2
 	button.Parent = props.Parent
-	Theme.surface(button, Theme.Color.Navy, Theme.Color.Void)
+	Theme.surface(button, PLATE_TOP, PLATE_BOTTOM)
 	Theme.corner(button, UDim.new(0, 8))
-	local stroke = Theme.goldStroke(button, 1.4)
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = EDGE
+	stroke.Thickness = 1.6
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = button
 
 	local scale = Instance.new("UIScale")
 	scale.Parent = button
 
-	local iconSize = props.IconSize or 26
 	local icon = Icons.create(props.Icon, {
-		Size = iconSize,
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 7),
+		Size = props.IconSize or 28,
+		Tint = props.Tint,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
 		Parent = button,
 	})
 	if icon then
@@ -68,20 +79,7 @@ function IconButton.create(props: Props): Handle
 		end
 	end
 
-	local caption = Instance.new("TextLabel")
-	caption.Name = "Caption"
-	caption.AnchorPoint = Vector2.new(0.5, 1)
-	caption.Position = UDim2.new(0.5, 0, 1, -5)
-	caption.Size = UDim2.new(1, -4, 0, (props.CaptionSize or 10) + 4)
-	caption.BackgroundTransparency = 1
-	caption.Text = props.Caption
-	caption.TextSize = props.CaptionSize or 10
-	caption.TextColor3 = Theme.Color.Parchment
-	caption.ZIndex = 3
-	caption.Parent = button
-	Theme.applyFont(caption, Theme.Role.Strong)
-
-	-- a small red-free dot or number in the corner (a prize waiting, say)
+	-- a small gold number in the corner (a prize waiting, say): a number, not a word
 	local badge = Instance.new("TextLabel")
 	badge.Name = "Badge"
 	badge.AnchorPoint = Vector2.new(1, 0)
@@ -96,22 +94,21 @@ function IconButton.create(props: Props): Handle
 	Theme.applyFont(badge, Theme.Role.Strong)
 	Theme.corner(badge, UDim.new(0.5, 0))
 
-	local function pose(target: number, thickness: number, captionColor: Color3)
+	local function pose(target: number, thickness: number, edge: Color3)
 		TweenService:Create(scale, Theme.Motion.Fast, { Scale = target }):Play()
-		TweenService:Create(stroke, Theme.Motion.Fast, { Thickness = thickness }):Play()
-		TweenService:Create(caption, Theme.Motion.Fast, { TextColor3 = captionColor }):Play()
+		TweenService:Create(stroke, Theme.Motion.Fast, { Thickness = thickness, Color = edge }):Play()
 	end
 	button.MouseEnter:Connect(function()
-		pose(1.07, 2.2, Theme.Color.GoldBright)
+		pose(1.07, 2.2, EDGE_LIT)
 	end)
 	button.MouseLeave:Connect(function()
-		pose(1, 1.4, Theme.Color.Parchment)
+		pose(1, 1.6, EDGE)
 	end)
 	button.MouseButton1Down:Connect(function()
-		pose(0.93, 2.2, Theme.Color.GoldBright)
+		pose(0.93, 2.2, EDGE_LIT)
 	end)
 	button.MouseButton1Up:Connect(function()
-		pose(1.07, 2.2, Theme.Color.GoldBright)
+		pose(1.07, 2.2, EDGE_LIT)
 	end)
 	if props.OnClick then
 		button.Activated:Connect(props.OnClick)

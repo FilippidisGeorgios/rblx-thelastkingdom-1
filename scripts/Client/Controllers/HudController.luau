@@ -3,8 +3,8 @@
 	HudController
 	The two small buttons beside the chat, at the top left, in both places:
 
-	  PROFILE   a head and shoulders. Opens the Muster Roll (Controllers/ProfileController).
-	  SETTINGS  a cog. Opens the Settings panel (UI/SettingsUI): the picture quality and the shadows switch.
+	  PROFILE   a head and shoulders (no word on it). Opens the Muster Roll (Controllers/ProfileController).
+	  SETTINGS  a grey cog (no word on it). Opens the Settings panel (UI/SettingsUI): the picture quality and the shadows switch.
 
 	(The INVENTORY tab on the left edge belongs to UI/BackpackHud, which also draws the pack and the Hub's inventory.)
 
@@ -34,7 +34,7 @@ HudController.Name = "HudController"
 local FALLBACK_X = 172
 local GAP = 6
 local BUTTON_W = 48
-local BUTTON_H = 54
+local BUTTON_H = 48
 
 function HudController.Init() end
 
@@ -51,9 +51,7 @@ function HudController.Start()
 		Name = "ProfileButton",
 		Parent = gui,
 		Icon = "person",
-		Caption = "PROFILE",
-		CaptionSize = 9,
-		IconSize = 24,
+		IconSize = 28,
 		Size = UDim2.fromOffset(BUTTON_W, BUTTON_H),
 		OnClick = function()
 			ProfileController.toggle()
@@ -64,9 +62,8 @@ function HudController.Start()
 		Name = "SettingsButton",
 		Parent = gui,
 		Icon = "gear",
-		Caption = "SETTINGS",
-		CaptionSize = 9,
-		IconSize = 24,
+		Tint = Color3.fromRGB(168, 168, 174), -- a grey cog
+		IconSize = 30,
 		Size = UDim2.fromOffset(BUTTON_W, BUTTON_H),
 		OnClick = function()
 			SettingsUI.toggle()
@@ -82,8 +79,8 @@ function HudController.Start()
 		if ok and inset and inset.Min.X > 0 then
 			x = inset.Min.X + 8
 		end
-		profile.button.Position = UDim2.fromOffset(x, 4)
-		gear.button.Position = UDim2.fromOffset(x + BUTTON_W + GAP, 4)
+		profile.button.Position = UDim2.fromOffset(x, 5)
+		gear.button.Position = UDim2.fromOffset(x + BUTTON_W + GAP, 5)
 	end
 	place()
 	pcall(function()

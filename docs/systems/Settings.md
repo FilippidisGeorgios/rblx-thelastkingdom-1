@@ -8,8 +8,9 @@
 | **SETTINGS** (a cog) | top left, beside PROFILE | the Settings panel (`UI/SettingsUI`) |
 | **INVENTORY** (a backpack) | left edge, middle | in the Hub the inventory; in the castle the pack. The key `B` too. |
 
-All three are `UI/IconButton`: a picture from `UI/Icons` (drawn from UI pieces, nothing to upload), a one-word caption under it, a dark
-plate with a brass edge; they lift on hover, sink on press, and have a small gold number for a prize waiting. The panels open by
+All three are `UI/IconButton`: a picture from `UI/Icons` (drawn from UI pieces, nothing to upload) and **no word at all** (the developer's rule
+for these buttons: the picture says what it is), on a black plate with a dark-grey edge. The person keeps its parchment colour, the backpack
+its leather, and the cog is grey. They lift on hover (the edge lightens), sink on press, and have a small gold number for a prize waiting. The panels open by
 sliding and settling from their button and slide away when closed (`Theme.Motion.Enter` / `Exit`).
 
 ## 2. Settings (`Shared/PlayerSettings`, `configs/Graphics`, `Services/SettingsService`, `Controllers/GraphicsController`)

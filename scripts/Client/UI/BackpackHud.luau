@@ -79,16 +79,14 @@ function BackpackHud.create(): Handle
 	gui.Parent = player:WaitForChild("PlayerGui")
 
 	--------------------------------------------------------------------------
-	-- The tab. Small, on the left edge, always there: a backpack with its one word. It is also the touch way in.
+	-- The tab. Small, on the left edge, always there: a backpack and no word. It is also the touch way in.
 	--------------------------------------------------------------------------
 	local tab = IconButton.create({
 		Name = "InventoryTab",
 		Parent = gui,
 		Icon = "backpack",
-		Caption = "INVENTORY",
-		CaptionSize = 9,
-		IconSize = 30,
-		Size = UDim2.fromOffset(62, 62),
+		IconSize = 40,
+		Size = UDim2.fromOffset(58, 58),
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 12, 0.5, 0),
 	})

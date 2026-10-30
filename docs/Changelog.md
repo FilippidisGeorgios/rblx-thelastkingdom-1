@@ -25,8 +25,8 @@ What the developer asked for (2026-10-30), built.
   Medium, High, Ultra and a shadows switch, kept in `profile.settings` (schema v6) and drawn in both places. A quality changes what the picture
   costs and never what can be seen. Shadows OFF means SIMPLE shadows (the walls and roofs keep casting, the small things stop), because turning the
   world's shadows off would light the dark rooms. `docs/systems/Settings.md`.
-- **The buttons.** PROFILE (a head and shoulders) and SETTINGS (a cog) beside the chat, INVENTORY (a backpack) on the left edge, all drawn from
-  UI pieces (`UI/Icons`, `UI/IconButton`), with hover, press and a sliding open and close. The Roll now opens in the castle too
+- **The buttons.** PROFILE (a head and shoulders) and SETTINGS (a grey cog) beside the chat, INVENTORY (a larger backpack) on the left edge, all drawn from
+  UI pieces (`UI/Icons`, `UI/IconButton`) with NO words on them, on a black plate with a dark-grey edge, with hover, press and a sliding open and close. The Roll now opens in the castle too
   (`Services/ProfileService`, moved from `Hub`).
 - **Names over heads (`Services/NametagService`).** The Hub: each player's nickname in a small cream serif with a brass rule (nobody sees their own).
   The Forgotten Lands: no name at all. Roblox's own overhead name is off in both.
