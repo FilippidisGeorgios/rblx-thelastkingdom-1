@@ -6,7 +6,9 @@ arms they have forged, what they have done (**statistics**) and what they have c
 numbers the difficulty already works from, so the fairness rules are visible rather than hidden. The train shows a short version of
 it beside every name aboard.
 
-**Open it:** key `P`, or the small `ROLL` button in the bottom-right corner of the Hub (also the touch way in).
+**Open it:** the **PROFILE** button (a head and shoulders) beside the chat, in the Hub and in the castle (also the touch way in); in the
+Hub also the key `P`. (0.39.0: the old `ROLL` corner button is gone; `Services/ProfileService` serves both places.) The **INVENTORY** tab on
+the left edge, the **SETTINGS** cog and the nicknames over heads are in `Settings.md`; how hard a run is, in `Danger.md`.
 
 ## 1. Who they are
 
@@ -39,9 +41,20 @@ At the sources below a full victory is worth about 2,300 XP, so level 30 is a ha
 All of this is **provisional** and is tuned in one place.
 
 **What earns XP (`Experience.Sources`, `Domain/RunXp`), paid to each player when the run ends:**
-the dead slain (Standard 2, Elite 8, Boss 60), each chamber cleared (30 + 10 x its number), each deed (60) and a victory bonus (300).
+the dead slain (Standard 2, Elite 8, Boss 60), each chamber cleared (30 + 10 x its number), each deed (60) and a victory bonus (300);
+and, since 0.39.0, **helping and time**: an assist (3: a blow on an enemy someone else finished within 12 seconds), a fallen friend
+raised (40) and 6 a minute on your feet (60 minutes at most). A player who took no part (under 100 of damage, assists and revives
+together) is paid the shared prizes (chambers, deeds, the victory) at 30% and no time: standing at the gate is not carried to a level.
 A wiped run pays everything but the victory bonus: progress persists. Before 0.38.0 a run paid NO experience at all (only the old
 placeholder missions did).
+
+**THE PRIZES OF THE ROAD can now be CLAIMED (0.39.0, `Domain/Prizes`, `Hub/HubInventoryService`).** The prize of a level is taken by the
+player from the Inventory panel (a CLAIM button), once: gold goes to the purse, items to the stash, the level is marked in
+`profile.prizes.claimed` and the profile is saved at once. What the prizes ARE is still not decided (`Experience.LevelRewards` is empty),
+so nothing waits yet; the whole path is tested with a fake reward table (`Prizes.spec`) and was claimed end to end in a playtest.
+
+**The roll of honour (0.39.0, `Domain/Mvp`).** On a victory the closing card ends with the company in order of what each did (the dead by
+tier, assists, friends raised, damage), one quiet line each, a thin bar and a laurel on the first place when there are two or more.
 
 **Titles** (`configs/Profile.Titles`): a new rank at every tenth level: Recruit 1, Footman 10, Man-at-Arms 20, Sergeant 30, Standard-Bearer
 40, Knight-Errant 50, Banneret 60, Castellan 70, Marshal 80, Lord Marshal 90, Warden of the Last Kingdom 100.
@@ -94,13 +107,15 @@ A player who leaves mid-run adds nothing. The ending card now says "Experience: 
 - The page is read-only: the client changes nothing, so there is nothing to tamper with.
 - **The train** (`TrainService.statusPayload`): every member comes with `{ level, title, might, renown }` (`ProfileService.brief`) and the
   party's Might (the average). The panel shows the name, and under it in a smaller hand `Lv 12 · Sergeant · Might 5`, and for a party
-  of two or more `Party Might 4.3 of 10`. The party Might is SHOWN, not used: the difficulty still scales by head count (`Scaling`).
+  of two or more `Party Might 4.3 of 10`. The party Might is SHOWN, not used. Since 0.39.0 the train also shows the DANGER
+  (`+34 of 100 harder`) and lets a small party choose Hard; the difficulty comes from the party's LEVELS, with a shield for new players,
+  not from Might (`Danger.md`).
 
 ## 7. What is NOT built (see the ideas in the Changelog and the backlog)
 
-- A separate "points" score beyond Renown, and any use of Might in matchmaking or in `Scaling`: waiting on the design talk.
+- Any use of Might in matchmaking or in `Scaling`: the developer chose levels instead (`Danger.md`); Might stays on the page.
 - Looking at another player's roll (consent and what is public first).
-- The prizes of the road, and a claim state for them.
+- What the prizes of the road ARE (the claim, the claimed mark and the hand-over to the inventory are built).
 - A custom nickname, with filtering.
 - The admin panel (the Company number and `profile.account` are ready for it).
 - A picture of each weapon on the arms list, a crest per rank.

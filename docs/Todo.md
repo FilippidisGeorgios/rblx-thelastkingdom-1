@@ -204,12 +204,27 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
 - [x] The Company number (`Domain/PlayerId`, `profile.account`, schema v5), the nickname, levels 1 to 100 (easy to 30, hard after), the road
       with a prize stop every 5th level and a milestone every 10th, Renown (the overall rating), the statistics, XP paid at the end of a
       run, deeds recorded, and the train showing level, rank and Might beside every name (Changelog 0.38.0; Profile.md).
-- [ ] **Decide what the prizes of the road are** (levels 5, 10, ... 100; the tens bigger): `Experience.LevelRewards[level]`, then a claim
-      state (`profile`) and a hand-over where `RewardService` reports `prizeLevels`.
+- [ ] **Decide what the prizes of the road are** (levels 5, 10, ... 100; the tens bigger): fill `Experience.LevelRewards[level] = { Gold, Items, Title }`.
+      The claim itself is BUILT (0.39.0: the Inventory panel, `Domain/Prizes`, `profile.prizes`); only the content is missing.
 - [ ] **Tune the curve with a real run:** a full victory pays about 2,300 XP on paper (`RunXp`); measure the real number and the minutes it
       takes, then set `Experience.Curve` so level 30 is a few runs and level 100 is the long road meant.
 - [ ] The weapon level gates (3, 5, 8: `configs/Weapons`) were set when the top level was 10: they are reached in the first few runs now.
-- [ ] Use Might in the lobby and in `Scaling` (the party's average is shown on the train; the difficulty still scales by head count).
+- [x] Difficulty from the party's LEVELS (Danger, 0.39.0): Normal/Hard by head count, Hard by choice for a small party, a shield for
+      new players, shown on the train (`docs/systems/Danger.md`). Might stays on the Roll only.
+- [x] Settings (Low/Medium/High/Ultra, shadows), the Profile/Settings buttons, the Inventory tab, nicknames over heads in the Hub and none in
+      the castle, XP for helping and time, assists and revives counted, the roll of honour on a won run, gold as a coin, burgundy and green
+      buttons (Changelog 0.39.0; `docs/systems/Settings.md`).
+- [ ] **Test with two or more real players:** assists, revives and the roll of honour were checked in pieces (specs, one player, a faked card),
+      never with a real party; the Danger shield (three rookies) and the train's join face likewise. Do it with a friend.
+- [ ] **Tune Danger with a real run** (`LevelPoints`, the shield's 15%, Hard's 25, `AtFull`): and re-check the `PlayerCount` rows, which were
+      tuned when Hard did nothing (five to eight players are now about 15% harder).
+- [ ] Look at Settings, the Inventory tab, the train and the Roll on a phone (the buttons start at `TopbarInset`; the train panel shrinks to fit).
+- [ ] The engine's quality level may not be settable from a script (not verified); decide if Low/Ultra need anything beyond what is done.
+- [ ] **The Crawler is built but placed nowhere:** choose its first chamber and how it arrives (a drain, a crack in the floor); a dedicated crawl clip
+      (alternate arms, a drag of the hips) and its sound. The shambler's clips are borrowed for now.
+- [ ] **Forest, catacombs and a bigger run (developer's idea, 2026-10-30):** a pitch-dark forest area (light only around you, black fog, hiding in
+      wardrobes, fuses and tools to find, one or two hunters, no weapons until the armoury), then catacombs from below (a maze, the dead digging up
+      through the floor). Needs a design talk first: the run is short for a player with good weapons. See the notes in the session summary.
 - [ ] The admin panel: search by Company number (`PlayerId.decode`), read `profile.account` and the statistics.
 - [ ] A custom nickname (filtered, unique, changeable how often?).
 - [ ] Look at another player's roll (a party mate): consent and what is public first.

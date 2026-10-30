@@ -31,7 +31,7 @@ and its fog, the colour grading and every authored light's colour and reach are 
 | lights near you cast shadows | no | no | no | **yes** |
 | shadow sharpness | | | | sharper |
 | shadows start at | OFF | ON | ON | ON |
-| the engine's own quality level (once chosen) | 3 | 8 | 14 | 21 |
+| the engine's own quality level (asked for once a quality is chosen; **not verified**: a Studio playtest still read Level 21 after Low, and nothing depends on it) | 3 | 8 | 14 | 21 |
 
 (`Domain` test `PlayerSettings.spec` checks that the table carries only these keys: a quality cannot be given a way to change visibility.)
 

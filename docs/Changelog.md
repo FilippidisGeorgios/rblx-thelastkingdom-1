@@ -1,3 +1,52 @@
+## Version 0.39.0 — Danger, the Settings panel, the Inventory tab, names over heads, the roll of honour, and gold as a coin
+
+What the developer asked for (2026-10-30), built.
+
+- **Colours.** Every button that was a bright red or a lime green is now a DEEP BURGUNDY or a DEEP FOREST GREEN with cream lettering (white
+  with a breath of yellow, not gold): `Theme.Color.Bordeaux/BordeauxLight` darkened, a new `GreenTop` for the top of a green button and `Green`
+  for its foot; the `green` and `danger` button variants write in `Theme.Color.Cream`; the title screen's Play button uses the same green.
+  Red and green TEXT on a dark panel (a warning, "Ready", "Hard") keeps its readable tones.
+- **Danger (`Shared/Danger`, `configs/Difficulty.Danger`, `docs/systems/Danger.md`).** One figure from 0 to 100, "+34 of 100 harder", made of the
+  mode (Hard = 25) and the party's average level, kept small by a shield for new players (the third-weakest player decides: three or more
+  rookies keep 15% of the veterans' points, fading to the full average from level 20; fewer than three are never shielded). It reaches the
+  waves, the trials, the King and the pay through `Scaling.setRunDanger`, set by the new `World/RunDifficultyService` when a run begins.
+- **Normal / Hard on the train.** A party of five or more plays Hard and Normal is shut to it; a smaller party may choose Hard
+  (`berth.wantsHard`, `RequestTrainBoard(size, hard)`). The panel has NORMAL / HARD buttons, a Danger meter that warms from green to red with
+  a line saying where the points come from, and previews the figure from your own level before anyone boards; aboard, the party card shows the
+  figure the server worked out for who is really there. The whole panel is drawn about 10% smaller. The mode was only a label before: it is real now.
+- **Experience for helping, not only for killing (`Domain/RunXp`).** Beside the dead, the chambers, the deeds and the victory, a run now pays an
+  assist (3, a blow on an enemy someone else finished within 12 seconds), a fallen friend raised (40), and the minutes on your feet (6 a minute,
+  60 minutes at most). A player who took no part (under 100 of damage, assists and revives together) is paid the shared prizes at 30% and no time.
+  Assists, revives and active seconds are counted by `RunStatsService` (`DeathService.onRaised` is new) and kept in the statistics; the Roll shows
+  ASSISTS and FRIENDS RAISED.
+- **The roll of honour (`Domain/Mvp`, `UI/EndingUi`).** On a victory the closing card ends with the company in order of what each did: a name, a quiet
+  line ("42 slain · 6 assists · 2 raised"), a thin bar, a laurel on the first place when there are two or more. Nothing punishes: falling does not count.
+- **Settings (`Shared/PlayerSettings`, `configs/Graphics`, `Services/SettingsService`, `Controllers/GraphicsController`, `UI/SettingsUI`).** Low,
+  Medium, High, Ultra and a shadows switch, kept in `profile.settings` (schema v6) and drawn in both places. A quality changes what the picture
+  costs and never what can be seen. Shadows OFF means SIMPLE shadows (the walls and roofs keep casting, the small things stop), because turning the
+  world's shadows off would light the dark rooms. `docs/systems/Settings.md`.
+- **The buttons.** PROFILE (a head and shoulders) and SETTINGS (a cog) beside the chat, INVENTORY (a backpack) on the left edge, all drawn from
+  UI pieces (`UI/Icons`, `UI/IconButton`), with hover, press and a sliding open and close. The Roll now opens in the castle too
+  (`Services/ProfileService`, moved from `Hub`).
+- **Names over heads (`Services/NametagService`).** The Hub: each player's nickname in a small cream serif with a brass rule (nobody sees their own).
+  The Forgotten Lands: no name at all. Roblox's own overhead name is off in both.
+- **The Inventory and the prizes of the road (`Hub/HubInventoryService`, `Domain/Prizes`).** The Hub's inventory shows the purse, the stash with a
+  picture of each thing, the charm, and a CLAIM button for each prize of the road that is waiting; claiming puts gold in the purse and items in the
+  stash, marks the level taken (`profile.prizes`, schema v6) and saves at once. `Experience.LevelRewards` is still empty, so nothing waits yet.
+- **Gold is a coin.** `Icons.coin` in the pack, the inventory, the forge's purse and prices and the statistics tiles.
+- **The Crawler (`World/CrawlerBody`, `undead_crawler`, Bestiary 5.2).** A legless dead that drags itself along on its arms, made at spawn from
+  a shambler body: everything joined to a leg is found by following the joints out from the thighs and removed, the torso is laid down by the Root
+  joint's C1 (so the standing clips still read), the head lifted, the arms turned to reach, two thighbones broken off at the hips. 36 health, speed
+  8.5, notices you from 70 studs; it shares the shambler's attack clip. Tested live (it chases, attacks, dies and sinks) and by `CrawlerBody.spec`.
+  NOT placed in any wave or area: where it first appears is the developer's call.
+- **Found and fixed while testing.** A weak-keyed table of Instances loses its entries (the Lua proxy of an instance nothing else refers to can be
+  collected), so the first GraphicsController stopped no shadows; its tables are strong now and pruned every 30 seconds. The title screen's Play
+  button put cream text on a gradient plate (dark green on black, the same trap `Components.button` documents); its word is a child label now.
+  `EndingController` dropped the roll of honour from the payload; it forwards it now. The profile buttons overlapped Roblox's chat button: they start
+  at `GuiService.TopbarInset`. The train panel overflowed a short screen: it measures itself and shrinks to fit.
+- **Other.** `DetailLodController` takes the quality's light distance and Ultra's near-light shadows; `PlayerCard` carries `assists` and `revives`.
+  `Experience.Spec`-style tests added: Danger, Mvp, AssistLedger, Prizes, PlayerSettings, CrawlerBody (all pass in both places).
+
 ## Version 0.38.0 — The profile grows up: the Company number, levels to 100, Renown, statistics, and the train knows who is aboard
 
 What the developer asked for in the profile (2026-10-30), built: the profile shows the level and the nickname, a unique ID for the
