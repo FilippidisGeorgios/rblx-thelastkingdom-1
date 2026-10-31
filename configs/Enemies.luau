@@ -407,6 +407,28 @@ local Enemies = {
 		},
 	},
 
+	--[[
+		THE DOCTOR (area 4, the Catacombs: docs/systems/Catacombs.md).
+
+		A plague doctor who cured the dead and was experimented on for it: blind, huge, and he hears everything. He has NO
+		`AI` block on purpose: the ordinary brain walks to what it sees, and he sees nothing. `Server/World/Trial/Doctor`
+		walks him by what he hears, on the floor plan, with `Domain/DoctorBrain`. Everything below is what the combat sees:
+		his health, his armour, what he is. His speeds, his reach and his blow are in `configs/Catacombs.Doctor`.
+	]]
+	plague_doctor = {
+		DisplayName = "The Doctor",
+		Faction = "Enemies",
+		Archetype = "Boss",
+		MaxHealth = 1500,
+		Armour = 0.15,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Boss",
+		Abilities = {},
+		Body = { "plague_doctor" },
+	},
+
 	--======================================================================
 	-- THE CURED — area 3
 	--======================================================================

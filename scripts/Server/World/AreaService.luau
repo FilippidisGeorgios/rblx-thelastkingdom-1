@@ -141,7 +141,7 @@ local AREAS = {
 	{ label = "OUTER WARD", subtitle = "Barricaded from the inside." },
 	{ label = "STABLES", subtitle = "Whatever left did not use the door." },
 	{ label = "KITCHENS", subtitle = "Cold ovens. A boarded well." },
-	{ label = "GRAVEYARD", subtitle = "More graves than the ground was meant for." },
+	{ label = "CATACOMBS", subtitle = "Do not run. Do not speak." },
 	{ label = "SMITHY", subtitle = "It was still working when it stopped." },
 	{ label = "GREAT HALL", subtitle = "The roof is gone. The table is not." },
 	{ label = "THE ROWS", subtitle = "The only cheerful place in the castle." },

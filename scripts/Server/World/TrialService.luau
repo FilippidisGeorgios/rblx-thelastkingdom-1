@@ -83,6 +83,7 @@ local TASKS: { [string]: any } = {
 	scribe = require(script.Parent.Trial.Scribe),
 	exit = require(script.Parent.Trial.Exit),
 	cellar = require(script.Parent.Trial.Cellar),
+	catacombs = require(script.Parent.Trial.Catacombs),
 }
 
 local PRESSURE: { [string]: any } = {

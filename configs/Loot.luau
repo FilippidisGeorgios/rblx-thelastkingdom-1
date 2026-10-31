@@ -217,6 +217,16 @@ local Loot = {
 			},
 		},
 
+		-- The Doctor of the Catacombs: killing him is a long, loud, hard thing and he pays for it.
+		plague_doctor = {
+			Gold = { Chance = 1.0, Min = 60, Max = 90 },
+			Always = {
+				{ Item = "grave_silver", Min = 4, Max = 6 },
+				{ Item = "hollow_ember", Min = 1, Max = 2 },
+				{ Item = "saints_medal", Min = 1, Max = 1 },
+			},
+		},
+
 		the_king = {
 			Gold = { Chance = 1.0, Min = 120, Max = 160 },
 			Always = {
@@ -322,6 +332,20 @@ local Loot = {
 		deed_kitchen_hoard = {
 			Always = { { Item = "grave_silver", Min = 3, Max = 4 }, { Item = "hollow_ember", Min = 1, Max = 1 } },
 			Sound = { Chance = 0.5, Pool = { { Item = "oil_pot", Weight = 1, Min = 1, Max = 2 } } },
+		},
+		-- The nine pages of the Catacombs, all read.
+		deed_catacomb_pages = {
+			Always = { { Item = "grave_silver", Min = 3, Max = 4 }, { Item = "saints_medal", Min = 1, Max = 1 } },
+		},
+		-- A cache in a crawl pocket: a refuge with a little in it.
+		catacomb_pocket = {
+			Gold = { Chance = 0.7, Min = 3, Max = 8 },
+			Drops = {
+				{ Item = "bandage", Chance = 0.7, Min = 1, Max = 2 },
+				{ Item = "tallow", Chance = 0.5, Min = 1, Max = 2 },
+				{ Item = "oil_pot", Chance = 0.25, Min = 1, Max = 1 },
+				{ Item = "bone_dust", Chance = 0.5, Min = 1, Max = 3 },
+			},
 		},
 		deed_graveyard_bell = {
 			Always = {

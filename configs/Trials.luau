@@ -29,6 +29,14 @@
 	trial follows the art when it moves.
 ]]
 
+local Catacombs = require(script.Parent.Catacombs)
+
+-- Nine pages in the Catacombs, each on a little table that the builder named Paper1 .. Paper9.
+local CatacombPages = {}
+for i, page in Catacombs.Pages do
+	table.insert(CatacombPages, { at = "Decorations.Area4.Catacombs.Marks.Paper" .. i, title = page.title, sign = page.sign, lines = page.lines })
+end
+
 local Trials = {
 	--======================================================================
 	-- 3 — Kitchens. The recipe, the pot, the five.
@@ -616,67 +624,34 @@ local Trials = {
 	},
 
 	--======================================================================
-	-- 4 — Graveyard. Carry the fire.
+	-- 4 — The Catacombs (it took the Graveyard’s place; the old trial is kept in `RetiredTrials`).
 	--
-	-- Four braziers, one to each section of the burying ground. A torch burns
-	-- for 25 seconds and is lit at the chapel altar (or at a brazier already
-	-- alight); the braziers are 36 to 150 studs from it. Each section's graves
-	-- keep giving up the dead until ITS brazier burns, so the order you light
-	-- them in is the whole decision.
+	-- A mountain shuts the yard from wall to wall. A table by its one cave gives each of the party a lantern, and a deep stair
+	-- goes down into the dark: a maze of passages two bodies wide, crawls only a crouching body fits, letters, blood,
+	-- eyes on the walls, and a huge blind doctor who goes to whatever he hears. The way out is on the far side, behind an
+	-- iron gate (three levers), a barricade (an axe) and an iron door (a key), and then up another deep stair. The errand
+	-- is one task here (`Trial/Catacombs`), which runs its own stages and tells the top line. Nine pages are the deed.
 	--======================================================================
 	[4] = {
+		-- the Catacombs call their own dead (the crawlers in their niches, the Doctor): no wave in the yard above
+		ownsWaves = true,
+
 		phases = {
 			{
-				id = "fire",
-				hint = "Carry fire from the chapel to the braziers (%d of %d)",
-				tasks = {
-					{
-						id = "braziers",
-						kind = "light",
-						braziers = "Decorations.Area4.GraveBraziers",
-						sources = { "Decorations.Area4.Chapel.Altar" },
-						torchSeconds = 25,
-						holdSeconds = 2.2,
-						sourceHoldSeconds = 0.7,
-					},
-				},
+				id = "below",
+				hint = "Take the lantern from the table and go down into the mountain",
+				tasks = { { id = "catacombs", kind = "catacombs" } },
 			},
 		},
 
-		pressure = {
-			{
-				id = "graves",
-				kind = "rising",
-				from = "start",
-				braziers = "Decorations.Area4.GraveBraziers",
-				graves = { "Decorations.Area4.NewGraves", "Decorations.Area4.Churchyard" },
-				gravesPerSection = 6, -- graves in each section that can open
-				interval = 9, -- seconds between pulses in a section
-				burst = 2, -- the dead per pulse (before the party / depth curve)
-				cap = 7, -- alive from one section at once (before the curve)
-				stagger = 5, -- sections wake this many seconds apart
-				enemies = {
-					{ id = "undead_shambler", weight = 3 },
-					{ id = "undead_runner", weight = 1 },
-				},
-				-- Every Nth pulse in a section carries a Gravedigger: the first heavy weapons.
-				heavy = { id = "undead_brute_heavy", every = 4 },
-			},
-		},
+		pressure = {},
 
 		deeds = {
 			{
-				id = "bell",
-				kind = "toll",
-				rope = "Decorations.Area4.Belfry.BellRope",
-				bell = "Decorations.Area4.Belfry.Bell",
-				prize = "deed_graveyard_bell",
-				-- What answers the bell: the hardest hour of the chamber.
-				answer = {
-					{ id = "undead_shambler", count = 5 },
-					{ id = "undead_runner", count = 3 },
-					{ id = "undead_brute_heavy", count = 1 },
-				},
+				id = "pages",
+				kind = "letters",
+				prize = "deed_catacomb_pages",
+				letters = CatacombPages,
 			},
 		},
 	},

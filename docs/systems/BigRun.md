@@ -8,6 +8,11 @@ fight), some of them frightening; ceilings or a better way to make the dark; a f
 a space inside a building. *Layer* = a level above or below the ground. *Hunter* = a monster you cannot kill, only
 escape. *Crouch* = ducking down to fit a low passage.
 
+> **2026-10-31 update.** The developer chose how the Catacombs go: they are AREA 4 (they took the Graveyard's place), a mountain across the yard with a
+> cave and a deep stair, a one-way safe room, a maze of narrow passages in total dark with only a lantern, and a huge blind plague doctor who
+> hunts by sound. Written down in `docs/systems/Catacombs.md`; it replaces this page's sections 6 and 10 for the catacombs. The forest will need the
+> lantern from the catacombs, so it comes after them (not before the gate as first thought).
+
 ## 0. What is built so far (0.41.0, 2026-10-30)
 
 | Piece | Where | State |

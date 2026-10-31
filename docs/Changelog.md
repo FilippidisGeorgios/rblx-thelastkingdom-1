@@ -1,3 +1,72 @@
+## Version 0.43.0 — The Catacombs (area 4): a mountain, a deep stair, a maze in the dark, a blind doctor
+
+What the developer asked for (2026-10-31). Design and reasons: `docs/systems/Catacombs.md`. **Written, tested, and now BUILT in the Forgotten Lands place and
+walked in play** (see "Built and walked" below); the first, frozen Studio was closed with the developer's leave and the place reopened.
+
+- **Area 4 is now the Catacombs.** The Graveyard had the plainest trial of the nine, and the catacombs are what lies under a graveyard. Its old trial is
+  kept in `configs/RetiredTrials.luau` (nothing reads it); `AreaService` calls the area CATACOMBS ("Do not run. Do not speak."); `Trials[4]` is one task
+  (`catacombs`) and one deed (nine pages, the `letters` verb) with `ownsWaves`, so no wave comes in the yard above.
+- **The floor plan (`configs/CatacombsMaze`, made once by a seeded design script, seed 7):** 22 by 18 cells of 10.5 studs, six halls (ossuary, plague ward,
+  quarry, gaol, great crypt, the Doctor's study), a long path (194 cells from the stair to the farthest), an exit road behind an iron gate, a barricade
+  and an iron door, seven crawl pockets and five crawl shortcuts, and 46 marked places (four key places, three axe places, three levers, nine pages, four
+  ropes and bells, sixteen crawler nests, seven pockets). Passages are 7 wide and 7.6 high; crawls 3.4.
+- **The rules, pure and tested (`Domain/CatacombMaze`, `Domain/Hearing`, `Domain/DoctorBrain`, `Tests/Catacombs.spec`, 13 specs; the whole suite is 312 pass in
+  the Hub's Studio):** the plan as a graph (open, low and shut ways; shortest path; reach in studs; what the big one can walk without crawling); noise that
+  carries ALONG THE PASSAGES and is stopped by a shut gate; what a foot makes (still 0, crouched 7, walking 36, running 52); the loudest remembered noise;
+  and the Doctor's mind (his round, going to a noise, searching, a chase of a body he keeps hearing, a swing with a windup that can be stepped out of). The
+  plan is checked: every cell reachable, the exit road behind the gate, everything to find outside it, and the pockets cannot be walked into.
+- **The errand (`World/Trial/Catacombs`):** the table by the cave gives each player a lantern; the first body in the safe room at the foot of the stair
+  wakes the place (the Doctor at the far side, the crawlers in their niches, in a number scaled by the party); three levers lift the gate, an axe (one of
+  three places, rolled each run) cuts the beams (eight loud strokes), a key (one of four places, rolled) opens the door, four ropes ring bells far off to
+  draw the Doctor, seven pockets hold a small cache; the first body at the top of the stair up ends the trial. Every loud thing is a noise he can hear, and
+  every blow a player lands and every dead one going down is too (a sound plays for the second).
+- **The Doctor (`World/Trial/Doctor`, `configs/Enemies.plague_doctor`, `configs/Catacombs.Doctor`):** blind, 6.9 high and 4.6 wide, 1500 health; walks the
+  plan cell to cell at 6 / 10 / 13 studs a second by what he hears, cannot pass a crawl, strikes for 45 after a 0.9 second windup. His body is made from a
+  shambler's by `tools/BuildDoctor.luau` (a plague doctor's coat, wide hat, long beak and two white lights for eyes).
+- **The lantern (`World/LanternService`, `Items.lantern`):** a lantern model on the left hand with one shadow-casting light (30 studs), for everyone to see;
+  kept to the end of the run (the forest will need it). **The dark (`configs/LightZones.Catacombs` / `CatacombMouth`):** no ambient light at all below the
+  ground, a dimming at the cave mouth; the same for every player whatever their picture quality.
+- **The dead come from several sides (`World/WaveService`, `configs/Waves.Defaults.Scatter`):** each unit of a wave now has an even chance (0.5; an encounter may set
+  `scatter`) to appear at one of the area's OTHER spawn points (north, east, west) instead of its group's own, picked at random one by one, so a wave arrives
+  from two or three sides and not in one clump. Safe by design: only the markers that already exist are used (no jitter that could land on a roof). Not seen in play yet.
+- **Shift crouches (`CrouchController`):** hold Shift to crouch, let go to stand (C still toggles); the server still keeps you down under a low ceiling.
+- **The tools (not synced; the result lives in the place):** `tools/BuildCatacombs.luau` (mountain, cave, barrier, painted STAY QUIET, table, two spiral
+  stairs, safe room, mausoleum, the maze's walls, gate, beams, door), `tools/BuildCatacombsProps.luau` (chests, racks, levers, ropes and bells, tables for the
+  pages, nests, hall dressing, eyes and a grin on walls, words in red, blood, the light zones), `tools/BuildDoctor.luau`.
+- **Built and walked (2026-10-31, evening).** The three tools were run in the place, one part at a time, and every part was looked at: the **mountain** (a
+  brown sandstone cliff in layers, 86 high, 1032 columns of terrain; an invisible barrier in front of it; the cave 9 wide; **STAY QUIET** painted 150 wide on a
+  deep block of rock above it, readable from the gate; the table with the lantern and the note), the **two deep stairs** (66 steps down, 78 up), the **safe room**
+  and the **mausoleum**, the **plan** (222 wall blocks, 78 crawl units, the gate, the beams, the iron door), the **props** (81 hall things, 93 along the
+  passages, chests, racks, levers, bells), the **scares** (10 watchers, 28 words in red, 36 stains) and the **three light zones**. 2492 parts, all anchored, no
+  script in them. The Doctor's body is in `Assets.Undead.plague_doctor`. Then a character WALKED it with the Studio's own play: the cave, the sill, the whole
+  stair down, the safe room's crawl, 176 cells of the maze crouched, the stair up and the mausoleum; the three levers lift the gate (8.6 studs), the axe and
+  eight strokes bring the beams down, the key opens the door, and the first body at the top ends the trial: `area 4 trial complete — gate rising`. The Doctor
+  walks his round, found a crouching body in a passage, and strikes in his loop (windup, strike, recover); a crawler wakes, winds up and strikes at 4 studs;
+  the HUD says "Take the lantern from the table and go down into the mountain", then "Find a way out in the dark: levers 0 of 3 | axe not yet | key not yet".
+  The whole test suite is still 312 pass, 0 fail, in the Forgotten Lands' play.
+- **Found by walking it, and mended** (none of these could be seen from the code):
+  - **The stairs did not end at their doors.** Three whole turns brought the last step back to the top landing's side, so the doorway at the foot (west) was
+    under six steps of the stair itself and could not be reached. Now the turns are 2.75 (down) and 3.25 (up), so the last step stands in the doorway.
+  - **A pit between the cave and the landing.** The shaft's round cut takes the ground of the cave with it, and the doorway's sill was six studs too low. A
+    stone sill now runs from the mouth to the landing (and another from the mausoleum's landing to the yard), level with them.
+  - **Water in the maze.** Under the castle, from wall to wall between z -870 and -810 and deeper than y -58, a band of water lies in the terrain; the middle of
+    the maze was full of it and the character was swimming. It is taken out of the plan's footprint (the tool does it now).
+  - **The lantern went out far from where it was lit.** `DetailLodController` reads the place of a tagged light once, when it arrives, and cuts it when the
+    camera is far from there: right for a lamp on a wall, wrong for a lantern that walks. The lantern's light no longer carries the tag.
+  - **A blade's glow lit the dark.** The sword model has its own light. Below `Catacombs.DarkBelow` (y -20) `LanternService` now puts out every light on a body
+    except the lantern's, and lights them again above it.
+  - **Small things:** the painted words were tiny (a text is capped at 100 pixels: now 4 pixels to the stud, so they fill the slab), a cliff jag stood in front of
+    a letter (the block is deep and its face stands 13 studs out), the Doctor's hat touched the ceiling (a lower crown), his beak dropped too steeply, his
+    eyes were two specks (bigger, with a wider faint light), and his dressing flew 15 studs from the body (every joint must be switched off while the parts are
+    moved one by one, not only the welds).
+- **Found while doing it, earlier.** A test of mine looped for ever in a play session (a picker that retried until it found a different stop, with a test
+  generator that always gave the same number) and froze the Studio of the Forgotten Lands: pickers get no retry loops. A frozen play session does not answer
+  its Stop button; only closing the Studio ends it (the developer then gave leave to do that).
+- **Not done:** the sounds are Roblox's own placeholders; a lantern that runs out of oil; more spawn points than the three markers an area has (the scatter above
+  uses those three); the Doctor's chase through the maze, a crawler's chase through a corridor and the Shift key itself were not played by a person (the tests
+  walked the route with the Studio's character; the key is bound to LeftShift and the toggle on C is as before); zombies that spawn in many more places over
+  the whole game; the forest, which will need the lantern.
+
 ## Version 0.42.0 — A tiny health bar, a quieter SKIP, wider dead, and arrows that count
 
 What the developer asked for (2026-10-31).

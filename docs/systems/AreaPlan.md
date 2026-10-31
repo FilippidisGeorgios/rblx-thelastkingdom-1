@@ -119,7 +119,9 @@ the party for the rest of the run**, through areas 4, 5 and 6, until they die.
 When they turn, a villager speaks on screen — the recipe was what they were
 trying to save, hoping someone would come who could use it.
 
-## 4 — Κοιμητήριο · Where it turns
+## 4 — The Catacombs (it took the Graveyard's place on 2026-10-31: see `Catacombs.md`; what follows is the old Graveyard, kept)
+
+#### Old: 4 — Κοιμητήριο · Where it turns
 
 Graves open and the dead climb out. Light the braziers; each one lit shuts a
 section down for good.

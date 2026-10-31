@@ -199,6 +199,11 @@ local Items = {
 	axe = { DisplayName = "Woodsman's Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the dead trees in the yard." },
 	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "To board the doors of the Great Hall." },
 	cellar_key = { DisplayName = "Cellar Key", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the door at the foot of the cellar stair, beside the kitchen." },
+	-- The Catacombs (docs/systems/Catacombs.md). The lantern is given at the table by the mountain and is carried to the
+	-- end of the run (the forest will not be walkable without it); the key and the axe are found in the dark.
+	lantern = { DisplayName = "Oil Lantern", Category = "QuestItem", Stackable = false, Banked = false, Use = "Your light in the dark places. Keep it: you will need it to the end." },
+	catacomb_key = { DisplayName = "Cold Iron Key", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the iron door at the foot of the stair that leads up and out of the Catacombs." },
+	catacomb_axe = { DisplayName = "Hewing Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the fallen beams across the exit road. Every blow is loud." },
 	keep_key = { DisplayName = "Key of the Marshal's Door", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the little door in the west of the keep's hall: the way up and out." },
 	mangonel_stone = { DisplayName = "Mangonel Stone", Category = "QuestItem", Stackable = false, Banked = false, Use = "Load it in the sling of the mangonel in the Inner Ward." },
 	pickaxe = { DisplayName = "Miner's Pickaxe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For rubble. Keep it." },

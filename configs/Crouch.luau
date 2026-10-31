@@ -39,8 +39,12 @@ local Crouch = {
 	-- How tall a standing body is, in studs: used only when the server cannot measure the body itself.
 	StandHeight = 5.2,
 
-	-- The key (an Enum.KeyCode name). A phone has a button instead.
+	-- The key that toggles (an Enum.KeyCode name). A phone has a button instead.
 	Key = "C",
+
+	-- The key that is HELD: down while it is pressed, up when it is let go (the developer asked for Shift, 2026-10-31).
+	-- Letting go under a low ceiling does nothing: the server keeps the body down until there is room.
+	HoldKey = "LeftShift",
 }
 
 return table.freeze(Crouch)

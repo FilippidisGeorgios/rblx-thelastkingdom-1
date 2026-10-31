@@ -62,6 +62,8 @@ function WaveService.startEncounter(encounterId: string, ctx: Context): () -> ()
 	end
 	local doScale = def.scaled ~= false
 	local restSeconds = def.restBetweenWaves or Config.get("Waves").Defaults.RestBetweenWavesSeconds or 2
+	-- how many of a wave's units come from a spawn point other than their group's own (configs/Waves.Defaults.Scatter)
+	local scatter: number = def.scatter or Config.get("Waves").Defaults.Scatter or 0
 
 	local run = EncounterRun.new(def)
 	local unitWave: { [string]: number } = {} -- entity id -> wave index
@@ -135,6 +137,18 @@ function WaveService.startEncounter(encounterId: string, ctx: Context): () -> ()
 					tostring(def.spawnPoints[group.spawnPoint])
 				))
 			end
+			-- the encounter's other spawn points, for units that come from another side than their group's
+			local others: { Vector3 } = {}
+			if scatter > 0 then
+				for name, ref in def.spawnPoints do
+					if name ~= group.spawnPoint then
+						local ok, other = pcall(Markers.resolve, ref)
+						if ok and other then
+							table.insert(others, other)
+						end
+					end
+				end
+			end
 			if pos then
 				local count = scaledCount(group.count)
 				local spread = group.spread or 0
@@ -151,7 +165,11 @@ function WaveService.startEncounter(encounterId: string, ctx: Context): () -> ()
 						enemyId = ctx.eliteEnemyId
 					end
 					local healthMult = if doScale then scale.enemyHealthMult else nil
-					local id = EnemyService.spawn(enemyId, pos + Vector3.new(offset, 0, 0), healthMult)
+					local from: Vector3 = pos
+					if #others > 0 and math.random() < scatter then
+						from = others[math.random(#others)]
+					end
+					local id = EnemyService.spawn(enemyId, from + Vector3.new(offset, 0, 0), healthMult)
 					unitWave[id] = waveIndex
 					spawnedCount += 1
 				end

@@ -240,6 +240,11 @@ Look and animation first; mechanics after. Each step ends in a playtest and scre
       by `generate_mesh` + `generate_texture` (see `ItemArt.md`) to judge the quality before committing; (2) a sculpted HEAD with a face for the dead (the
       body keeps its R15-named joints so every clip still fits), then limbs and clothes as meshes with textures; (3) the full bodies by an artist
       (rigged, PBR textures), uploaded by the developer. Then the animation, design and sound passes (the project has no audio yet).
+- [ ] **The Catacombs (area 4; design `docs/systems/Catacombs.md`, Changelog 0.43.0):** built and walked (2026-10-31). Still to do: (1) a real play-through by a person
+      (the chase through the maze, crawlers in corridors, Shift, the sounds of the lantern and the bell); (2) tune the numbers in `configs/Catacombs` by feel (the
+      lantern's reach, how loud a step is, the Doctor's speed, how many crawlers); (3) the real sounds; (4) `tools/OptimiseCastle.luau` over the new part count;
+      (5) zombies that spawn at many places over the whole game, not only at the fixed markers (the developer's wish, 2026-10-31); (6) the forest, which needs the
+      lantern; (7) the oil for the lantern, if it is wanted.
 - [ ] The entering scene for the big areas, and the mark (ping) key ("show"), from `BigRun.md`.
 - [ ] **The bigger run (developer's idea, 2026-10-30; design written in `docs/systems/BigRun.md`, waiting for the developer's answers):** a dark forest
       before the gate (your lantern is the only light, a hunter you cannot kill, no weapon until the lodge), the catacombs under the graveyard (a maze, a
