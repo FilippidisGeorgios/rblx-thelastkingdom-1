@@ -5,14 +5,16 @@
 	and the dialogue box: the speaker's face on the left, their name on a small gold plate, and what they say,
 	typed out. In the bottom bar, on the right, the SKIP button, which has to be HELD.
 
-	HOLD TO SKIP. A tap does nothing. The player presses and keeps pressing for `holdSeconds` (3) while a gold
-	bar fills the button; let go early and it empties again. Only when it is full does the button say "skip" to
-	the controller, and the controller sends the vote. In a party the skip needs a majority (the server counts),
-	and the button shows how many have held so far.
+	THE SKIP BUTTON says only SKIP, in bold cream letters on a small golden-brown plate with a thin gold edge. A tap
+	does nothing: the player presses and keeps pressing for `holdSeconds` (3) while a gold fill rises in it; let go
+	early and it empties again. Only when it is full does the button say "skip" to the controller, and the controller
+	sends the vote. In a party the skip needs a majority (the server counts), and small dots under the plate show
+	how many of the votes needed have been given. For the first two seconds it is fully visible, then it fades to
+	40% so as not to trouble the scene, and is full again while it is held.
 
 	Built for a phone first. Every size is a share of the screen, and the text size is worked out from the
 	screen's height (and redone if it turns), so the box reads the same on a 5-inch phone held sideways and on a
-	monitor. The skip button is 48 px tall at least: a thumb, not a mouse pointer.
+	monitor. The skip plate is only as big as its word (the letters 17 to 25 px, a thin margin round them).
 
 	Owns no logic: IntroController says what to show and when.
 
@@ -200,35 +202,66 @@ function IntroUI.create(holdSeconds: number): Handle
 	lineText.TextYAlignment = Enum.TextYAlignment.Top
 	lineText.ZIndex = 5
 
-	-- Skip, in the bottom bar, right. A plate with a gold bar under its word that fills while it is held.
+	--[[
+		SKIP, in the bottom bar, right: a small plate only as big as its one word, in bold cream letters. Golden brown
+		inside, a thin gold edge that shines now and then (not much), and a gold fill that rises while it is held. It
+		says only SKIP: no "hold", no "continue". For the first two seconds it is fully there; then it fades to 40% so
+		that it does not trouble the scene, and it comes back to full while it is being held.
+		The whole thing is a CanvasGroup so that one number (GroupTransparency) fades the plate, the edge and the word
+		together.
+	]]
+	local skipGroup = Instance.new("CanvasGroup")
+	skipGroup.Name = "SkipGroup"
+	skipGroup.AnchorPoint = Vector2.new(1, 0)
+	skipGroup.Position = UDim2.new(1, -24, 0.5, -17)
+	skipGroup.Size = UDim2.fromOffset(80, 34)
+	skipGroup.BackgroundTransparency = 1
+	skipGroup.ZIndex = 3
+	skipGroup.Parent = bottom
+
 	local skip = Instance.new("TextButton")
 	skip.Name = "Skip"
-	skip.AnchorPoint = Vector2.new(1, 0.5)
-	skip.Position = UDim2.new(1, -24, 0.5, 0)
-	skip.Size = UDim2.fromOffset(230, 48)
-	skip.BackgroundColor3 = Theme.Color.Navy
-	skip.BackgroundTransparency = 0.15
+	skip.Position = UDim2.fromScale(0, 0)
+	skip.Size = UDim2.fromOffset(80, 34)
+	skip.BackgroundColor3 = Color3.fromRGB(104, 72, 32) -- golden brown
+	skip.BackgroundTransparency = 0.22
 	skip.AutoButtonColor = false
 	skip.Text = ""
 	skip.ClipsDescendants = true
 	skip.ZIndex = 3
-	skip.Parent = bottom
+	skip.Parent = skipGroup
 	Theme.corner(skip, Theme.Size.CornerSmall)
-	Theme.goldStroke(skip, 1.2)
+	local skipEdge = Theme.goldStroke(skip, 1.2)
 
 	local skipFill = Instance.new("Frame")
 	skipFill.Name = "Fill"
 	skipFill.Size = UDim2.fromScale(0, 1)
 	skipFill.BackgroundColor3 = Theme.Color.Gold
-	skipFill.BackgroundTransparency = 0.45
+	skipFill.BackgroundTransparency = 0.4
 	skipFill.BorderSizePixel = 0
 	skipFill.ZIndex = 4
 	skipFill.Parent = skip
 
-	local skipText = label(skip, "Word", Theme.Role.Strong, Theme.Color.Parchment)
+	local skipText = label(skip, "Word", Theme.Role.Strong, Theme.Color.Cream)
+	skipText.Text = "SKIP"
 	skipText.Size = UDim2.fromScale(1, 1)
 	skipText.TextWrapped = false
 	skipText.ZIndex = 5
+
+	-- A party's votes, as small dots under the plate (a picture, not a word): one for each vote needed, gold for each given.
+	local pips = Instance.new("Frame")
+	pips.Name = "Pips"
+	pips.Position = UDim2.fromOffset(0, 37)
+	pips.Size = UDim2.fromOffset(80, 6)
+	pips.BackgroundTransparency = 1
+	pips.Visible = false
+	pips.ZIndex = 3
+	pips.Parent = skipGroup
+	local pipLayout = Instance.new("UIListLayout")
+	pipLayout.FillDirection = Enum.FillDirection.Horizontal
+	pipLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	pipLayout.Padding = UDim.new(0, 4)
+	pipLayout.Parent = pips
 
 	-- Text sizes follow the screen's height (and re-follow it if it turns).
 	local function resize()
@@ -238,7 +271,16 @@ function IntroUI.create(holdSeconds: number): Handle
 		subText.TextSize = math.clamp(math.floor(h * 0.03), 14, 24)
 		lineText.TextSize = math.clamp(math.floor(h * 0.034), 15, 28)
 		nameText.TextSize = math.clamp(math.floor(h * 0.026), 13, 20)
-		skipText.TextSize = math.clamp(math.floor(h * 0.024), 13, 18)
+		-- the plate is only as big as its word: the letters a little larger than before, a thin margin round them
+		skipText.TextSize = math.clamp(math.floor(h * 0.034), 17, 25)
+		local bounds = skipText.TextBounds
+		local w = math.ceil((if bounds.X > 0 then bounds.X else skipText.TextSize * 2.4) + 22)
+		local ph = math.ceil(skipText.TextSize + 12)
+		skip.Size = UDim2.fromOffset(w, ph)
+		skipGroup.Size = UDim2.fromOffset(w, ph + 10)
+		skipGroup.Position = UDim2.new(1, -24, 0.5, -math.floor(ph / 2))
+		pips.Position = UDim2.fromOffset(0, ph + 3)
+		pips.Size = UDim2.fromOffset(w, 6)
 		plate.Size = UDim2.fromOffset(0, math.max(26, nameText.TextSize + 12))
 		titleRule.Size = UDim2.new(titleRule.Size.X.Scale, 0, 0, 2)
 	end
@@ -269,14 +311,29 @@ function IntroUI.create(holdSeconds: number): Handle
 	local holdInput: InputObject? = nil
 	local holdConn: RBXScriptConnection? = nil
 
-	local function words(): string
-		if mine then
-			return ("WAITING   %d / %d"):format(votes, needed)
-		elseif needed <= 1 then
-			return "HOLD TO SKIP"
-		end
-		return ("HOLD TO SKIP   %d / %d"):format(votes, needed)
+	-- How present the button is: fully there for the first two seconds, then 40% (the scene must not be troubled by it),
+	-- full again while it is being held and for a moment when a friend has held theirs.
+	local FADE_AFTER = 2
+	local DIMMED = 0.6 -- GroupTransparency: 0.6 leaves 40% of it showing
+	local dimToken = 0
+	local function present(full: boolean, seconds: number)
+		TweenService:Create(skipGroup, TweenInfo.new(seconds, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			GroupTransparency = if full then 0 else DIMMED,
+		}):Play()
 	end
+	local function dimSoon(after: number)
+		dimToken += 1
+		local mineToken = dimToken
+		task.delay(after, function()
+			if mineToken == dimToken and not holdStart and not mine and skipGroup.Parent then
+				present(false, 0.9)
+			end
+		end)
+	end
+	dimSoon(FADE_AFTER)
+
+	-- the gold edge shines now and then: slowly, and not much
+	TweenService:Create(skipEdge, TweenInfo.new(2.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.55 }):Play()
 
 	local function emptyFill()
 		TweenService:Create(skipFill, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Size = UDim2.fromScale(0, 1) }):Play()
@@ -291,7 +348,7 @@ function IntroUI.create(holdSeconds: number): Handle
 		holdInput = nil
 		if not completed then
 			emptyFill()
-			skipText.Text = words()
+			dimSoon(0.8)
 		end
 	end
 
@@ -301,7 +358,8 @@ function IntroUI.create(holdSeconds: number): Handle
 		end
 		holdStart = os.clock()
 		holdInput = input
-		skipText.Text = "KEEP HOLDING"
+		dimToken += 1
+		present(true, 0.15)
 		holdConn = RunService.RenderStepped:Connect(function()
 			local started = holdStart
 			if not started then
@@ -312,12 +370,34 @@ function IntroUI.create(holdSeconds: number): Handle
 			if t >= 1 then
 				stopHold(true)
 				mine = true
-				skipText.Text = words()
 				for _, fn in skipFns do
 					fn()
 				end
 			end
 		end)
+	end
+
+	-- the dots under the plate: one for each vote needed (when more than one is), gold for each one given
+	local function drawPips()
+		for _, child in pips:GetChildren() do
+			if child:IsA("Frame") then
+				child:Destroy()
+			end
+		end
+		pips.Visible = needed > 1
+		for i = 1, if needed > 1 then needed else 0 do
+			local dot = Instance.new("Frame")
+			dot.Size = UDim2.fromOffset(6, 6)
+			dot.BackgroundColor3 = if i <= votes then Theme.Color.GoldBright else Color3.fromRGB(60, 44, 24)
+			dot.BorderSizePixel = 0
+			dot.LayoutOrder = i
+			dot.Parent = pips
+			Theme.corner(dot, UDim.new(0.5, 0))
+			local rim = Instance.new("UIStroke")
+			rim.Color = Theme.Color.GoldDim
+			rim.Thickness = 1
+			rim.Parent = dot
+		end
 	end
 
 	skip.InputBegan:Connect(function(input: InputObject)
@@ -336,7 +416,12 @@ function IntroUI.create(holdSeconds: number): Handle
 			stopHold(false)
 		end
 	end)
-	skipText.Text = words()
+	-- the size once the word has its letters (TextBounds is only true after the label has been drawn)
+	task.defer(function()
+		if skipText.Parent then
+			resize()
+		end
+	end)
 
 	--========================================================================
 	-- The handle
@@ -404,11 +489,15 @@ function IntroUI.create(holdSeconds: number): Handle
 	end
 
 	function handle.setVotes(count: number, need: number, iHaveHeld: boolean)
+		local more = count > votes
 		votes = count
 		needed = need
 		mine = iHaveHeld
-		if not holdStart then
-			skipText.Text = words()
+		drawPips()
+		-- a friend has held theirs: the button comes back to full for a moment, so it is noticed
+		if more and not holdStart and not mine then
+			present(true, 0.2)
+			dimSoon(2.5)
 		end
 	end
 

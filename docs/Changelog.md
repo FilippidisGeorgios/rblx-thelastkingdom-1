@@ -1,3 +1,34 @@
+## Version 0.42.0 — A tiny health bar, a quieter SKIP, wider dead, and arrows that count
+
+What the developer asked for (2026-10-31).
+
+- **The health bar (`UI/HealthBar`, `Controllers/HealthController`, `configs/Hud`, `Shared/HealthColor`).** A tiny bar (92 by 11 pixels) in the
+  bottom-left corner of every player's screen in the Forgotten Lands: a black outline, a fill that goes green, yellow, orange, red (blended
+  between the four) as health falls, and the percentage in 9 pixel letters inside it (rounded up, so a sliver never reads 0). Roblox's own
+  health bar is switched off in both places: the arrival scene switches every Roblox gui back ON when it ends, and `CoreGuiChangedSignal` is
+  not open to game scripts, so the controller looks once a second and switches it off again (seen: still off after the scene). Not drawn in the
+  Hub (nothing there can hurt you). `HealthColor.spec` tests the colours and the rounding.
+- **SKIP (`UI/IntroUI`).** A small plate only as big as its one word: the word SKIP in bold cream letters (17 to 25 px, larger than before), on golden
+  brown, with a thin gold edge that shines now and then, and a gold fill that rises while held. It says nothing else (no "hold", no vote
+  words): a party's votes are shown as small dots under the plate. For the first 2 seconds it is fully there, then it fades to 40% (so it does not
+  trouble the scene), is full while held, and comes back for a moment when a friend has held theirs. The hold of 3 seconds and the vote table are
+  unchanged. Seen in a playtest.
+- **The dead are about 7% wider, not taller (`tools/WidenUndead.luau`).** All ten bodies in `ServerStorage.Assets.Undead` were thickened sideways
+  (widths +6.8%, heights +0.04 studs): the parts moved out from the middle by 7% sideways only, thickened along their sideways faces, the joints'
+  C0 written again from where the parts now are (rotations of all 107 parts of a shambler unchanged to 0.000 degrees; joint error 0.000), the
+  welds that hold helmets and plates switched off and on again, the invisible hit box left alone. Their heads and everything else are as
+  they were: the developer is happy with the look and the `Head2` swap was cancelled. The result lives in the place, so it needs a Save.
+- **Arrows that pass between the limbs now count (`World/ProjectileService`).** The trace was a thread, and a body is limbs with air between: an arrow
+  that went between an arm and a torso, or by a shoulder, was a "miss" nobody could see the reason for. When the thread has not struck a body, a
+  sphere of 0.9 studs is run along the same stretch against the bodies of the other side only, and counts if it finds one before any wall.
+  Measured with an archer shooting a player whose thread-hit width was 2.0 studs: 8 of 8 arrows count out to 2.8 studs off the middle, 0 of 8 at 3.4;
+  and with a wall in front, 0 of 8 (cover still works).
+- **A first simple set of weapons (`docs/systems/Realism.md`).** A sword, a shield and a brigandine chest piece were generated beside the bow
+  (all readable), and the rules for a weapon's hit shape and the design of skins and rarities were written. Not wired in.
+- **Found while doing it.** `StarterGui.CoreGuiChangedSignal` cannot be connected from a game script (it needs a capability): poll
+  `GetCoreGuiEnabled`. A `CanvasGroup` fades a plate, its edge and its word with one number. `Weapons.luau` still says "ranged is not
+  implemented": the enemy archers' `ProjectileService` exists; a player's bow does not.
+
 ## Version 0.41.0 — Crouching, rooms that are dark, and the Kitchens' cellar: the first step of the bigger run
 
 What the developer asked for (2026-10-30): start on the areas; a camera that zooms out less; "ducking through low passages, a maze, a mine, fear".

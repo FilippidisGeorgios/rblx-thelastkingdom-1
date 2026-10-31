@@ -41,3 +41,37 @@ place, for looking at.
 
 Generation limits (from `ItemArt.md`): three at a time, a prompt with "fire" can fail moderation, `maxTriangles` 3000 for props and 6000 to 8000
 for a head.
+
+## Update 2026-10-31: the developer's decision, and the first simple set
+
+**The dead stay as they are.** The developer likes how the zombies look and does NOT want their heads or anything else changed; the
+`Head2` swap is cancelled. The only change to them is a little more body: about 7% WIDER (not taller) so the eyes, the helmets and the
+clothes read better (`tools/WidenUndead.luau`, run once on `ServerStorage.Assets.Undead`: every part thickened sideways, joints re-written,
+heights unchanged to 0.04 studs; Changelog 0.42.0). **The work goes into the weapons**, which will have skins (plain, rare, limited edition).
+
+**The first simple set** (kept in `ServerStorage.Assets.RealismTests`, nothing wired in yet; the wording is the recipe):
+
+| Model | Prompt (after the key) | Result | Asset id |
+|---|---|---|---|
+| `Sword1` | one single plain medieval arming sword lying flat, a straight double-edged steel blade with a fuller groove, a simple iron crossguard, a leather-wrapped grip and a round iron pommel, realistic, no scabbard | **good**: blade, guard, grip and pommel all there | 108756161158412 |
+| `Shield1` | one single plain medieval heater shield, a wooden board covered in worn dark leather with a plain iron rim and a central iron boss, no painting, realistic, seen from the front | **good** (an oval, kite-like shape rather than a heater) | 113702149830618 |
+| `Armour1` | one single plain medieval chest armour, a riveted brigandine torso piece with small iron plates under dark leather and two short shoulder straps, laid flat and open, realistic worn medieval, no helmet, no arms | **good**: a torso with lames and shoulder plates | 120859221105064 |
+| `Bow2` | (above) | **good** | 103800020038442 |
+
+## The rules for a weapon's hitbox (the developer: "watch the hitbox")
+
+1. **The picture is not the hitbox.** A weapon's model is only seen: its parts are `CanCollide = false` and `CanQuery = false`, so a sword or a
+   shield never blocks a ray, never catches an arrow by accident and never trips a player. What hurts is the numbers in `configs/Weapons`
+   (`Range`, `Arc`) checked on the server, the same for every skin of the same weapon, so a skin can never be a bigger or smaller weapon.
+2. **A skin changes the look only.** Mesh, texture, glow and sound may change; reach, arc, damage, speed and the size of the hit shape may not
+   (a spec will check the skin table, as `PlayerSettings.spec` does for the graphics qualities).
+3. **Arrows are fat against bodies and thin against walls.** See `ProjectileService`: the thread stops at a wall (cover is real), a sphere of 0.9
+   studs finds bodies. A player's own bow will use the same service.
+4. **A shield is a hit shape of its own** (a thin box in front of the arm, on the server) and not the shield's mesh.
+
+## Skins and rarities (design, nothing built)
+
+A weapon is: a **base** (`configs/Weapons`: the numbers and the hit shape) + a **skin** (`configs/WeaponSkins`: `MeshId`, `TextureId`, `Rarity`
+from Plain to Limited, an optional glow and sound, and for a Limited skin the dates it can be had). One base can have many skins. The player owns
+skins (a list in the profile), wears one per weapon, and sees it on the hand and on the card. New skins are new `generate_mesh` or artist
+models and one line of data; no code. Rarity colours reuse `Loot.Ranks`.

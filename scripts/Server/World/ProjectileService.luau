@@ -53,6 +53,14 @@ local STICK_SECONDS = 6
 -- Hard ceiling on flight time, in case something is fired into open sky.
 local MAX_LIFETIME = 8
 
+-- How fat an arrow is AGAINST BODIES (studs of radius): a shot that passes within this of a body counts as a hit. 0.9
+-- is a little less than the half-width of a person, so an arrow that clearly goes by still goes by.
+local BODY_PAD = 0.9
+
+-- How far from a stretch of flight a body's middle may be and still be looked at: the pad plus the size of the
+-- biggest body (the King is about 10 studs across).
+local BODY_NEAR = 7
+
 --[[
 	The look of each kind. Deliberately the castle's own palette — dark timber
 	and corroded iron — so a shot in flight reads as part of this world and not
@@ -240,6 +248,28 @@ local function entityFor(part: BasePart)
 	return nil
 end
 
+--[[
+	The bodies a shot could hit on this frame's stretch: the models of living entities of the OTHER side that are near
+	enough to the stretch to matter (their reach plus the pad), so the fat trace has few things to look at.
+]]
+local function opposingBodies(shot: Shot, move: number): { Instance }
+	local out: { Instance } = {}
+	local mid = shot.position + shot.direction * (move / 2)
+	local reach = move / 2 + BODY_NEAR
+	for _, entity in CombatService.getAllEntities() do
+		local model = entity.model
+		if model and entity.faction ~= shot.sourceFaction and entity:isAlive() then
+			local ok, pivot = pcall(function()
+				return (model :: Model):GetPivot().Position
+			end)
+			if ok and (pivot - mid).Magnitude <= reach then
+				table.insert(out, model)
+			end
+		end
+	end
+	return out
+end
+
 local function retire(shot: Shot, stuckAt: Vector3?)
 	if stuckAt then
 		shot.position = stuckAt
@@ -349,6 +379,29 @@ local function step(shot: Shot, dt: number): boolean
 		point test would sail straight through a wall between two frames.
 	]]
 	local hit = Workspace:Raycast(shot.position, shot.direction * move, shot.params)
+
+	--[[
+		THE BODY PAD. The ray above is as thin as a thread, and a body is made of limbs with air between them: an arrow
+		that goes between an arm and a torso, or by a shoulder at the edge of the trace, is a "miss" nobody can see the
+		reason for (the developer saw exactly this: arrows that pass through and do not count). So when the thread has
+		not struck a body, a FAT trace (a sphere of `BODY_PAD` studs) is run along the same stretch against the bodies
+		of the other side only; if it finds one nearer than the wall (or there is no wall), that body is hit. Walls and
+		barricades still stop the arrow on the thread, so cover is as real as before.
+	]]
+	local thread = if hit then entityFor(hit.Instance) else nil
+	if not (thread and thread.faction ~= shot.sourceFaction and thread:isAlive()) then
+		local bodies = opposingBodies(shot, move)
+		if #bodies > 0 then
+			local pad = RaycastParams.new()
+			pad.FilterType = Enum.RaycastFilterType.Include
+			pad.FilterDescendantsInstances = bodies
+			local fat = Workspace:Spherecast(shot.position, BODY_PAD, shot.direction * move, pad)
+			if fat and (not hit or fat.Distance <= hit.Distance) then
+				hit = fat
+			end
+		end
+	end
+
 	if hit then
 		local entity = entityFor(hit.Instance)
 		if entity and entity.faction ~= shot.sourceFaction and entity:isAlive() then
