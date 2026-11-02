@@ -59,7 +59,7 @@ local Catacombs = {
 	-- The lantern the table gives (it is carried for the rest of the run: the forest will need it).
 	Lantern = {
 		Item = "lantern",
-		Range = 30, -- studs of light round the bearer
+		Range = 29.5, -- studs of light round the bearer (2026-11-02: a very little less, from 30)
 		Brightness = 2.1,
 		Color = Color3.fromRGB(255, 224, 172),
 		Shadows = true, -- the walls stop the light (without it the maze would glow through its walls)
@@ -173,6 +173,16 @@ local Catacombs = {
 	-- SOUNDS. Roblox's own sounds are used until the sound pass makes real ones (the project has no audio yet): each is
 	-- `rbxasset://sounds/<file>`, which every Roblox install carries. Replace the Id and nothing else changes.
 	--======================================================================
+	-- What the player's own senses do below the ground (Client/Controllers/DreadController). Roblox's own library sounds.
+	Dread = {
+		Drone = { Id = "rbxassetid://9114353261", Volume = 0.35 }, -- a deep, uneasy rumble, always there below the ground
+		Heart = { Id = "rbxassetid://9043365842", Volume = 1.1, Speed = 0.9, Quicken = 0.7 }, -- a heartbeat that quickens as he comes near
+		HeartFrom = 55, -- studs from the Doctor at which it begins
+		HeartTo = 8, -- and at which it is at its loudest
+		Waver = 0.1, -- how much the lantern wavers all the time
+		Shrink = 0.4, -- how much of its reach it loses when he is at its feet
+	},
+
 	Sounds = {
 		Kill = { Id = "rbxasset://sounds/ouch.ogg", Speed = 0.5, Volume = 1.4, Reach = 70 }, -- a dead one going down
 		Stomp = { Id = "rbxasset://sounds/action_jump_land.mp3", Speed = 0.42, Volume = 1.6, Reach = 90 }, -- the Doctor's step

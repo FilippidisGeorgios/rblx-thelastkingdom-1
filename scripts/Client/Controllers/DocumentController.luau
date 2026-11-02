@@ -38,6 +38,7 @@ function DocumentController.Start()
 			title = if typeof(payload.title) == "string" then payload.title else nil,
 			sign = if typeof(payload.sign) == "string" then payload.sign else nil,
 			lines = if typeof(payload.lines) == "table" then payload.lines else {},
+			style = if typeof(payload.style) == "string" then payload.style else nil,
 		})
 	end)
 end

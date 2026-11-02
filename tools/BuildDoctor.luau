@@ -128,6 +128,24 @@ end
 local model = source:Clone()
 model.Name = "plague_doctor"
 model:SetAttribute("BodyWidth", nil)
+-- the shambler's own dressing (a tabard with a star, an iron cap, hair, ribs, a chain of bone, a neck cord) is taken off: only the
+-- bones of the rig stay, and the doctor is dressed anew (2026-11-02: the white chain on his chest read as a beard)
+local STRIP = { "^Tab", "^Sk[FBLR]%d", "^StarBar", "^StarCore", "^Rib%d", "^Spine", "^Vein", "^Blotch", "^Tear", "^Rag", "^Pouch", "^Belt", "^Buckle", "^Sleeve", "^HollowLight", "^NeckCord", "^ArrowShaft", "^Fletching", "^skin", "^hair", "^iron", "^bone" }
+local stripped = 0
+for _, d in model:GetChildren() do
+	if d:IsA("BasePart") then
+		local drop = d:IsA("UnionOperation")
+		for _, pat in STRIP do
+			if d.Name:find(pat) then
+				drop = true
+			end
+		end
+		if drop then
+			d:Destroy()
+			stripped += 1
+		end
+	end
+end
 model.Parent = workspace -- a model is scaled and measured where it can be seen; it goes back in the store at the end
 model:PivotTo(CFrame.new(0, 200, 0))
 
@@ -173,34 +191,47 @@ else
 	local LEATHER = Color3.fromRGB(34, 28, 24)
 	local BONE = Color3.fromRGB(176, 166, 142)
 
-	-- the mask: a rounded skull plate and a long curved beak of five tapering rings
-	gear(model, head, "MaskPlate", Vector3.new(hs.X * 1.12, hs.Y * 1.0, hs.Z * 0.5), front * CFrame.new(0, 0, 0.1), BONE, Enum.Material.Slate)
-	local beakStart = front.Position + forward * 0.05
-	for i = 1, 6 do
-		local radius = 0.5 * hs.X * (1 - (i - 1) * 0.15)
-		-- (the head already leans forward when he walks, so the beak itself only drops a little)
-		local pos = beakStart + forward * (hs.Z * 0.4 * i) + down * (hs.Y * 0.016 * i ^ 1.6)
-		local ring = gear(model, head, "Beak" .. i, Vector3.new(hs.Z * 0.46, radius * 2, radius * 2), CFrame.lookAt(pos, pos + forward) * CFrame.Angles(0, math.rad(90), 0), BONE:Lerp(LEATHER, i * 0.05), Enum.Material.Slate, Enum.PartType.Cylinder)
-		ring.Name = "Beak" .. i
-	end
-	-- the two round lenses, and behind them the white lights that are all of his face that is ever seen
-	for _, side in { -1, 1 } do
-		local lensAt = (front * CFrame.new(side * hs.X * 0.27, hs.Y * 0.14, -0.02)).Position
-		local lens = gear(model, head, "Lens", Vector3.new(0.14, hs.Y * 0.36, hs.Y * 0.36), CFrame.lookAt(lensAt, lensAt + forward) * CFrame.Angles(0, math.rad(90), 0), Color3.fromRGB(86, 66, 34), Enum.Material.Metal, Enum.PartType.Cylinder)
-		lens.Name = "LensRing"
-		local eyeAt = lensAt + forward * 0.06
-		local eye = gear(model, head, "Eye", Vector3.new(hs.Y * 0.32, hs.Y * 0.32, hs.Y * 0.32), CFrame.new(eyeAt), Color3.fromRGB(255, 255, 255), Enum.Material.Neon, Enum.PartType.Ball)
-		eye.Name = "Eye"
-		local light = Instance.new("PointLight")
-		light.Color = Color3.fromRGB(235, 245, 255)
-		-- (a wide faint wash, so that two white spots in a black passage are seen from far down it and the walls near him are touched)
-		light.Range = 11
-		light.Brightness = 0.9
-		light.Shadows = false
-		light.Parent = eye
+	-- the mask: a plague doctor's beaked leather mask with brass-rimmed lenses, a mesh made with `generate_mesh` and kept in
+	-- ServerStorage.Assets.CatacombMeshes.DocMask (2026-11-02: the first one, six cylinders and a plate, read as a white beard).
+	-- Its front is -Z, the beak drops forward; it is scaled to the head and welded on. Behind each lens a white light.
+	local meshes = ServerStorage.Assets:FindFirstChild("CatacombMeshes")
+	local maskSrc = meshes and meshes:FindFirstChild("DocMask")
+	if maskSrc then
+		local mask = maskSrc:Clone()
+		mask.Name = "PlagueMask"
+		local s = (hs.X / 1.49) * 1.08
+		mask:ScaleTo(s)
+		local at = head.CFrame * CFrame.new(0, hs.Y * 0.08 - 0.35 * s - 0.32, -hs.Z / 2 + 0.1 - 0.14 * s)
+		mask:PivotTo(at)
+		for _, d in mask:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.Anchored = false
+				d.CanCollide = false
+				d.CanQuery = false
+				d.CanTouch = false
+				d.Massless = true
+				local w = Instance.new("WeldConstraint")
+				w.Part0 = head
+				w.Part1 = d
+				w.Parent = d
+			end
+		end
+		mask.Parent = model
+		for _, side in { -1, 1 } do
+			local eyeAt = (at * CFrame.new(side * 0.3 * s, 0.34 * s, 0.05 * s)).Position
+			local eye = gear(model, head, "Eye", Vector3.new(hs.Y * 0.3, hs.Y * 0.3, hs.Y * 0.3), CFrame.new(eyeAt), Color3.fromRGB(255, 255, 255), Enum.Material.Neon, Enum.PartType.Ball)
+			local light = Instance.new("PointLight")
+			light.Color = Color3.fromRGB(235, 245, 255)
+			light.Range = 11
+			light.Brightness = 0.9
+			light.Shadows = false
+			light.Parent = eye
+		end
+	else
+		warn("BuildDoctor: ServerStorage.Assets.CatacombMeshes.DocMask is missing: no mask")
 	end
 	-- the wide hat
-	local topAt = (head.CFrame * CFrame.new(0, hs.Y / 2 + 0.05, 0)).Position
+	local topAt = (head.CFrame * CFrame.new(0, hs.Y / 2 + 0.32, 0)).Position
 	local brim = gear(model, head, "Brim", Vector3.new(0.14, hs.X * 2.5, hs.X * 2.5), CFrame.new(topAt) * CFrame.Angles(0, 0, math.rad(90)), LEATHER, Enum.Material.Fabric, Enum.PartType.Cylinder)
 	brim.Name = "Brim"
 	-- a low crown: with the tall one his hat touched a ceiling of 7.6
@@ -214,14 +245,10 @@ else
 	for _, side in { -1, 1 } do
 		gear(model, upper, "CoatSide", Vector3.new(0.18, long * 0.9, us.Z * 1.1), upper.CFrame * CFrame.new(side * (us.X / 2 + 0.1), -us.Y * 0.3 - long * 0.45 + us.Y * 0.5, 0), LEATHER, Enum.Material.Fabric)
 	end
-	gear(model, upper, "Cape", Vector3.new(us.X * 1.5, 0.5, us.Z * 1.5), upper.CFrame * CFrame.new(0, us.Y * 0.42, 0), LEATHER:Lerp(Color3.fromRGB(60, 50, 40), 0.3), Enum.Material.Fabric)
+	-- (the square cape box is gone: it stood round the neck like a table)
 
 	-- what the experiments made of him: spines through the coat, pale lumps on the shoulders
-	for i = 1, 7 do
-		local y = us.Y * 0.4 - (i - 1) * us.Y * 0.2
-		local spike = gear(model, upper, "Spine", Vector3.new(0.3, 0.9 - i * 0.07, 0.3), upper.CFrame * CFrame.new((i % 2 - 0.5) * 0.18, y, us.Z / 2 + 0.55) * CFrame.Angles(math.rad(-25), 0, math.rad((i % 3 - 1) * 10)), BONE, Enum.Material.Slate)
-		spike.Name = "Spine"
-	end
+	-- (no spines: they stood on his chest as a white chain, and the developer read it as a beard)
 	for _, side in { -1, 1 } do
 		local lump = gear(model, upper, "Growth", Vector3.new(us.X * 0.32, us.X * 0.32, us.X * 0.32), upper.CFrame * CFrame.new(side * us.X * 0.55, us.Y * 0.45, 0.1), Color3.fromRGB(122, 126, 104), Enum.Material.Slate, Enum.PartType.Ball)
 		lump.Name = "Growth"

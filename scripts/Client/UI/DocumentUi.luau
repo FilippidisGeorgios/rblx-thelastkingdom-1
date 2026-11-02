@@ -30,7 +30,7 @@ local PAPER_EDGE = Color3.fromRGB(190, 168, 124)
 
 export type Handle = {
 	gui: ScreenGui,
-	open: (payload: { title: string?, sign: string?, lines: { string }? }) -> (),
+	open: (payload: { title: string?, sign: string?, lines: { string }?, style: string? }) -> (),
 	close: () -> (),
 	destroy: () -> (),
 }
@@ -148,6 +148,31 @@ function DocumentUi.create(): Handle
 	Theme.applyFont(fold, Theme.Role.Strong)
 
 	--==========================================================================
+	-- The DARK style (2026-11-02, the catacombs' pages): old, stained paper, the title in the creepy letters in dried blood,
+	-- the body in a hand-written face, the page a little askew. Marks laid once and shown only in that style.
+	local stains: { Frame } = {}
+	for _, spec in {
+		{ 0.76, 0.2, 60, Color3.fromRGB(88, 14, 16), 0.72 },
+		{ 0.14, 0.72, 90, Color3.fromRGB(96, 70, 40), 0.86 },
+		{ 0.6, 0.84, 36, Color3.fromRGB(70, 10, 14), 0.7 },
+	} do
+		local st = Instance.new("Frame")
+		st.Name = "Stain"
+		st.AnchorPoint = Vector2.new(0.5, 0.5)
+		st.Position = UDim2.fromScale(spec[1] :: number, spec[2] :: number)
+		st.Size = UDim2.fromOffset(spec[3] :: number, (spec[3] :: number) * 0.8)
+		st.BackgroundColor3 = spec[4] :: Color3
+		st.BackgroundTransparency = spec[5] :: number
+		st.BorderSizePixel = 0
+		st.Visible = false
+		st.ZIndex = 0
+		local round = Instance.new("UICorner")
+		round.CornerRadius = UDim.new(0.5, 0)
+		round.Parent = st
+		st.Parent = page
+		table.insert(stains, st)
+	end
+
 	local opened = false
 	local handle: Handle
 
@@ -175,6 +200,33 @@ function DocumentUi.create(): Handle
 					child:Destroy()
 				end
 			end
+			local dark = payload.style == "dark"
+			page.BackgroundColor3 = if dark then Color3.fromRGB(184, 160, 112) else PAPER
+			grain.Color = if dark
+				then ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 124, 84)),
+					ColorSequenceKeypoint.new(0.5, Color3.fromRGB(190, 166, 118)),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 100, 66)),
+				})
+				else ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Color3.fromRGB(232, 218, 182)),
+					ColorSequenceKeypoint.new(0.5, PAPER),
+					ColorSequenceKeypoint.new(1, Color3.fromRGB(204, 184, 142)),
+				})
+			edge.Color = if dark then Color3.fromRGB(84, 62, 38) else PAPER_EDGE
+			page.Rotation = if dark then (math.random() - 0.5) * 3 else 0
+			for _, st in stains do
+				st.Visible = dark
+			end
+			if dark then
+				title.Font = Enum.Font.Creepster
+				title.TextColor3 = Color3.fromRGB(96, 10, 14)
+				title.TextSize = 32
+			else
+				Theme.applyFont(title, Theme.Role.Heading)
+				title.TextColor3 = INK
+				title.TextSize = 26
+			end
 			title.Text = payload.title or ""
 			sign.Text = payload.sign or ""
 			for i, line in payload.lines or {} do
@@ -187,11 +239,18 @@ function DocumentUi.create(): Handle
 				label.TextXAlignment = Enum.TextXAlignment.Left
 				label.TextYAlignment = Enum.TextYAlignment.Top
 				label.TextWrapped = true
-				label.TextSize = 19
-				label.TextColor3 = INK
+				label.TextSize = if dark then 21 else 19
+				label.TextColor3 = if dark then Color3.fromRGB(38, 26, 16) else INK
 				label.Text = if line == "" then " " else line
 				label.Parent = body
-				Theme.applyFont(label, Theme.Role.Body)
+				if dark then
+					label.Font = Enum.Font.Fondamento
+					-- the lines come up one after another, as a reader's eye finds them
+					label.TextTransparency = 1
+					TweenService:Create(label, TweenInfo.new(0.5, Enum.EasingStyle.Sine), { TextTransparency = 0 }):Play()
+				else
+					Theme.applyFont(label, Theme.Role.Body)
+				end
 			end
 			opened = true
 			gui.Enabled = true

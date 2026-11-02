@@ -108,6 +108,7 @@ function Read.place(ctx: any, path: string, title: string?, sign: string?, lines
 			title = title,
 			sign = sign,
 			lines = lines(),
+			style = if ctx.trial then ctx.trial.pageStyle else nil, -- "dark": the catacombs' stained pages
 		})
 		onRead(player)
 	end)

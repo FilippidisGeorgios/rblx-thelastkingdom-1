@@ -16,7 +16,7 @@
 ]]
 
 local Camera = {
-	MaxZoomOut = 25,
+	MaxZoomOut = 23, -- (2026-11-02: 23, the developer asked; it was 25, 30 before)
 	-- the closest the camera may come (the engine's default is 0.5)
 	MinZoom = 0.5,
 }

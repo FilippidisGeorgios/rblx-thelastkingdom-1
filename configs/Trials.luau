@@ -635,6 +635,8 @@ local Trials = {
 	[4] = {
 		-- the Catacombs call their own dead (the crawlers in their niches, the Doctor): no wave in the yard above
 		ownsWaves = true,
+		-- the pages here are shown dark: old, stained, in the creepy letters (UI/DocumentUi)
+		pageStyle = "dark",
 
 		phases = {
 			{

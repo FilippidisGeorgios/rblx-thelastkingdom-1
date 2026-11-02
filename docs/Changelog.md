@@ -1,3 +1,16 @@
+## Version 0.43.1 — The catacombs made sand, with marks that mean something, a dread of their own, and five zombie bodies to choose from
+
+What the developer asked for (2026-11-02). 
+
+- **Sand, not stone.** Walls, floor and ceiling use materials made with `generate_material` (SandWall, SandFloor, SandCeiling, SandMarble) and the dead lie as real skull and skeleton meshes (`generate_mesh`, kept in `ServerStorage.Assets.CatacombMeshes`, placed by `tools/PlaceBones`). The first try with a stone material, and the slabs stuck on the walls, were taken out.
+- **Nothing on a wall without a reason.** The niches and bones that had been stuck to walls are gone. `tools/BuildCatacombsGlyphs` paints marks that mean something, drawn with frames (the engine has no hieroglyph font): an ankh over each pocket ("rest here"), an eye in the Doctor's study and the plague ward, tally strokes in the gaol, a sun at the head of the exit road.
+- **Dread (`Client/Controllers/DreadController`, `Catacombs.Dread`).** A low drone below the ground; the lantern wavers all the time and, as the Doctor comes near, flickers hard and loses up to 40% of its reach; a heartbeat grows with his nearness (seen in play: 29 to 16 studs and a loud, quick heart at 14 studs). The lantern's reach is 29.5 (a very little less).
+- **The letters.** Pages in the catacombs open dark: aged stained paper, the title in the creepy face in dried blood, the lines in a hand face that come up one by one (`style = "dark"`, set per trial by `pageStyle`).
+- **The Doctor's mask** is now a mesh made with `generate_mesh` (a leather beak with brass lenses); the shambler's own dressing (the tabard star, the bone chain that read as a beard) is stripped; the square cape box is gone.
+- **Camera** zoom-out limit is 23 (was 25).
+- **Five zombie bodies to choose from** (generated meshes, published; seen in a still: a blocky R6 one, a rotting peasant, a plague victim, a mummy, an undead soldier). Asset ids: 127211790219051, 92386398019821, 84690361281786, 96896062235998, 126121812608499. Not in the game yet: the developer chooses.
+- **Not done / not checked:** the Doctor's sounds and animations were not re-examined one by one; the crawlers still use the old body (a generated crawler failed moderation); the dark pages and the glyphs were seen in a still, not played by a person; the camera trouble in the Studio edit view could not be reproduced.
+
 ## Version 0.43.0 — The Catacombs (area 4): a mountain, a deep stair, a maze in the dark, a blind doctor
 
 What the developer asked for (2026-10-31). Design and reasons: `docs/systems/Catacombs.md`. **Written, tested, and now BUILT in the Forgotten Lands place and
