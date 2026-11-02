@@ -1,3 +1,25 @@
+## Version 0.43.3 — The catacombs checked again: a crawler that really crawls, one lantern on the table
+
+The developer asked (2026-11-03) for the catacombs to be perfected and checked again before the forest. A play-through of the whole area (the table,
+the stairs, the safe room, the three levers, the gate, the axe and the beams, the key and the door, the stair up and the end of the trial) found:
+
+- **The crawlers were two bodies at once** ("one crawls and the other stands"): the bodies hold their cloth, belts, neck and head on with
+  WeldConstraints, which take their offset when the body enters the world, by which time the new joints had already laid the torso down; so the torso lay
+  on the floor and everything welded to it stayed at a standing body's height. `Domain/CrawlerBody` now turns every WeldConstraint into a fixed Weld
+  first. The body lies flatter (76 degrees), the head's top is 1.6 studs off the floor and its middle 0.9 (the developer: "about one, at most two"); a
+  helmet or coif is taken off and anything worn on the trunk that would stand above the head (the arrows in a guard's back, the tabard's tails, a
+  cook's ladle) goes; each shoulder is turned, worked out through that body's own joints, until its hand rests on the floor in front (one angle for both
+  had put one hand in the floor and the other in the air). Seen in play.
+- **A crawl of their own** (`ZombieAnims` `crawl`, `crawlDeath`): hand over hand, one arm reaching out high and wide while the other pulls, the elbow
+  taking the weight, the shoulders rolling and the body surging at each pull; a crawler dies where it lies instead of falling like a standing body;
+  no stumbles. Before this they played the standing walk.
+- **The table at the cave:** the lantern standing on it was an older, plainer one than the lantern you are given; it is now the same one
+  (`LanternService.display`). The note and the lantern lay 1.6 studs apart with the same key, and the game kept switching between the two prompts: the
+  note now lies at the other end of the table (`Read.place` takes a spot), checked in play (at one end only "Take", at the other only "Read").
+- **The loading screen** fetched every sound id as a picture and filled the log with "Asset type does not match requested type"; it now hands the
+  Sound itself to the preloader (the drone and the heartbeat load: 36 s and 60 s long).
+- Checked and working: the levers lift the gate at three, eight strokes cut the beams, the key opens the door, the first body at the top ends the trial.
+
 ## Version 0.43.2 — Papyrus pages, the dead in rot, a real stride; two styles kept
 
 What the developer asked for and chose (2026-11-02 / 03).

@@ -32,6 +32,7 @@
 	              loading, push-off, swing), a jolt and a late head at every footfall, arms that trail
 	  Stumble     an overlay now and then on a walk: a knee gives, it catches itself
 	  Run         the couriers
+	  Crawl       a body with no legs, hand over hand along the floor (and its own death, where it lies)
 	  Aggro       the first sight of you: the head snaps up, the chest arches, a cry
 	  Flinch      an overlay, played on every hit
 	  Death x3    falls forward, falls back, kneels and slumps
@@ -336,6 +337,68 @@ local function stumbleFrames(): { Frame }
 		{ time = 0.14, ease = "smooth", pose = { UpperTorso = deg(-13, 6, 4), Head = deg(-16, 10, 6), RightLowerLeg = deg(-22, 0, 0), RightUpperArm = deg(16, 0, 8), LeftUpperArm = deg(10, 0, -6) } },
 		{ time = 0.34, ease = "smooth", pose = { UpperTorso = deg(-6, 3, 2), Head = deg(5, -4, 2), RightLowerLeg = deg(-8, 0, 0), RightUpperArm = deg(6, 0, 3), LeftUpperArm = deg(4, 0, -2) } },
 		{ time = 0.62, ease = "smooth", pose = { UpperTorso = deg(0, 0, 0), Head = deg(0, 0, 0), RightLowerLeg = deg(0, 0, 0), RightUpperArm = deg(0, 0, 0), LeftUpperArm = deg(0, 0, 0) } },
+	}
+end
+
+--[[
+	THE CRAWL (2026-11-03). A body with no legs lies on its chest (CrawlerBody) and pulls itself along hand over hand:
+	one arm reaches out ahead, high and wide, and comes down; then it pulls, the elbow bending as the weight comes onto
+	it and straightening as the body slides up to the hand, while the other arm reaches for the next hold. The shoulders
+	roll toward the pulling arm, the hips drag the other way, the head lolls late, and the body surges a little at each
+	pull (the root itself goes at an even pace: the AI moves it). Before this the crawler played the standing walk.
+
+	Arms: +X lifts a reaching arm further out ahead (CrawlerBody turned the shoulders until the hands lie on the floor
+	in front), -X brings it back down under the chest; +X on a forearm bends the elbow.
+]]
+local CRAWL_SECONDS = 1.3 -- two pulls
+
+-- one arm at phase p (0 = the hand lands, far out): its swing, its elbow and how far out to the side
+local function crawlArm(p: number): (number, number, number)
+	p = wrap(p)
+	if p < 0.55 then
+		local q = p / 0.55
+		return 16 - 38 * q, 34 * math.sin(math.pi * q) + 4 * q, 4 * (1 - q)
+	end
+	local q = (p - 0.55) / 0.45
+	local e = 0.5 - 0.5 * math.cos(math.pi * q)
+	return -22 + 38 * e, 4 + 20 * math.sin(math.pi * q) - 4 * e, 10 * math.sin(math.pi * q)
+end
+
+local function crawlFrames(): { Frame }
+	local frames: { Frame } = {}
+	local tau = 2 * math.pi
+	for i = 0, SAMPLES do
+		local t = i / SAMPLES
+		local rSwing, rElbow, rOut = crawlArm(t)
+		local lSwing, lElbow, lOut = crawlArm(t + 0.5)
+		-- +1 while the right arm pulls, -1 while the left does
+		local side = math.cos(tau * (t - 0.14))
+		-- the surge: at the middle of each pull the body slides up toward the hand
+		local surge = 0.5 - 0.5 * math.cos(2 * tau * (t - 0.02))
+		frames[i + 1] = {
+			time = t * CRAWL_SECONDS,
+			ease = "flat",
+			pose = {
+				LowerTorso = move(0, 0.04 * surge, -0.22 * surge, 0, -5 * side, 4 * side),
+				UpperTorso = deg(3 * surge, 9 * side, -7 * side),
+				Head = deg(-5 + 7 * math.cos(2 * tau * (t - 0.2)), -6 * math.cos(tau * (t - 0.3)), 5 * math.cos(tau * (t - 0.32))),
+				RightUpperArm = deg(rSwing, 0, rOut),
+				RightLowerArm = deg(rElbow, 0, 0),
+				LeftUpperArm = deg(lSwing, 0, -lOut),
+				LeftLowerArm = deg(lElbow, 0, 0),
+			},
+		}
+	end
+	return frames
+end
+
+-- A crawler dies where it lies: it rears once, then the chest and the face go down into the dirt, the arms slack.
+local function crawlDeathFrames(): { Frame }
+	return {
+		{ time = 0, ease = "smooth", pose = { LowerTorso = move(0, 0, 0), UpperTorso = deg(0, 0, 0), Head = deg(0, 0, 0), RightUpperArm = deg(0, 0, 0), LeftUpperArm = deg(0, 0, 0), RightLowerArm = deg(0, 0, 0), LeftLowerArm = deg(0, 0, 0) } },
+		{ time = 0.18, ease = "out", pose = { LowerTorso = move(0, 0.05, 0), UpperTorso = deg(14, 0, 4), Head = deg(22, 8, 0), RightUpperArm = deg(10, 0, 6), LeftUpperArm = deg(14, 0, -8), RightLowerArm = deg(10, 0, 0), LeftLowerArm = deg(6, 0, 0) } },
+		{ time = 0.55, ease = "in", pose = { LowerTorso = move(0, -0.25, 0, 0, 0, 4), UpperTorso = deg(-10, 0, 8), Head = deg(-34, 26, 6), RightUpperArm = deg(-14, 0, 16), LeftUpperArm = deg(-8, 0, -20), RightLowerArm = deg(4, 0, 0), LeftLowerArm = deg(0, 0, 0) } },
+		{ time = 0.8, ease = "out", pose = { LowerTorso = move(0, -0.3, 0, 0, 0, 5), UpperTorso = deg(-12, 0, 9), Head = deg(-38, 30, 6), RightUpperArm = deg(-18, 0, 20), LeftUpperArm = deg(-10, 0, -24), RightLowerArm = deg(2, 0, 0), LeftLowerArm = deg(0, 0, 0) } },
 	}
 end
 
@@ -672,6 +735,8 @@ export type Ids = {
 	aggro: string,
 	flinch: string,
 	stumble: string,
+	crawl: string, -- a crawler's walk and run alike
+	crawlDeath: string,
 	death: { string },
 	attack: { [string]: string }, -- by kind
 	kindOf: { [string]: string }, -- by enemy type
@@ -709,6 +774,8 @@ function ZombieAnims.register(timings: { [string]: Timing }): (Ids?, string?)
 			aggro = register(build("ZombieAggro", aggroFrames(), false, P.Action)),
 			flinch = register(build("ZombieFlinch", flinchFrames(), false, P.Action2)),
 			stumble = register(build("ZombieStumble", stumbleFrames(), false, P.Action)),
+			crawl = register(build("ZombieCrawl", crawlFrames(), true, P.Movement)),
+			crawlDeath = register(build("ZombieCrawlDeath", crawlDeathFrames(), false, P.Action4)),
 			death = {
 				register(build("ZombieDeathForward", deathForward(), false, P.Action4)),
 				register(build("ZombieDeathBack", deathBackward(), false, P.Action4)),

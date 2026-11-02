@@ -47,6 +47,7 @@ local ACTIVE_RANGE = 170
 local STEP_SECONDS = 0.25
 local WALK_PACE = 7 -- the speed a walk clip is authored for
 local RUN_PACE = 15
+local CRAWL_PACE = 6 -- the speed the crawl clip is authored for
 local FADE = 0.2
 
 type Agent = {
@@ -61,6 +62,7 @@ type Agent = {
 	connections: { RBXScriptConnection },
 	jitter: number, -- this body's own pace, a little off everyone else's
 	nextStumble: number,
+	crawler: boolean, -- no legs (the attribute CrawlerBody sets): it crawls and dies where it lies
 }
 
 local ids: ZombieAnims.Ids? = nil
@@ -122,7 +124,11 @@ local function apply(agent: Agent)
 	local pace = model:GetAttribute("Move")
 	local move = if typeof(pace) == "number" then pace else 0
 
-	if state == "Walk" then
+	if agent.crawler and (state == "Walk" or state == "Run") then
+		-- no legs: walking and running are the same pull, faster
+		stopLoops(agent, "walk")
+		play(agent, "walk", set.crawl, FADE, math.max(0.5, move / CRAWL_PACE) * agent.jitter, true)
+	elseif state == "Walk" then
 		stopLoops(agent, "walk")
 		play(agent, "walk", set.walk[agent.variant], FADE, math.max(0.4, move / WALK_PACE) * agent.jitter, true)
 	elseif state == "Run" then
@@ -147,7 +153,8 @@ local function apply(agent: Agent)
 		stopAll(agent, 0.05)
 		local fall = model:GetAttribute("Fall")
 		local n = if typeof(fall) == "number" then math.clamp(fall, 1, #set.death) else 1
-		local t = track(agent, "death" .. n, set.death[n])
+		-- a crawler is already down: it dies where it lies
+		local t = if agent.crawler then track(agent, "crawlDeath", set.crawlDeath) else track(agent, "death" .. n, set.death[n])
 		t:Play(0.05)
 		-- hold the last pose: a clip that ends returns to rest, and a corpse standing up is worse than none
 		task.delay(math.max(0, t.Length - 0.04), function()
@@ -177,7 +184,7 @@ end
 -- Now and then a walking body stumbles: a knee gives and it catches itself (an overlay; the legs go on walking).
 local function maybeStumble(agent: Agent, now: number)
 	local set = ids
-	if not set or not agent.active or now < agent.nextStumble then
+	if not set or not agent.active or agent.crawler or now < agent.nextStumble then
 		return
 	end
 	agent.nextStumble = now + 6 + math.random() * 9
@@ -238,6 +245,7 @@ local function setup(instance: Instance)
 		connections = {},
 		jitter = 0.88 + math.random() * 0.24,
 		nextStumble = os.clock() + 4 + math.random() * 8,
+		crawler = model:GetAttribute("Crawler") == true,
 	}
 	agents[model] = agent
 
@@ -254,7 +262,8 @@ local function setup(instance: Instance)
 			local walk, run = agent.tracks.walk, agent.tracks.run
 			if typeof(pace) == "number" then
 				if walk and walk.IsPlaying then
-					walk:AdjustSpeed(math.max(0.4, pace / WALK_PACE) * agent.jitter)
+					local speed = if agent.crawler then math.max(0.5, pace / CRAWL_PACE) else math.max(0.4, pace / WALK_PACE)
+					walk:AdjustSpeed(speed * agent.jitter)
 				end
 				if run and run.IsPlaying then
 					run:AdjustSpeed(math.max(0.5, pace / RUN_PACE) * agent.jitter)

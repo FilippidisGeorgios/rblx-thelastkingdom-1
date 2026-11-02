@@ -454,22 +454,9 @@ local function buildTable()
 			part(model, "Leg", Vector3.new(0.45, 3.0, 0.45), CFrame.new(at.X + dx, y + 1.5, at.Z + dz), WOOD_DARK, Enum.Material.Wood, true)
 		end
 	end
-	-- a lantern standing on it (the one you may take) and a cloth beneath
-	local lantern = Instance.new("Model")
-	lantern.Name = "LanternProp"
-	lantern.Parent = model
-	part(lantern, "Base", Vector3.new(0.7, 0.14, 0.7), CFrame.new(at.X - 1.6, y + 3.47, at.Z), IRON, Enum.Material.Metal, false)
-	part(lantern, "Glass", Vector3.new(0.55, 0.8, 0.55), CFrame.new(at.X - 1.6, y + 3.95, at.Z), cfg.Lantern.Color, Enum.Material.Glass, false).Transparency = 0.5
-	part(lantern, "Cap", Vector3.new(0.72, 0.14, 0.72), CFrame.new(at.X - 1.6, y + 4.42, at.Z), IRON, Enum.Material.Metal, false)
-	local flame = ball(lantern, "Flame", 0.26, CFrame.new(at.X - 1.6, y + 3.95, at.Z), Color3.fromRGB(255, 214, 140), Enum.Material.Neon)
-	local light = Instance.new("PointLight")
-	light.Color = cfg.Lantern.Color
-	light.Range = 14
-	light.Brightness = 1.4
-	light.Shadows = false
-	light.Parent = flame
-	tagLight(light)
-	local spot = part(marks, "LanternSpot", Vector3.new(1, 1, 1), CFrame.new(at.X - 1.6, y + 3.6, at.Z), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic, false)
+	-- where the lantern you may take stands, near the west end (the trial puts the real one there, the same as the one a
+	-- hand carries: LanternService.display; the note lies at the other end)
+	local spot = part(marks, "LanternSpot", Vector3.new(1, 1, 1), CFrame.new(at.X - 2.3, y + 3.8, at.Z), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic, false)
 	spot.Transparency = 1
 	table.insert(report, "table and lantern at " .. tostring(at))
 	-- stakes with skulls at the edges of the plateau (a warning in the old way)

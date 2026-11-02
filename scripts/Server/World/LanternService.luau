@@ -144,6 +144,34 @@ local function build(hand: BasePart): Model
 	return model
 end
 
+--[[
+	A lantern standing on a surface, the same one a hand carries (2026-11-03: the table at the catacombs showed an older,
+	plainer one than the one you are given). `at` is where its feet stand. It is anchored by an unseen part where a hand
+	would be; its light is softer and casts no shadow.
+]]
+function LanternService.display(parent: Instance, at: CFrame): Model
+	local anchor = Instance.new("Part")
+	anchor.Name = "Hang"
+	anchor.Size = Vector3.new(0.2, 0.2, 0.2)
+	anchor.Transparency = 1
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanQuery = false
+	anchor.CanTouch = false
+	anchor.CFrame = at * CFrame.new(0, 1.63, 0)
+	local model = build(anchor)
+	model.Name = "LanternDisplay"
+	anchor.Parent = model
+	local light = model:FindFirstChild("LanternLight", true)
+	if light and light:IsA("PointLight") then
+		light.Range = 12
+		light.Brightness = 1.2
+		light.Shadows = false
+	end
+	model.Parent = parent
+	return model
+end
+
 local function handOf(character: Model): BasePart?
 	local hand = character:FindFirstChild("LeftHand") or character:FindFirstChild("Left Arm")
 	return if hand and hand:IsA("BasePart") then hand else nil

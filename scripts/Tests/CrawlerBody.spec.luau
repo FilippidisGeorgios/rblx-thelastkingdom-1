@@ -130,7 +130,30 @@ return function(t: any)
 		assert(root.C0.Y < c0.Y, "dropped toward the ground")
 		local pitched = c1:ToObjectSpace(root.C1)
 		local rx = pitched:ToEulerAnglesXYZ()
-		assert(math.abs(math.deg(rx) - 64) < 1, "pitched about X by the config's angle: " .. math.deg(rx))
+		assert(math.abs(math.deg(rx) - CrawlerBody.PITCH) < 1, "pitched about X by the module's angle: " .. math.deg(rx))
+		model:Destroy()
+	end)
+
+	t.test("its welds are fixed Welds, so cloth and heads follow the body as it lies down; its helmet is gone", function()
+		local model = body()
+		local helmet = Instance.new("Model")
+		helmet.Name = "helm_kettle"
+		local iron = Instance.new("Part")
+		iron.Parent = helmet
+		helmet.Parent = model
+		CrawlerBody.make(model)
+		for _, d in model:GetDescendants() do
+			assert(not d:IsA("WeldConstraint"), "no WeldConstraint is left: " .. d:GetFullName())
+		end
+		local belt = model:FindFirstChild("Belt")
+		local held = false
+		for _, d in model:GetDescendants() do
+			if d:IsA("Weld") and (d.Part1 == belt or d.Part0 == belt) then
+				held = true
+			end
+		end
+		assert(held, "the belt is held by a Weld")
+		assert(model:FindFirstChild("helm_kettle") == nil, "the helmet is taken off")
 		model:Destroy()
 	end)
 

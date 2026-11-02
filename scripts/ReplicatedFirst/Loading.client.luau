@@ -63,7 +63,6 @@ local WHERE: { [string]: { string } } = {
 	SpecialMesh = { "MeshId", "TextureId" },
 	Decal = { "Texture" },
 	Texture = { "Texture" },
-	Sound = { "SoundId" },
 	ParticleEmitter = { "Texture" },
 	ImageLabel = { "Image" },
 	ImageButton = { "Image" },
@@ -72,15 +71,25 @@ local WHERE: { [string]: { string } } = {
 	SurfaceAppearance = { "ColorMap", "NormalMap", "MetalnessMap", "RoughnessMap" },
 }
 
-local function collect(): { string }
+-- What is fetched: a file named by a string, or a Sound itself (a sound's id handed over as a string is fetched as a
+-- picture and refused, "Asset type does not match requested type": found in the log, 2026-11-03).
+type Want = string | Instance
+
+local function collect(): { Want }
 	local seen: { [string]: boolean } = {}
-	local list: { string } = {}
+	local list: { Want } = {}
 	local looked = 0
 
 	local function scan(root: Instance)
 		for _, instance in root:GetDescendants() do
 			local properties = WHERE[instance.ClassName]
-			if properties then
+			if instance.ClassName == "Sound" then
+				local id = (instance :: Sound).SoundId
+				if id ~= "" and string.sub(id, 1, 11) ~= "rbxasset://" and not seen[id] then
+					seen[id] = true
+					table.insert(list, instance)
+				end
+			elseif properties then
 				for _, property in properties do
 					local ok, value = pcall(function()
 						return (instance :: any)[property]
@@ -125,7 +134,7 @@ local function loadWorld()
 	-- the assets
 	screen.setStatus("Raising the walls...")
 	local assets = collect()
-	local batches: { { string } } = {}
+	local batches: { { Want } } = {}
 	for first = 1, #assets, BATCH do
 		table.insert(batches, table.move(assets, first, math.min(first + BATCH - 1, #assets), 1, {}))
 	end

@@ -82,9 +82,10 @@ end
 	top of whatever it lies on, glows softly, and opens as a page on the screen of
 	whoever takes it up. `onRead(player)` runs each time. Returns the prompt, or nil
 	(after warning) when there is nothing at `path`. Shared by `read` (one page) and
-	`letters` (several).
+	`letters` (several). `spot` may name where on the top it lies and how it is turned (`top`, `yaw` in degrees), for a
+	table that also carries something else to take: two prompts on E a hand apart flicker between each other.
 ]]
-function Read.place(ctx: any, path: string, title: string?, sign: string?, lines: () -> { string }, onRead: (Player) -> ()): ProximityPrompt?
+function Read.place(ctx: any, path: string, title: string?, sign: string?, lines: () -> { string }, onRead: (Player) -> (), spot: { top: Vector3?, yaw: number? }?): ProximityPrompt?
 	local documentEvent = Net.getEvent("DocumentEvent")
 	local scenery = Util.find(path)
 	if not scenery then
@@ -97,8 +98,8 @@ function Read.place(ctx: any, path: string, title: string?, sign: string?, lines
 	else
 		cf, size = (scenery :: BasePart).CFrame, (scenery :: BasePart).Size
 	end
-	local top = Vector3.new(cf.Position.X, cf.Position.Y + size.Y / 2, cf.Position.Z)
-	local scroll = buildScroll(ctx.folder, CFrame.new(top) * CFrame.Angles(0, math.rad(22), 0))
+	local top = (spot and spot.top) or Vector3.new(cf.Position.X, cf.Position.Y + size.Y / 2, cf.Position.Z)
+	local scroll = buildScroll(ctx.folder, CFrame.new(top) * CFrame.Angles(0, math.rad((spot and spot.yaw) or 22), 0))
 	glow(scroll)
 
 	local prompt = Util.prompt(ctx.folder, top + Vector3.new(0, 1.4, 0), "ReadPrompt", "Read", title or "Parchment", 0.4, 11)

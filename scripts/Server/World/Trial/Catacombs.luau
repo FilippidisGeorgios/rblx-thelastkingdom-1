@@ -148,7 +148,25 @@ function Catacombs.create(ctx: any, _def: any)
 	--======================================================================
 	local function setUpTable()
 		local spot = mark("LanternSpot")
+		local note: { top: Vector3?, yaw: number? }? = nil
 		if spot then
+			-- the lantern you are given, standing on the table (its feet on the top: the spot sits 0.4 above it)
+			LanternService.display(ctx.folder, CFrame.new(Util.position(spot) - Vector3.new(0, 0.4, 0)) * CFrame.Angles(0, math.rad(30), 0))
+			-- and the note at the far end of the top from it, its sheet toward the middle (two prompts on E a hand apart
+			-- flicker between each other: found in play, 2026-11-03)
+			local tbl = mark("EntranceTable")
+			if tbl and tbl:IsA("Model") then
+				local cf, size = tbl:GetBoundingBox()
+				local away = cf.Position - Util.position(spot)
+				away = Vector3.new(away.X, 0, away.Z)
+				if away.Magnitude > 0.01 then
+					local reach = math.max(size.X, size.Z) / 2 - 1.3
+					note = {
+						top = Vector3.new(cf.Position.X, cf.Position.Y + size.Y / 2, cf.Position.Z) + away.Unit * reach,
+						yaw = math.deg(math.atan2(-away.Z, away.X)) + 180 + 22,
+					}
+				end
+			end
 			local p = Util.prompt(ctx.folder, Util.position(spot) + Vector3.new(0, 1.2, 0), "LanternPrompt", "Take", "Lantern", err.LanternHold, 10)
 			guard(p, function(player: Player)
 				if LanternService.give(player) then
@@ -162,7 +180,7 @@ function Catacombs.create(ctx: any, _def: any)
 		end
 		Read.place(ctx, MARKS .. "EntranceTable", cfg.Entrance.title, cfg.Entrance.sign, function()
 			return cfg.Entrance.lines
-		end, function() end)
+		end, function() end, note)
 	end
 
 	--======================================================================
