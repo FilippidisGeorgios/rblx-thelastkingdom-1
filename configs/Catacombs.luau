@@ -61,7 +61,7 @@ local Catacombs = {
 		Item = "lantern",
 		Range = 30, -- studs of light round the bearer
 		Brightness = 2.1,
-		Color = Color3.fromRGB(255, 190, 110),
+		Color = Color3.fromRGB(255, 224, 172),
 		Shadows = true, -- the walls stop the light (without it the maze would glow through its walls)
 	},
 	-- What a candle, a lamp at a table or a brazier gives: only near.

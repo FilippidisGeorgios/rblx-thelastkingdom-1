@@ -655,88 +655,129 @@ local function buildZones()
 end
 
 --==========================================================================
--- DETAIL (2026-11-02): the walls and floor of the passages made less plain. Along every wall face: a darker packed-earth
--- plinth at the foot, slabs of sandstone and limestone set into the wall at different heights, a thin band of earth strata,
--- and a few timber props. On the floor: a worn path of packed earth, drifts of loose sand in the corners, and gravel and
--- pebbles, small and few. Everything is Roblox's own material (Sand, Ground, Sandstone, Limestone, Pebble), nothing is a picture.
+-- DETAIL (2026-11-02, second version). The first one stuck slabs on the walls like buttons: it is gone. The walls, floor and
+-- ceiling are now ONE generated material each (MaterialVariant SandWall / SandFloor / SandCeiling, made with
+-- `generate_material`: sand and sandstone, no stones), and what is added is what a real tunnel has and has a REASON for:
+--   * timber frames (two posts and a beam) every few cells of a long passage, as a miner props a dug tunnel;
+--   * burial niches (loculi) in some walls: a carved frame, a dark recess, a skull and bones lying in it;
+--   * loose sand drifted against the foot of a wall, and a very few small pebbles;
+--   * a few roots hanging from the ceiling.
 --==========================================================================
 local function buildDetail()
 	local detail = folder(c.root, "Detail")
 	detail:ClearAllChildren()
-	local sandCols = { Color3.fromRGB(214, 190, 134), Color3.fromRGB(226, 206, 156), Color3.fromRGB(200, 172, 116), Color3.fromRGB(236, 222, 186) }
-	local earth = { Color3.fromRGB(150, 120, 78), Color3.fromRGB(128, 100, 66), Color3.fromRGB(170, 140, 94) }
-	local pebbleCols = { Color3.fromRGB(186, 170, 140), Color3.fromRGB(150, 130, 100), Color3.fromRGB(214, 202, 172), Color3.fromRGB(120, 104, 84) }
-	local slabMats = { Enum.Material.Sandstone, Enum.Material.Limestone, Enum.Material.Sand, Enum.Material.Ground }
-	local n = { faces = 0, slabs = 0, plinths = 0, bands = 0, pebbles = 0, path = 0, drifts = 0 }
-	local function tiny(p: Part)
+	local pale = { Color3.fromRGB(232, 214, 168), Color3.fromRGB(238, 226, 190), Color3.fromRGB(222, 200, 150) }
+	local pebbleCols = { Color3.fromRGB(196, 178, 146), Color3.fromRGB(168, 146, 112), Color3.fromRGB(222, 208, 176) }
+	local timber = { Color3.fromRGB(128, 100, 70), Color3.fromRGB(104, 82, 58), Color3.fromRGB(142, 114, 82) }
+	local n = { frames = 0, niches = 0, drifts = 0, pebbles = 0, roots = 0 }
+	local function pick(t) return t[rng:NextInteger(1, #t)] end
+	local function soft(p: Part)
 		p.CanCollide = false
 		p.CanQuery = false
 		p.CastShadow = false
 		return p
 	end
-	local function pick(t) return t[rng:NextInteger(1, #t)] end
-	-- face: centre point on the wall plane, normal (into the passage), and tangent (along the wall)
-	local function dressFace(centre: Vector3, normal: Vector3, tangent: Vector3)
-		n.faces += 1
-		local look = CFrame.lookAt(Vector3.zero, normal) -- local -Z looks into the passage
-		local function at(along: number, up: number, out: number): CFrame
-			return CFrame.new(centre + tangent * along + Vector3.new(0, up, 0) + normal * out) * (look - look.Position)
+	local function wood(name: string, size: Vector3, cf: CFrame, collide: boolean)
+		local p = part(detail, name, size, cf, pick(timber), Enum.Material.Wood, collide)
+		p.MaterialVariant = "TLK_OakBeam" .. rng:NextInteger(1, 3)
+		return p
+	end
+
+	-- a niche in a wall face: `centre` on the wall plane, `normal` into the passage, `tangent` along the wall
+	local function niche(centre: Vector3, normal: Vector3, tangent: Vector3, along: number, y: number)
+		local look = CFrame.lookAt(Vector3.zero, normal)
+		local rot = look - look.Position
+		local function at(a: number, up: number, out: number): CFrame
+			return CFrame.new(centre + tangent * (along + a) + Vector3.new(0, up, 0) + normal * out) * rot
 		end
-		-- plinth: packed earth, uneven, at the foot
-		local ph = rng:NextNumber(0.7, 1.4)
-		tiny(part(detail, "Plinth", Vector3.new(U * rng:NextNumber(0.9, 1.05), ph, rng:NextNumber(0.35, 0.7)), at(rng:NextNumber(-0.2, 0.2), FLOOR + ph / 2, 0.2), pick(earth), Enum.Material.Ground, false)).CanCollide = false
-		n.plinths += 1
-		-- slabs of stone set in the wall
-		for _ = 1, rng:NextInteger(0, 2) do
-			local w, h = rng:NextNumber(0.7, 1.8), rng:NextNumber(0.4, 1.2)
-			local y = FLOOR + rng:NextNumber(1.4, H - 1.4)
-			local s = tiny(part(detail, "Slab", Vector3.new(w, h, rng:NextNumber(0.2, 0.45)), at(rng:NextNumber(-U / 2 + 0.6, U / 2 - 0.6), y, 0.1) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-4, 4))), pick(sandCols):Lerp(Color3.fromRGB(240, 232, 205), rng:NextNumber(0, 0.5)), pick(slabMats), false))
-			s.CanCollide = false
-			n.slabs += 1
+		local frame = part(detail, "NicheFrame", Vector3.new(2.3, 1.25, 0.3), at(0, y, 0.15), pick(pale), Enum.Material.Limestone, false)
+		frame.MaterialVariant = "SandMarble" .. rng:NextInteger(1, 3)
+		frame.Color = Color3.fromRGB(214, 192, 150)
+		soft(frame)
+		soft(part(detail, "NicheDark", Vector3.new(1.85, 0.8, 0.12), at(0, y - 0.02, 0.33), Color3.fromRGB(26, 20, 14), Enum.Material.Slate, false))
+		-- what lies in it
+		if rng:NextNumber() < 0.7 then
+			local sk = part(detail, "NicheSkull", Vector3.new(0.4, 0.44, 0.42), at(rng:NextNumber(-0.5, 0.5), y - 0.12, 0.45), Color3.fromRGB(214, 200, 164), Enum.Material.SmoothPlastic, false)
+			sk.Shape = Enum.PartType.Ball
+			soft(sk)
 		end
-		-- a thin band of strata
-		if rng:NextNumber() < 0.45 then
-			tiny(part(detail, "Strata", Vector3.new(U, rng:NextNumber(0.1, 0.25), 0.18), at(0, FLOOR + rng:NextNumber(2.4, 4.6), 0.07), pick(earth):Lerp(pick(sandCols), 0.35), Enum.Material.Ground, false))
-			n.bands += 1
+		for _ = 1, rng:NextInteger(1, 3) do
+			soft(part(detail, "NicheBone", Vector3.new(0.14, 0.14, rng:NextNumber(0.6, 1.1)), at(rng:NextNumber(-0.7, 0.7), y - 0.26, 0.42) * CFrame.Angles(0, rng:NextNumber(-0.7, 0.7), rng:NextNumber(-0.2, 0.2)), Color3.fromRGB(204, 190, 156), Enum.Material.SmoothPlastic, false))
 		end
-		-- gravel at the foot of the wall
-		for _ = 1, rng:NextInteger(0, 2) do
-			local d = rng:NextNumber(0.1, 0.34)
-			tiny(part(detail, "Pebble", Vector3.new(d * rng:NextNumber(0.8, 1.6), d * 0.7, d), at(rng:NextNumber(-U / 2, U / 2), FLOOR + d * 0.3, rng:NextNumber(0.4, 1.6)) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), pick(pebbleCols), Enum.Material.Pebble, false))
-			n.pebbles += 1
+		n.niches += 1
+	end
+
+	local function dressFace(centre: Vector3, normal: Vector3, tangent: Vector3, burial: boolean)
+		local look = CFrame.lookAt(Vector3.zero, normal)
+		local rot = look - look.Position
+		local function at(a: number, up: number, out: number): CFrame
+			return CFrame.new(centre + tangent * a + Vector3.new(0, up, 0) + normal * out) * rot
 		end
-		-- a drift of loose sand in the corner of some
-		if rng:NextNumber() < 0.25 then
-			local dr = tiny(part(detail, "Drift", Vector3.new(rng:NextNumber(1.2, 2.4), 0.5, rng:NextNumber(0.8, 1.4)), at(rng:NextNumber(-1, 1), FLOOR + 0.05, 0.7) * CFrame.Angles(0, math.rad(rng:NextNumber(-12, 12)), 0), pick(sandCols), Enum.Material.Sand, false))
+		-- burial niches: one or two, one above the other
+		if burial and rng:NextNumber() < 0.5 then
+			niche(centre, normal, tangent, rng:NextNumber(-0.4, 0.4), FLOOR + 1.3)
+			niche(centre, normal, tangent, rng:NextNumber(-0.4, 0.4), FLOOR + 2.75)
+			if rng:NextNumber() < 0.5 then
+				niche(centre, normal, tangent, rng:NextNumber(-0.4, 0.4), FLOOR + 4.2)
+			end
+		end
+		-- sand drifted against the foot
+		if rng:NextNumber() < 0.3 then
+			local dr = soft(part(detail, "Drift", Vector3.new(rng:NextNumber(1.6, 3.2), rng:NextNumber(0.5, 0.9), rng:NextNumber(0.9, 1.6)), at(rng:NextNumber(-1.2, 1.2), FLOOR + 0.04, 0.6) * CFrame.Angles(0, math.rad(rng:NextNumber(-12, 12)), 0), Color3.fromRGB(255, 250, 238), Enum.Material.Sand, false))
 			dr.Shape = Enum.PartType.Ball
+			dr.MaterialVariant = "SandFloor" .. rng:NextInteger(1, 3)
 			n.drifts += 1
 		end
+		if rng:NextNumber() < 0.16 then
+			local d = rng:NextNumber(0.1, 0.26)
+			soft(part(detail, "Pebble", Vector3.new(d * 1.4, d * 0.7, d), at(rng:NextNumber(-1.4, 1.4), FLOOR + d * 0.3, rng:NextNumber(0.5, 1.4)) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), pick(pebbleCols), Enum.Material.Sand, false))
+			n.pebbles += 1
+		end
+		-- a root from the ceiling
+		if rng:NextNumber() < 0.07 then
+			local len = rng:NextNumber(0.8, 2.4)
+			local r = soft(part(detail, "Root", Vector3.new(0.07, len, 0.07), at(rng:NextNumber(-1, 1), FLOOR + H - len / 2, rng:NextNumber(0.4, 1.4)), Color3.fromRGB(96, 72, 48), Enum.Material.Wood, false))
+			_ = r
+			n.roots += 1
+		end
 	end
+
 	local solid = c.isSolid
+	local function frameAcross(x0: number, z0: number, x1: number, z1: number)
+		-- two posts at the ends of the line (x0,z0)-(x1,z1), and a beam between them just under the ceiling
+		local a, b = Vector3.new(x0, 0, z0), Vector3.new(x1, 0, z1)
+		for _, p in { a, b } do
+			wood("Post", Vector3.new(0.55, H - 0.2, 0.55), CFrame.new(p.X, FLOOR + (H - 0.2) / 2, p.Z) * CFrame.Angles(0, rng:NextNumber(0, 1.5), math.rad(rng:NextNumber(-1.5, 1.5))), false)
+		end
+		local mid = (a + b) / 2
+		local len = (b - a).Magnitude
+		local beam = wood("Beam", Vector3.new(len + 0.8, 0.6, 0.6), CFrame.lookAt(Vector3.new(mid.X, FLOOR + H - 0.45, mid.Z), Vector3.new(b.X, FLOOR + H - 0.45, b.Z)) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-1.2, 1.2))), false)
+		beam.Size = Vector3.new(0.6, 0.6, len + 0.8)
+		beam.CFrame = CFrame.lookAt(Vector3.new(mid.X, FLOOR + H - 0.45, mid.Z), Vector3.new(b.X, FLOOR + H - 0.45, b.Z))
+		n.frames += 1
+	end
+
 	for j = 0, c.UH - 1 do
 		for i = 0, c.UW - 1 do
 			if not solid(i, j) then
+				local hallId = maze:hallAt(math.max(0, (i - 1) // 3), math.max(0, (j - 1) // 3))
+				local burial = hallId == "ossuary" or hallId == "crypt" or hallId == "ward"
 				local x0, z0 = c.unitX(i), c.unitZ(j)
 				local cx, cz = x0 + U / 2, z0 - U / 2
-				-- a worn path of packed earth over part of the floor
-				if rng:NextNumber() < 0.55 then
-					tiny(part(detail, "Path", Vector3.new(U * rng:NextNumber(0.5, 0.85), 0.06, U * rng:NextNumber(0.9, 1.05)), CFrame.new(cx + rng:NextNumber(-0.5, 0.5), FLOOR + 0.03, cz) * CFrame.Angles(0, math.rad(rng:NextNumber(-10, 10)), 0), pick(earth):Lerp(Color3.fromRGB(205, 180, 125), 0.55), Enum.Material.Ground, false))
-					n.path += 1
+				if solid(i - 1, j) then dressFace(Vector3.new(x0, 0, cz), Vector3.new(1, 0, 0), Vector3.new(0, 0, 1), burial) end
+				if solid(i + 1, j) then dressFace(Vector3.new(x0 + U, 0, cz), Vector3.new(-1, 0, 0), Vector3.new(0, 0, 1), burial) end
+				if solid(i, j - 1) then dressFace(Vector3.new(cx, 0, z0), Vector3.new(0, 0, -1), Vector3.new(1, 0, 0), burial) end
+				if solid(i, j + 1) then dressFace(Vector3.new(cx, 0, z0 - U), Vector3.new(0, 0, 1), Vector3.new(1, 0, 0), burial) end
+				-- a timber frame across a passage two units wide, every ninth unit along it
+				if solid(i - 1, j) and not solid(i + 1, j) and solid(i + 2, j) and j % 9 == 4 then
+					frameAcross(x0 + 0.3, cz, x0 + 2 * U - 0.3, cz)
+				elseif solid(i, j - 1) and not solid(i, j + 1) and solid(i, j + 2) and i % 9 == 4 then
+					frameAcross(cx, z0 - 0.3, cx, z0 - 2 * U + 0.3)
 				end
-				-- a few pebbles in the open
-				if rng:NextNumber() < 0.22 then
-					local d = rng:NextNumber(0.08, 0.24)
-					tiny(part(detail, "Pebble", Vector3.new(d * 1.3, d * 0.7, d), CFrame.new(cx + rng:NextNumber(-1.4, 1.4), FLOOR + d * 0.3, cz + rng:NextNumber(-1.4, 1.4)) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), pick(pebbleCols), Enum.Material.Pebble, false))
-					n.pebbles += 1
-				end
-				if solid(i - 1, j) then dressFace(Vector3.new(x0, 0, cz), Vector3.new(1, 0, 0), Vector3.new(0, 0, 1)) end
-				if solid(i + 1, j) then dressFace(Vector3.new(x0 + U, 0, cz), Vector3.new(-1, 0, 0), Vector3.new(0, 0, 1)) end
-				if solid(i, j - 1) then dressFace(Vector3.new(cx, 0, z0), Vector3.new(0, 0, -1), Vector3.new(1, 0, 0)) end
-				if solid(i, j + 1) then dressFace(Vector3.new(cx, 0, z0 - U), Vector3.new(0, 0, 1), Vector3.new(1, 0, 0)) end
 			end
 		end
 	end
-	return { ("detail: %d faces, %d plinths, %d slabs, %d bands, %d pebbles, %d path patches, %d drifts"):format(n.faces, n.plinths, n.slabs, n.bands, n.pebbles, n.path, n.drifts) }
+	return { ("detail: %d timber frames, %d niches, %d drifts, %d pebbles, %d roots"):format(n.frames, n.niches, n.drifts, n.pebbles, n.roots) }
 end
 
 return {
