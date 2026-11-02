@@ -28,7 +28,7 @@ local Util = require(script.Parent.Util)
 
 local Read = {}
 
-local PAPER = Color3.fromRGB(214, 198, 160)
+local PAPER = Color3.fromRGB(226, 198, 132) -- papyrus yellow (2026-11-02)
 local WAX = Color3.fromRGB(122, 36, 38)
 
 local function part(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material): Part

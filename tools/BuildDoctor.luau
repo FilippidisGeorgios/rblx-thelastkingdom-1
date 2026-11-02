@@ -119,6 +119,51 @@ local function gear(model: Model, host: BasePart, name: string, size: Vector3, c
 	return p
 end
 
+-- HANDS, the same careful way as tools/BuildZombieStyles: a palm, four two-jointed fingers curling to the palm, a thumb
+local rng = Random.new(7)
+local function hands(model: Model, skin: Color3, material: Enum.Material, o: any)
+	for _, side in { { "RightHand", -1 }, { "LeftHand", 1 } } do
+		local hand = model:FindFirstChild(side[1] :: string) :: BasePart?
+		if hand then
+			local inner = side[2] :: number
+			local hs = hand.Size
+			local cf = hand.CFrame
+			local t = o.thick or math.min(hs.Z * 0.62, hs.X * 0.19)
+			local full = o.length or hs.Y * 1.0
+			local lens = { 0.9, 1.0, 0.93, 0.74 } -- index, middle, ring, little
+			local curl1, curl2 = math.rad(o.curl1 or 22), math.rad(o.curl2 or 34)
+			for i = 1, 4 do
+				local x = inner * hs.X * (0.37 - (i - 1) * 0.245)
+				local L = full * lens[i]
+				local L1, L2 = L * 0.56, L * 0.44
+				local splay = math.rad((i - 2.5) * (o.splay or 5)) * -inner
+				local knuckle = CFrame.new(x, -hs.Y / 2 + t * 0.35, -hs.Z * 0.06) * CFrame.Angles(0, 0, splay)
+				local bend1 = knuckle * CFrame.Angles(curl1 + rng:NextNumber(-0.06, 0.06), 0, 0)
+				gear(model, hand, "Finger", Vector3.new(t, L1 + t * 0.4, t), cf * bend1 * CFrame.new(0, -L1 / 2, 0), skin, material)
+				local bend2 = bend1 * CFrame.new(0, -L1, 0) * CFrame.Angles(curl2 + rng:NextNumber(-0.08, 0.08), 0, 0)
+				gear(model, hand, "Finger", Vector3.new(t * 0.86, L2 + t * 0.3, t * 0.86), cf * bend2 * CFrame.new(0, -L2 / 2, 0), skin, material)
+				if o.nail then
+					gear(model, hand, "Nail", Vector3.new(t * 0.7, t * 0.9, t * 0.3), cf * bend2 * CFrame.new(0, -L2 + t * 0.2, t * 0.35), o.nail, Enum.Material.SmoothPlastic)
+				end
+			end
+			-- the thumb: from the inner edge low on the palm, out and down, bent toward the palm
+			local tl = full * 0.62
+			local root = CFrame.new(inner * hs.X * 0.5, -hs.Y * 0.05, -hs.Z * 0.15) * CFrame.Angles(0, 0, inner * math.rad(42))
+			local t1 = root * CFrame.Angles(math.rad(28), 0, 0)
+			gear(model, hand, "Thumb", Vector3.new(t * 1.05, tl * 0.55, t * 1.05), cf * t1 * CFrame.new(0, -tl * 0.27, 0), skin, material)
+			local t2 = t1 * CFrame.new(0, -tl * 0.55, 0) * CFrame.Angles(math.rad(24), 0, inner * math.rad(-14))
+			gear(model, hand, "Thumb", Vector3.new(t * 0.92, tl * 0.48, t * 0.92), cf * t2 * CFrame.new(0, -tl * 0.22, 0), skin, material)
+			if o.nail then
+				gear(model, hand, "Nail", Vector3.new(t * 0.75, t * 0.9, t * 0.3), cf * t2 * CFrame.new(0, -tl * 0.44, t * 0.38), o.nail, Enum.Material.SmoothPlastic)
+			end
+			-- the knuckles: a slight ridge across the back of the hand
+			gear(model, hand, "Knuckles", Vector3.new(hs.X * 0.92, t * 0.7, hs.Z * 0.5), cf * CFrame.new(0, -hs.Y / 2 + t * 0.3, hs.Z * 0.2), skin:Lerp(Color3.new(0, 0, 0), 0.08), material)
+			hand.Color = skin
+			hand.Material = material
+		end
+	end
+end
+
 local recording = ChangeHistoryService:TryBeginRecording("BuildDoctor")
 
 local old = undead:FindFirstChild("plague_doctor")
@@ -130,8 +175,16 @@ model.Name = "plague_doctor"
 model:SetAttribute("BodyWidth", nil)
 -- the shambler's own dressing (a tabard with a star, an iron cap, hair, ribs, a chain of bone, a neck cord) is taken off: only the
 -- bones of the rig stay, and the doctor is dressed anew (2026-11-02: the white chain on his chest read as a beard)
-local STRIP = { "^Tab", "^Sk[FBLR]%d", "^StarBar", "^StarCore", "^Rib%d", "^Spine", "^Vein", "^Blotch", "^Tear", "^Rag", "^Pouch", "^Belt", "^Buckle", "^Sleeve", "^HollowLight", "^NeckCord", "^ArrowShaft", "^Fletching", "^skin", "^hair", "^iron", "^bone" }
+local STRIP = { "^Tab", "^Sk[FBLR]%d", "^StarBar", "^StarCore", "^Rib%d", "^Spine", "^Vein", "^Blotch", "^Tear", "^Rag", "^Pouch", "^Belt", "^Buckle", "^Sleeve", "^HollowLight", "^NeckCord", "^ArrowShaft", "^Fletching", "^skin", "^hair", "^iron", "^bone", "^Finger", "^Thumb" }
 local stripped = 0
+-- the head and helmet of the shambler are MODELS of their own (head_gaunt, helm_kettle): they go too (2026-11-02: his kettle helmet
+-- and hair showed above the mask, the "second hat")
+for _, d in model:GetChildren() do
+	if d:IsA("Model") then
+		d:Destroy()
+		stripped += 1
+	end
+end
 for _, d in model:GetChildren() do
 	if d:IsA("BasePart") then
 		local drop = d:IsA("UnionOperation")
@@ -230,12 +283,21 @@ else
 	else
 		warn("BuildDoctor: ServerStorage.Assets.CatacombMeshes.DocMask is missing: no mask")
 	end
-	-- the wide hat
-	local topAt = (head.CFrame * CFrame.new(0, hs.Y / 2 + 0.32, 0)).Position
-	local brim = gear(model, head, "Brim", Vector3.new(0.14, hs.X * 2.5, hs.X * 2.5), CFrame.new(topAt) * CFrame.Angles(0, 0, math.rad(90)), LEATHER, Enum.Material.Fabric, Enum.PartType.Cylinder)
-	brim.Name = "Brim"
-	-- a low crown: with the tall one his hat touched a ceiling of 7.6
-	gear(model, head, "Crown", Vector3.new(hs.Y * 0.55, hs.X * 1.15, hs.X * 1.15), CFrame.new(topAt + Vector3.new(0, hs.Y * 0.25, 0)) * CFrame.Angles(0, 0, math.rad(90)), LEATHER, Enum.Material.Fabric, Enum.PartType.Cylinder)
+	-- ONE hat (2026-11-02: the developer saw two, a brim floating over the top of the mask): the crown is set down OVER the top of
+	-- the mask, so the mask goes up into it, and the brim sits at the crown's foot
+	local maskModel = model:FindFirstChild("PlagueMask")
+	local maskTop = head.Position.Y + hs.Y / 2
+	local maskWide = hs.X * 1.1
+	if maskModel then
+		local mcf, msize = (maskModel :: Model):GetBoundingBox()
+		maskTop = mcf.Position.Y + msize.Y / 2
+		maskWide = math.max(msize.X, hs.X) * 1.06
+	end
+	local crownH = hs.Y * 0.62
+	local crownAt = Vector3.new(head.Position.X, maskTop - crownH * 0.3, head.Position.Z) + head.CFrame.LookVector * Vector3.new(1, 0, 1) * 0.05
+	gear(model, head, "Crown", Vector3.new(crownH, maskWide, maskWide), CFrame.new(crownAt) * CFrame.Angles(0, 0, math.rad(90)), LEATHER, Enum.Material.Fabric, Enum.PartType.Cylinder)
+	gear(model, head, "Brim", Vector3.new(0.12, maskWide * 2.1, maskWide * 2.1), CFrame.new(crownAt - Vector3.new(0, crownH / 2 - 0.06, 0)) * CFrame.Angles(0, 0, math.rad(90)), LEATHER, Enum.Material.Fabric, Enum.PartType.Cylinder)
+	gear(model, head, "HatBand", Vector3.new(0.14, maskWide * 1.02, maskWide * 1.02), CFrame.new(crownAt - Vector3.new(0, crownH / 2 - 0.2, 0)) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(70, 52, 30), Enum.Material.Leather, Enum.PartType.Cylinder)
 
 	-- the long coat: a back, two sides and a shoulder cape, hanging well below the hips
 	local us = upper.Size
@@ -249,10 +311,7 @@ else
 
 	-- what the experiments made of him: spines through the coat, pale lumps on the shoulders
 	-- (no spines: they stood on his chest as a white chain, and the developer read it as a beard)
-	for _, side in { -1, 1 } do
-		local lump = gear(model, upper, "Growth", Vector3.new(us.X * 0.32, us.X * 0.32, us.X * 0.32), upper.CFrame * CFrame.new(side * us.X * 0.55, us.Y * 0.45, 0.1), Color3.fromRGB(122, 126, 104), Enum.Material.Slate, Enum.PartType.Ball)
-		lump.Name = "Growth"
-	end
+	-- (and no pale lumps on the shoulders: they read as two balls on him, not as anything)
 	-- a belt of vials
 	for i = -2, 2 do
 		local v = gear(model, lower, "Vial", Vector3.new(0.5, 0.18, 0.18), lower.CFrame * CFrame.new(i * lower.Size.X * 0.2, -0.1, -lower.Size.Z / 2 - 0.1), Color3.fromRGB(120, 150, 110), Enum.Material.Glass, Enum.PartType.Cylinder)
@@ -261,6 +320,9 @@ else
 	gear(model, lower, "Belt", Vector3.new(lower.Size.X * 1.06, 0.2, lower.Size.Z * 1.06), lower.CFrame * CFrame.new(0, 0.1, 0), Color3.fromRGB(26, 20, 16), Enum.Material.Fabric)
 	table.insert(report, "dressed: mask, beak, lenses, eyes, hat, coat, spines, growths")
 end
+
+-- 4b. his hands, in old leather gloves (2026-11-02: the blocks with sticks for fingers looked false)
+hands(model, Color3.fromRGB(46, 36, 28), Enum.Material.Leather, { curl1 = 26, curl2 = 38, length = (model:FindFirstChild("LeftHand") :: BasePart).Size.Y * 1.25 })
 
 -- 5. into the store
 model:PivotTo(CFrame.new(0, 3, 0))
