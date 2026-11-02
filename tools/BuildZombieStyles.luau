@@ -236,7 +236,8 @@ end
 local function panel(model: Model, host: BasePart, name: string, centre: Vector3, w: number, top: number, bottom: number, facing: Vector3, flare: number, color: Color3, material: Enum.Material, thick: number?): Part
 	local h = top - bottom
 	local at = Vector3.new(centre.X, (top + bottom) / 2, centre.Z)
-	local cf = CFrame.lookAt(at, at + facing) * CFrame.Angles(math.rad(-flare), 0, 0)
+	-- (a turn about X by +a tilts the panel's top inward and its foot outward: the hem flares)
+	local cf = CFrame.lookAt(at, at + facing) * CFrame.Angles(math.rad(flare), 0, 0)
 	return gear(model, host, name, Vector3.new(w, h, thick or 0.14), cf, color, material)
 end
 
@@ -252,7 +253,7 @@ local STYLE = {}
 -- 1. THE LONG ONE: too tall, too thin, no face. A black funeral coat to below the knee. Long, long fingers.
 function STYLE.longman(): Model
 	local m = base("longman", 8.8, 2.7)
-	local SKIN = Color3.fromRGB(204, 202, 196)
+	local SKIN = Color3.fromRGB(178, 176, 170)
 	local COAT = Color3.fromRGB(22, 21, 24)
 	paint(m, "skin", SKIN, Enum.Material.SmoothPlastic)
 	paint(m, "arms", COAT, Enum.Material.SmoothPlastic)
@@ -288,12 +289,12 @@ end
 -- 2. THE HANGED: a sack over the head, tied at the throat by the noose, the rope cut a little above; the head hangs to one side
 function STYLE.hanged(): Model
 	local m = base("hanged", 6.2, 3.0)
-	local SKIN = Color3.fromRGB(146, 132, 140)
+	local SKIN = Color3.fromRGB(108, 96, 102)
 	paint(m, "skin", SKIN, Enum.Material.SmoothPlastic)
 	paint(m, "arms", Color3.fromRGB(186, 176, 152), Enum.Material.Fabric)
 	paint(m, "torso", Color3.fromRGB(190, 180, 156), Enum.Material.Fabric)
 	paint(m, "legs", Color3.fromRGB(78, 62, 46), Enum.Material.Fabric)
-	paint(m, "feet", Color3.fromRGB(70, 64, 66), Enum.Material.SmoothPlastic)
+	paint(m, "feet", Color3.fromRGB(52, 46, 48), Enum.Material.SmoothPlastic)
 	local head = m.Head :: BasePart
 	local hs = head.Size
 	-- the broken neck: the sack is laid on the head turned 34 degrees down to the right
@@ -356,13 +357,13 @@ end
 -- 3. THE PENITENT: bare and lashed, the head locked in an iron cage with a bell at the mouth; chains hang from both wrists
 function STYLE.penitent(): Model
 	local m = base("penitent", 6.4, 3.3)
-	local SKIN = Color3.fromRGB(112, 118, 120)
+	local SKIN = Color3.fromRGB(84, 90, 92)
 	local IRON = Color3.fromRGB(44, 40, 38)
 	paint(m, "skin", SKIN, Enum.Material.SmoothPlastic)
 	paint(m, "arms", SKIN, Enum.Material.SmoothPlastic)
 	paint(m, "torso", SKIN, Enum.Material.SmoothPlastic)
 	paint(m, "legs", Color3.fromRGB(110, 92, 66), Enum.Material.Fabric)
-	paint(m, "feet", SKIN:Lerp(Color3.new(0, 0, 0), 0.3), Enum.Material.SmoothPlastic)
+	paint(m, "feet", Color3.fromRGB(46, 44, 42), Enum.Material.SmoothPlastic)
 	for _, n in { "LeftShoulderBall", "RightShoulderBall", "LeftElbowBall", "RightElbowBall", "LeftCuff", "RightCuff" } do
 		local p = m:FindFirstChild(n)
 		if p then
@@ -376,7 +377,7 @@ function STYLE.penitent(): Model
 	for i = 1, 9 do
 		local back = i <= 7
 		local z = if back then us.Z / 2 + 0.01 else -us.Z / 2 - 0.01
-		gear(m, ut, "Lash", Vector3.new(us.X * rng:NextNumber(0.35, 0.6), 0.06, 0.03), ut.CFrame * CFrame.new(rng:NextNumber(-us.X * 0.12, us.X * 0.12), rng:NextNumber(-us.Y * 0.36, us.Y * 0.38), z) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-18, 18))), Color3.fromRGB(96, 22, 24), Enum.Material.SmoothPlastic)
+		gear(m, ut, "Lash", Vector3.new(us.X * rng:NextNumber(0.25, 0.42), 0.06, 0.03), ut.CFrame * CFrame.new(rng:NextNumber(-us.X * 0.12, us.X * 0.12), rng:NextNumber(-us.Y * 0.36, us.Y * 0.38), z) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-18, 18))), Color3.fromRGB(96, 22, 24), Enum.Material.SmoothPlastic)
 	end
 	-- a sackcloth skirt from the waist to the knee, tied with a cord
 	local lt = m.LowerTorso :: BasePart
@@ -450,11 +451,11 @@ end
 -- white hands come out of it, reaching
 function STYLE.mourner(): Model
 	local m = base("mourner", 7.4, 3.0)
-	local SKIN = Color3.fromRGB(232, 228, 218)
+	local SKIN = Color3.fromRGB(196, 192, 182)
 	local VEIL = Color3.fromRGB(16, 14, 16)
 	paint(m, "skin", SKIN, Enum.Material.SmoothPlastic)
 	for _, g in { "arms", "torso", "legs", "feet" } do
-		paint(m, g, VEIL, Enum.Material.Fabric)
+		paint(m, g, VEIL, Enum.Material.Plastic)
 	end
 	local head = m.Head :: BasePart
 	local hs = head.Size
@@ -475,14 +476,30 @@ function STYLE.mourner(): Model
 		local slope = math.deg(math.atan((rBottom - rTop) / hgt))
 		local width = 2 * rBottom * math.tan(math.pi / N) + 0.1
 		local at = Vector3.new(axis.X + dir.X * rMid, (peakY + bottom) / 2, axis.Z + dir.Z * rMid)
-		local strip = gear(m, ut, "Veil", Vector3.new(width, hgt, 0.1), CFrame.lookAt(at, at + dir) * CFrame.Angles(math.rad(-slope), 0, 0), VEIL:Lerp(Color3.fromRGB(46, 40, 38), rng:NextNumber(0, 0.3)), Enum.Material.Fabric)
+		local strip = gear(m, ut, "Veil", Vector3.new(width, hgt, 0.1), CFrame.lookAt(at, at + dir) * CFrame.Angles(math.rad(slope), 0, 0), VEIL:Lerp(Color3.fromRGB(46, 40, 38), rng:NextNumber(0, 0.3)), Enum.Material.Plastic)
 		_ = strip
 	end
 	-- the crown of the veil, rounded over the head
-	egg(m, head, "VeilCrown", Vector3.new(rTop * 2.15, hs.Y * 0.7, rTop * 2.15), CFrame.new(axis.X, peakY - hs.Y * 0.08, axis.Z), VEIL, Enum.Material.Fabric)
+	egg(m, head, "VeilCrown", Vector3.new(rTop * 2.15, hs.Y * 0.7, rTop * 2.15), CFrame.new(axis.X, peakY - hs.Y * 0.08, axis.Z), VEIL, Enum.Material.Plastic)
 	-- where the arms come out: sleeves of the same cloth round the forearms, and the hands bare
+	-- (the sleeve stops short of the wrist, so the hand comes out of the cloth and is not framed by it)
 	for _, n in { "LeftLowerArm", "RightLowerArm" } do
-		shell(m, n, Vector3.new(0.05, 0.5, 0.5), VEIL, Enum.Material.Fabric)
+		local arm = m:FindFirstChild(n) :: BasePart
+		-- the forearm itself is bare and bone-white: the arm comes out of the veil, long and thin
+		arm.Color = SKIN
+		arm.Material = Enum.Material.SmoothPlastic
+		arm.Size = Vector3.new(arm.Size.X, arm.Size.Y * 0.62, arm.Size.Z * 0.62)
+		-- a ROUND sleeve (a cylinder lies along its X, as the arm does): a square one showed as a black box behind the hand
+		local d = math.max(arm.Size.Y, arm.Size.Z) + 0.5
+		gear(m, arm, n .. "Sleeve", Vector3.new(arm.Size.X * 0.45, d, d), arm.CFrame * CFrame.new(arm.Size.X * 0.28, 0, 0), VEIL, Enum.Material.Plastic, Enum.PartType.Cylinder)
+	end
+	-- the joints' round balls would show through the veil at the shoulders
+	-- (and the square cuffs at the wrists, which framed each hand like a box)
+	for _, n in { "LeftShoulderBall", "RightShoulderBall", "LeftElbowBall", "RightElbowBall", "LeftKneeBall", "RightKneeBall", "LeftCuff", "RightCuff" } do
+		local ball = m:FindFirstChild(n)
+		if ball then
+			(ball :: BasePart).Transparency = 1
+		end
 	end
 	hands(m, SKIN, Enum.Material.SmoothPlastic, { length = m.LeftHand.Size.Y * 2.0, thick = m.LeftHand.Size.X * 0.14, curl1 = 18, curl2 = 26, splay = 4, nail = Color3.fromRGB(190, 184, 172) })
 	return m
