@@ -1,3 +1,14 @@
+## Version 0.43.2 — Papyrus pages, the dead in rot, a real stride; two styles kept
+
+What the developer asked for and chose (2026-11-02 / 03).
+
+- **The Studio camera was stuck** (right-click and WASD did nothing in Edit): the screenshot tool leaves `workspace.CurrentCamera.CameraType` at Scriptable. It is set back to Fixed after every batch of pictures.
+- **Pages are papyrus** (`UI/DocumentUi`): yellow reed paper built from frames, crossed fibres, uneven age, darker edges, a ragged nibbled rim; no stroke, no round stains; scaled down on small screens. The catacombs' pages stay older and browner with the title in the creepy face.
+- **Five styles of the dead were offered** (`tools/BuildZombieStyles`, on the first blocky rig, with careful hands). **Kept: the plague Doctor and the Burned** (without the stake on his back: `Assets.Undead.undead_burned`, not spawned anywhere yet). The other four were removed from the place; the tool still makes them.
+- **The Doctor:** one hat sitting on the mask (the shambler's own helmet and hair, models of their own, are stripped), leather gloves with real fingers, no shoulder balls.
+- **The dead dress in rot** (`tools/DressUndeadRot`, generated `RotCloth` / `RotSkin` / `RotLeather`): every body in `Assets.Undead`; the developer approved it.
+- **A real stride** (`Shared/Anim/ZombieAnims`, `ZombieAnimController`): sampled strides (heel strike, loading, push-off, swing), a jolt and a late head at each footfall, trailing arms, a stumble now and then; every body starts its walk at a random point and at a pace of its own, so a crowd never steps in time. Seen running in play without errors; not yet judged in motion by a person.
+
 ## Version 0.43.1 — The catacombs made sand, with marks that mean something, a dread of their own, and five zombie bodies to choose from
 
 What the developer asked for (2026-11-02). 
