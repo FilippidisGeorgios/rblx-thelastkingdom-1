@@ -59,6 +59,8 @@ type Agent = {
 	hits: number,
 	active: boolean,
 	connections: { RBXScriptConnection },
+	jitter: number, -- this body's own pace, a little off everyone else's
+	nextStumble: number,
 }
 
 local ids: ZombieAnims.Ids? = nil
@@ -95,10 +97,14 @@ local function stopAll(agent: Agent, fade: number)
 	end
 end
 
-local function play(agent: Agent, key: string, id: string, fade: number, speed: number?)
+-- `desync`: a loop that starts starts at a random point of itself, so a crowd of the dead never steps in time (2026-11-03)
+local function play(agent: Agent, key: string, id: string, fade: number, speed: number?, desync: boolean?)
 	local t = track(agent, key, id)
 	if not t.IsPlaying then
 		t:Play(fade)
+		if desync and t.Length > 0 then
+			t.TimePosition = math.random() * t.Length
+		end
 	end
 	t:AdjustSpeed(speed or 1)
 end
@@ -118,10 +124,10 @@ local function apply(agent: Agent)
 
 	if state == "Walk" then
 		stopLoops(agent, "walk")
-		play(agent, "walk", set.walk[agent.variant], FADE, math.max(0.4, move / WALK_PACE))
+		play(agent, "walk", set.walk[agent.variant], FADE, math.max(0.4, move / WALK_PACE) * agent.jitter, true)
 	elseif state == "Run" then
 		stopLoops(agent, "run")
-		play(agent, "run", set.run, FADE, math.max(0.5, move / RUN_PACE))
+		play(agent, "run", set.run, FADE, math.max(0.5, move / RUN_PACE) * agent.jitter, true)
 	elseif state == "Aggro" then
 		stopLoops(agent, nil)
 		local t = track(agent, "aggro", set.aggro)
@@ -166,6 +172,21 @@ local function flinch(agent: Agent)
 	end
 	local t = track(agent, "flinch", set.flinch)
 	t:Play(0.03)
+end
+
+-- Now and then a walking body stumbles: a knee gives and it catches itself (an overlay; the legs go on walking).
+local function maybeStumble(agent: Agent, now: number)
+	local set = ids
+	if not set or not agent.active or now < agent.nextStumble then
+		return
+	end
+	agent.nextStumble = now + 6 + math.random() * 9
+	if agent.model:GetAttribute("State") ~= "Walk" then
+		return
+	end
+	local t = track(agent, "stumble", set.stumble)
+	t:Play(0.06)
+	t:AdjustSpeed(0.85 + math.random() * 0.3)
 end
 
 local function activate(agent: Agent, on: boolean)
@@ -215,6 +236,8 @@ local function setup(instance: Instance)
 		hits = if typeof(hits) == "number" then hits else 0,
 		active = false,
 		connections = {},
+		jitter = 0.88 + math.random() * 0.24,
+		nextStumble = os.clock() + 4 + math.random() * 8,
 	}
 	agents[model] = agent
 
@@ -231,10 +254,10 @@ local function setup(instance: Instance)
 			local walk, run = agent.tracks.walk, agent.tracks.run
 			if typeof(pace) == "number" then
 				if walk and walk.IsPlaying then
-					walk:AdjustSpeed(math.max(0.4, pace / WALK_PACE))
+					walk:AdjustSpeed(math.max(0.4, pace / WALK_PACE) * agent.jitter)
 				end
 				if run and run.IsPlaying then
-					run:AdjustSpeed(math.max(0.5, pace / RUN_PACE))
+					run:AdjustSpeed(math.max(0.5, pace / RUN_PACE) * agent.jitter)
 				end
 			end
 		end)
@@ -296,10 +319,12 @@ function ZombieAnimController.Start()
 			local camera = Workspace.CurrentCamera
 			if camera then
 				local eye = camera.CFrame.Position
+				local now = os.clock()
 				for model, agent in agents do
 					local root = model.PrimaryPart
 					if root then
 						activate(agent, (root.Position - eye).Magnitude <= ACTIVE_RANGE)
+						maybeStumble(agent, now)
 					end
 				end
 			end

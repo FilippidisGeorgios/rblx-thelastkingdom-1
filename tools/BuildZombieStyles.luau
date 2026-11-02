@@ -9,7 +9,7 @@
 	  hanged     THE HANGED        a sack over the head tied with the noose, the rope cut; the neck broken sideways
 	  penitent   THE PENITENT      bare and lashed; the head locked in an iron cage with a bell; chains dragging from the wrists
 	  mourner    THE MOURNER       a black veil from the head to the floor, no feet, no face; long white hands out of the sleeves
-	  burned     THE BURNED        charred, the cracks still glowing; carries the stake he was burned on, chained to his back
+	  burned     THE BURNED        charred, the cracks still glowing, smoking; a chain still round his waist (KEPT by the developer, 2026-11-03)
 
 	Every one has HANDS made the same careful way: a palm, four fingers of two joints each curling toward the palm, a thumb set at
 	the inner side, a nail at each tip.
@@ -505,7 +505,7 @@ function STYLE.mourner(): Model
 	return m
 end
 
--- 5. THE BURNED: charred, the cracks still glowing; the stake he was burned on chained to his back
+-- 5. THE BURNED: charred, the cracks still glowing, smoke and sparks rising off him (the stake was taken off, 2026-11-03)
 function STYLE.burned(): Model
 	local m = base("burned", 6.3, 3.2)
 	local CHAR = Color3.fromRGB(46, 36, 30)
@@ -521,18 +521,11 @@ function STYLE.burned(): Model
 		local e = gear(m, head, "Ember", Vector3.new(hs.X * 0.13, hs.X * 0.13, hs.X * 0.13), hcf * CFrame.new(ex * hs.X * 0.2, hs.Y * 0.08, -hs.Z * 0.46), Color3.fromRGB(255, 120, 30), Enum.Material.Neon, Enum.PartType.Ball)
 		_ = e
 	end
-	-- the stake, black and split, across his back, held on by a chain over each shoulder
+	-- (no stake on his back: the developer kept him without it, 2026-11-03) a chain still round the waist, where he was bound
 	local ut = m.UpperTorso :: BasePart
-	local us = ut.Size
-	local stakeLen = 6.6
-	local stake = gear(m, ut, "Stake", Vector3.new(0.55, stakeLen, 0.55), ut.CFrame * CFrame.new(0, us.Y * 0.1, us.Z / 2 + 0.34) * CFrame.Angles(0, 0, math.rad(14)), Color3.fromRGB(28, 22, 18), Enum.Material.Wood)
-	stake.MaterialVariant = "TLK_Charred" .. tostring(rng:NextInteger(1, 3))
-	gear(m, ut, "StakeTip", Vector3.new(0.4, 0.6, 0.4), stake.CFrame * CFrame.new(0, stakeLen / 2 + 0.25, 0) * CFrame.Angles(0, math.rad(45), 0), Color3.fromRGB(20, 16, 14), Enum.Material.Wood)
-	for _, s in { -1, 1 } do
-		gear(m, ut, "Chain", Vector3.new(0.12, us.Y * 1.05, 0.12), ut.CFrame * CFrame.new(s * us.X * 0.28, us.Y * 0.05, 0) * CFrame.Angles(0, 0, math.rad(s * -8)), Color3.fromRGB(60, 52, 46), Enum.Material.CorrodedMetal)
-		gear(m, ut, "ChainOver", Vector3.new(0.12, 0.12, us.Z + 0.5), ut.CFrame * CFrame.new(s * us.X * 0.3, us.Y * 0.52, 0.1), Color3.fromRGB(60, 52, 46), Enum.Material.CorrodedMetal)
-	end
-	gear(m, m.LowerTorso :: BasePart, "ChainWaist", Vector3.new((m.LowerTorso :: BasePart).Size.X * 1.15, 0.14, (m.LowerTorso :: BasePart).Size.Z * 1.6), (m.LowerTorso :: BasePart).CFrame * CFrame.new(0, 0.1, 0.2), Color3.fromRGB(60, 52, 46), Enum.Material.CorrodedMetal)
+	local lt = m.LowerTorso :: BasePart
+	gear(m, lt, "ChainWaist", Vector3.new(lt.Size.X * 1.12, 0.14, lt.Size.Z * 1.15), lt.CFrame * CFrame.new(0, 0.1, 0), Color3.fromRGB(60, 52, 46), Enum.Material.CorrodedMetal)
+	gear(m, lt, "ChainEnd", Vector3.new(0.12, 1.1, 0.12), lt.CFrame * CFrame.new(lt.Size.X * 0.3, -0.5, -lt.Size.Z * 0.5) * CFrame.Angles(0, 0, math.rad(8)), Color3.fromRGB(60, 52, 46), Enum.Material.CorrodedMetal)
 	-- smoke rising off him, and a few sparks; a low orange light
 	local smoke = Instance.new("ParticleEmitter")
 	smoke.Texture = "rbxasset://textures/particles/smoke_main.dds"

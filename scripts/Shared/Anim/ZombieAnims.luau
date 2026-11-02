@@ -28,7 +28,9 @@
 	THE SET
 
 	  Idle        breathing, a twitch every few seconds
-	  Walk x3     lurch (a dragged foot, the head late), stiff march, shuffle
+	  Walk x3     lurch (a dragged foot, the head late), stiff march, shuffle: SAMPLED strides (heel strike,
+	              loading, push-off, swing), a jolt and a late head at every footfall, arms that trail
+	  Stumble     an overlay now and then on a walk: a knee gives, it catches itself
 	  Run         the couriers
 	  Aggro       the first sight of you: the head snaps up, the chest arches, a cry
 	  Flinch      an overlay, played on every hit
@@ -232,41 +234,82 @@ type Gait = {
 	roll: number, -- hips rolling side to side
 	bob: number, -- how far the pelvis drops at each contact
 	head: number, -- how late the head is, as a multiple of the twist
-	nod: number?, -- head nods
+	nod: number?, -- how far the head drops at each footfall
 	drag: number?, -- the left leg does this fraction of the swing (a dragged foot)
 	pitch: number?, -- extra lean forward (running)
+	stance: number?, -- the share of a stride a foot is on the ground (0.6 walking, 0.4 running)
+	impact: number?, -- how far the chest jolts forward at each footfall, degrees
 }
+
+--[[
+	A stride is SAMPLED, not four poses eased into each other (2026-11-03: the four-key walk moved like a toy, every joint
+	stopping at every key). Each leg runs the real cycle: the heel lands with the leg forward, the body passes over it while
+	it is planted (the thigh sweeps back at an even rate), the knee gives a little as the weight lands and bends hard as the
+	foot leaves; then the swing, quick and eased. The other leg is half a stride behind. On every footfall the pelvis drops
+	and the chest and head jolt forward and come up late; the arms hang and follow the twist a beat behind, the forearms later
+	still. Twelve samples a stride, joined by straight lines, so nothing stops between them.
+]]
+local SAMPLES = 12
+
+local function wrap(x: number): number
+	return x - math.floor(x)
+end
+
+-- a soft bump at phase 0, `width` wide, for a phase that wraps
+local function bump(p: number, width: number): number
+	local d = math.min(wrap(p), 1 - wrap(p))
+	return math.exp(-(d / width) ^ 2)
+end
+
+-- one leg at phase p (0 = the heel lands): the thigh's swing and the knee's bend
+local function leg(p: number, g: Gait, scale: number): (number, number)
+	local st = g.stance or 0.6
+	local S, K = g.S * scale, g.K * scale
+	p = wrap(p)
+	if p < st then
+		local q = p / st
+		local thigh = S - S * 1.85 * q
+		local knee = -3 - 9 * math.exp(-((q - 0.12) / 0.1) ^ 2) - 16 * math.clamp((q - 0.65) / 0.35, 0, 1) ^ 2
+		return thigh, knee
+	end
+	local q = (p - st) / (1 - st)
+	local thigh = -0.85 * S + 1.85 * S * (0.5 - 0.5 * math.cos(math.pi * q))
+	local knee = -19 * (1 - q) - K * 1.3 * math.sin(math.pi * q) - 3 * q
+	return thigh, knee
+end
 
 local function gaitFrames(g: Gait): { Frame }
 	local frames: { Frame } = {}
 	local drag = g.drag or 1
 	local pitch = g.pitch or 0
-	local yawSeq = { 1, 0, -1, 0 }
-	local headSeq = { 0, 1, 0, -1 }
-	local rollSeq = { 1, 0, -1, 0 }
-	local bobSeq = { 1, 0, 1, 0 }
-	local rul = { g.S, 0, -g.S, 0 }
-	local lul = { -g.S * drag, 0, g.S * drag, 0 }
-	local rll = { -3, -4, -g.K * 0.6, -g.K * 1.3 }
-	local lll = { -g.K * 0.6 * drag, -g.K * 1.3 * drag, -3, -4 }
-	local armSeq = { -1, 0, 1, 0 }
-	for i = 1, 5 do
-		local k = ((i - 1) % 4) + 1
-		frames[i] = {
-			time = (i - 1) * g.D / 4,
-			ease = "smooth",
+	local nod = g.nod or 4
+	local impact = g.impact or 3
+	local tau = 2 * math.pi
+	for i = 0, SAMPLES do
+		local t = i / SAMPLES
+		local rThigh, rKnee = leg(t, g, 1)
+		local lThigh, lKnee = leg(t + 0.5, g, drag)
+		local c = math.cos(tau * t)
+		-- the footfalls: just after each heel lands
+		local fall = math.max(bump(t - 0.06, 0.07), bump(t - 0.56, 0.07))
+		local late = math.max(bump(t - 0.13, 0.08), bump(t - 0.63, 0.08))
+		local drop = -g.bob * (0.5 + 0.5 * math.cos(2 * tau * (t - 0.08)))
+		frames[i + 1] = {
+			time = t * g.D,
+			ease = "flat",
 			pose = {
-				LowerTorso = move(0, -g.bob * bobSeq[k], 0, 0, -g.yaw * 0.5 * yawSeq[k], g.roll * rollSeq[k]),
-				UpperTorso = deg(-pitch, g.yaw * yawSeq[k], -g.roll * 0.4 * rollSeq[k]),
-				Head = deg(pitch * 0.8 + (g.nod or 0) * bobSeq[k], g.yaw * g.head * headSeq[k], g.roll * 0.3 * rollSeq[k]),
-				RightUpperArm = deg(g.arms * armSeq[k], 0, 0),
-				LeftUpperArm = deg(-g.arms * armSeq[k], 0, 0),
-				RightLowerArm = deg(g.arms * 0.3 * (1 + armSeq[k]) , 0, 0),
-				LeftLowerArm = deg(g.arms * 0.3 * (1 - armSeq[k]), 0, 0),
-				RightUpperLeg = deg(rul[k], 0, 0),
-				LeftUpperLeg = deg(lul[k], 0, 0),
-				RightLowerLeg = deg(rll[k], 0, 0),
-				LeftLowerLeg = deg(lll[k], 0, 0),
+				LowerTorso = move(0, drop, 0, 0, -g.yaw * 0.5 * c, g.roll * c),
+				UpperTorso = deg(-pitch - impact * fall, g.yaw * c, -g.roll * 0.4 * c),
+				Head = deg(pitch * 0.8 - nod * late, g.yaw * g.head * math.cos(tau * (t - 0.25)), g.roll * 0.3 * c),
+				-- the arms hang and are carried, a beat behind the twist; the forearms swing later still
+				RightUpperArm = deg(-g.arms * math.cos(tau * (t - 0.1)), 0, 0),
+				LeftUpperArm = deg(g.arms * math.cos(tau * (t - 0.1)), 0, 0),
+				RightLowerArm = deg(g.arms * 0.35 * (1 - math.cos(tau * (t - 0.22))), 0, 0),
+				LeftLowerArm = deg(g.arms * 0.35 * (1 + math.cos(tau * (t - 0.22))), 0, 0),
+				RightUpperLeg = deg(rThigh, 0, 0),
+				LeftUpperLeg = deg(lThigh, 0, 0),
+				RightLowerLeg = deg(rKnee, 0, 0),
+				LeftLowerLeg = deg(lKnee, 0, 0),
 			},
 		}
 	end
@@ -274,14 +317,27 @@ local function gaitFrames(g: Gait): { Frame }
 end
 
 local WALKS: { Gait } = {
-	-- 1. the lurch: weight thrown from hip to hip, the left foot dragged, the head late
-	{ D = 1.3, S = 20, K = 28, arms = 7, yaw = 9, roll = 5, bob = 0.14, head = 1.4, drag = 0.5 },
+	-- 1. the lurch: weight thrown from hip to hip, the left foot dragged, the head late and falling at each step
+	{ D = 1.4, S = 20, K = 26, arms = 8, yaw = 9, roll = 6, bob = 0.16, head = 1.4, drag = 0.45, nod = 7, impact = 5 },
 	-- 2. the stiff march: upright, hardly bending, stepping in time with nobody
-	{ D = 1.0, S = 24, K = 10, arms = 3, yaw = 3, roll = 1, bob = 0.08, head = 0.2 },
+	{ D = 1.05, S = 23, K = 12, arms = 4, yaw = 3, roll = 2, bob = 0.09, head = 0.3, nod = 3, impact = 2 },
 	-- 3. the shuffle: short steps, the hips rolling, the head nodding
-	{ D = 1.5, S = 13, K = 18, arms = 11, yaw = 5, roll = 9, bob = 0.1, head = 0.8, nod = 6 },
+	{ D = 1.55, S = 13, K = 16, arms = 11, yaw = 5, roll = 9, bob = 0.11, head = 0.8, nod = 6, impact = 3, stance = 0.66 },
 }
-local RUN: Gait = { D = 0.64, S = 48, K = 75, arms = 34, yaw = 12, roll = 4, bob = 0.28, head = 0.5, pitch = 8 }
+local RUN: Gait = { D = 0.66, S = 46, K = 72, arms = 32, yaw = 12, roll = 4, bob = 0.26, head = 0.5, pitch = 9, stance = 0.42, nod = 5, impact = 6 }
+
+--[[
+	A STUMBLE, laid over a walk now and then (ZombieAnimController): a knee gives, the chest and head pitch forward, it
+	catches itself. Only the bones it keys; the legs go on walking under it.
+]]
+local function stumbleFrames(): { Frame }
+	return {
+		{ time = 0, ease = "out", pose = { UpperTorso = deg(0, 0, 0), Head = deg(0, 0, 0), RightLowerLeg = deg(0, 0, 0), RightUpperArm = deg(0, 0, 0), LeftUpperArm = deg(0, 0, 0) } },
+		{ time = 0.14, ease = "smooth", pose = { UpperTorso = deg(-13, 6, 4), Head = deg(-16, 10, 6), RightLowerLeg = deg(-22, 0, 0), RightUpperArm = deg(16, 0, 8), LeftUpperArm = deg(10, 0, -6) } },
+		{ time = 0.34, ease = "smooth", pose = { UpperTorso = deg(-6, 3, 2), Head = deg(5, -4, 2), RightLowerLeg = deg(-8, 0, 0), RightUpperArm = deg(6, 0, 3), LeftUpperArm = deg(4, 0, -2) } },
+		{ time = 0.62, ease = "smooth", pose = { UpperTorso = deg(0, 0, 0), Head = deg(0, 0, 0), RightLowerLeg = deg(0, 0, 0), RightUpperArm = deg(0, 0, 0), LeftUpperArm = deg(0, 0, 0) } },
+	}
+end
 
 --==========================================================================
 -- AGGRO and FLINCH
@@ -615,6 +671,7 @@ export type Ids = {
 	run: string,
 	aggro: string,
 	flinch: string,
+	stumble: string,
 	death: { string },
 	attack: { [string]: string }, -- by kind
 	kindOf: { [string]: string }, -- by enemy type
@@ -651,6 +708,7 @@ function ZombieAnims.register(timings: { [string]: Timing }): (Ids?, string?)
 			run = register(build("ZombieRun", gaitFrames(RUN), true, P.Movement)),
 			aggro = register(build("ZombieAggro", aggroFrames(), false, P.Action)),
 			flinch = register(build("ZombieFlinch", flinchFrames(), false, P.Action2)),
+			stumble = register(build("ZombieStumble", stumbleFrames(), false, P.Action)),
 			death = {
 				register(build("ZombieDeathForward", deathForward(), false, P.Action4)),
 				register(build("ZombieDeathBack", deathBackward(), false, P.Action4)),
