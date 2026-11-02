@@ -120,7 +120,7 @@ local function lever(parent: Instance, cf: CFrame, name: string): Model
 	local wall = cf * CFrame.new(0, 0, 1.1)
 	local baseCf = wall * CFrame.new(0, FLOOR - cf.Y + 2.6, 0)
 	local base = part(m, "Base", Vector3.new(1.4, 0.6, 0.6), baseCf, col.IRON, Enum.Material.Metal, false)
-	part(m, "Plate", Vector3.new(2.2, 2.6, 0.3), wall * CFrame.new(0, FLOOR - cf.Y + 2.5, 0.35), col.STONE_DARK, Enum.Material.Slate, true)
+	part(m, "Plate", Vector3.new(2.2, 2.6, 0.3), wall * CFrame.new(0, FLOOR - cf.Y + 2.5, 0.35), col.STONE_DARK, Enum.Material.Sand, true)
 	local length = 3
 	local handle = part(m, "Handle", Vector3.new(0.3, length, 0.3), baseCf * CFrame.new(0, 0.3, 0) * CFrame.Angles(0, 0, math.rad(35)) * CFrame.new(0, length / 2, 0), col.WOOD_DARK, Enum.Material.Wood, false)
 	handle:SetAttribute("Length", length)
@@ -157,13 +157,13 @@ end
 
 local function nestPit(parent: Instance, cf: CFrame, name: string): Part
 	local f = cf * CFrame.new(0, FLOOR - cf.Y, 0.2)
-	local pit = part(parent, name, Vector3.new(3, 0.5, 3), f * CFrame.new(0, 0.2, 0), Color3.fromRGB(26, 22, 20), Enum.Material.Slate, false)
+	local pit = part(parent, name, Vector3.new(3, 0.5, 3), f * CFrame.new(0, 0.2, 0), Color3.fromRGB(26, 22, 20), Enum.Material.Sand, false)
 	pit.Transparency = 0.3
 	-- bones and rags round it: the dead lie here until a body comes near
 	for k = 1, 9 do
 		local a = rng:NextNumber(0, math.pi * 2)
 		local d = rng:NextNumber(1.3, 2.4)
-		local bone = part(props, "Bone", Vector3.new(rng:NextNumber(0.2, 0.3), 0.2, rng:NextNumber(0.8, 1.5)), f * CFrame.new(math.cos(a) * d, 0.15, math.sin(a) * d) * CFrame.Angles(0, rng:NextNumber(0, 6), math.rad(rng:NextNumber(-8, 8))), col.BONE, Enum.Material.Slate, false)
+		local bone = part(props, "Bone", Vector3.new(rng:NextNumber(0.2, 0.3), 0.2, rng:NextNumber(0.8, 1.5)), f * CFrame.new(math.cos(a) * d, 0.15, math.sin(a) * d) * CFrame.Angles(0, rng:NextNumber(0, 6), math.rad(rng:NextNumber(-8, 8))), col.BONE, Enum.Material.SmoothPlastic, false)
 		bone.Name = "Bone"
 	end
 	for k = 1, 3 do
@@ -176,8 +176,8 @@ end
 -- Dressing: scattered things
 --==========================================================================
 local function skull(parent: Instance, at: Vector3)
-	ball(parent, "Skull", 0.9, CFrame.new(at + Vector3.new(0, 0.45, 0)), col.BONE, Enum.Material.Slate)
-	part(parent, "Jaw", Vector3.new(0.6, 0.25, 0.5), CFrame.new(at + Vector3.new(0, 0.12, 0.3)), col.BONE, Enum.Material.Slate, false)
+	ball(parent, "Skull", 0.9, CFrame.new(at + Vector3.new(0, 0.45, 0)), col.BONE, Enum.Material.SmoothPlastic)
+	part(parent, "Jaw", Vector3.new(0.6, 0.25, 0.5), CFrame.new(at + Vector3.new(0, 0.12, 0.3)), col.BONE, Enum.Material.SmoothPlastic, false)
 end
 
 local function boneHeap(parent: Instance, at: Vector3, count: number)
@@ -186,7 +186,7 @@ local function boneHeap(parent: Instance, at: Vector3, count: number)
 		if rng:NextNumber() < 0.25 then
 			skull(parent, p)
 		else
-			part(parent, "Bone", Vector3.new(0.22, 0.22, rng:NextNumber(0.9, 1.8)), CFrame.new(p) * CFrame.Angles(math.rad(rng:NextNumber(-20, 20)), rng:NextNumber(0, 6.28), math.rad(rng:NextNumber(-20, 20))), col.BONE, Enum.Material.Slate, false)
+			part(parent, "Bone", Vector3.new(0.22, 0.22, rng:NextNumber(0.9, 1.8)), CFrame.new(p) * CFrame.Angles(math.rad(rng:NextNumber(-20, 20)), rng:NextNumber(0, 6.28), math.rad(rng:NextNumber(-20, 20))), col.BONE, Enum.Material.SmoothPlastic, false)
 		end
 	end
 end
@@ -210,8 +210,8 @@ local function web(parent: Instance, corner: Vector3, dirA: Vector3, dirB: Vecto
 end
 
 local function sarcophagus(parent: Instance, cf: CFrame)
-	local base = part(parent, "Sarcophagus", Vector3.new(3, 2.2, 6.6), cf * CFrame.new(0, 1.1, 0), col.STONE, Enum.Material.Slate, true)
-	part(parent, "Lid", Vector3.new(3.3, 0.6, 7), cf * CFrame.new(rng:NextNumber(-0.5, 0.5), 2.45, rng:NextNumber(-0.4, 0.4)) * CFrame.Angles(0, math.rad(rng:NextNumber(-8, 8)), 0), col.STONE_DARK, Enum.Material.Slate, true)
+	local base = part(parent, "Sarcophagus", Vector3.new(3, 2.2, 6.6), cf * CFrame.new(0, 1.1, 0), col.STONE, Enum.Material.Sand, true)
+	part(parent, "Lid", Vector3.new(3.3, 0.6, 7), cf * CFrame.new(rng:NextNumber(-0.5, 0.5), 2.45, rng:NextNumber(-0.4, 0.4)) * CFrame.Angles(0, math.rad(rng:NextNumber(-8, 8)), 0), col.STONE_DARK, Enum.Material.Sand, true)
 	_ = base
 end
 
@@ -238,7 +238,7 @@ local function cart(parent: Instance, cf: CFrame)
 	end
 	-- ore in it
 	for k = 1, 6 do
-		part(parent, "Ore", Vector3.new(rng:NextNumber(0.6, 1.2), rng:NextNumber(0.5, 1), rng:NextNumber(0.6, 1.2)), cf * CFrame.new(rng:NextNumber(-1.1, 1.1), 3.3, rng:NextNumber(-1.9, 1.9)) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0), Color3.fromRGB(82, 76, 70), Enum.Material.Slate, false)
+		part(parent, "Ore", Vector3.new(rng:NextNumber(0.6, 1.2), rng:NextNumber(0.5, 1), rng:NextNumber(0.6, 1.2)), cf * CFrame.new(rng:NextNumber(-1.1, 1.1), 3.3, rng:NextNumber(-1.9, 1.9)) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0), Color3.fromRGB(82, 76, 70), Enum.Material.Sand, false)
 	end
 end
 
@@ -379,7 +379,7 @@ local function buildProps()
 			many(8, 1.4, 1.4, function(at) crate(props, at) end)
 			many(8, 1.9, 1.9, function(at)
 				for k = 1, 5 do
-					part(props, "Rock", Vector3.new(rng:NextNumber(1, 2.6), rng:NextNumber(0.8, 2), rng:NextNumber(1, 2.6)), CFrame.new(at + Vector3.new(rng:NextNumber(-1.5, 1.5), 0.6, rng:NextNumber(-1.5, 1.5))) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0), Color3.fromRGB(84, 74, 62), Enum.Material.Rock, true)
+					part(props, "Rock", Vector3.new(rng:NextNumber(1, 2.6), rng:NextNumber(0.8, 2), rng:NextNumber(1, 2.6)), CFrame.new(at + Vector3.new(rng:NextNumber(-1.5, 1.5), 0.6, rng:NextNumber(-1.5, 1.5))) * CFrame.Angles(rng:NextNumber(0, 3), rng:NextNumber(0, 3), 0), Color3.fromRGB(84, 74, 62), Enum.Material.Sand, true)
 				end
 			end)
 			-- rails across the hall
@@ -583,7 +583,7 @@ local function buildScares()
 		text.Text = word
 		text.Font = Enum.Font.Creepster
 		text.TextScaled = true
-		text.TextColor3 = Color3.fromRGB(146, 18, 18)
+		text.TextColor3 = Color3.fromRGB(104, 8, 14)
 		text.Parent = gui
 		written += 1
 	end
@@ -605,20 +605,20 @@ local function buildScares()
 		local kind = rng:NextInteger(1, 3)
 		if kind == 1 then
 			local d = rng:NextNumber(1.2, 3.2)
-			local p = pillar(scares, "Pool", d, 0.05, centre + Vector3.new(rng:NextNumber(-1.8, 1.8), 0.05, rng:NextNumber(-1.8, 1.8)), col.BLOOD, Enum.Material.Slate, false)
+			local p = pillar(scares, "Pool", d, 0.05, centre + Vector3.new(rng:NextNumber(-1.8, 1.8), 0.05, rng:NextNumber(-1.8, 1.8)), col.BLOOD, Enum.Material.SmoothPlastic, false)
 			p.Color = col.BLOOD:Lerp(Color3.fromRGB(40, 6, 6), rng:NextNumber(0, 0.6))
 		elseif kind == 2 then
 			-- a drag: long, thin, wandering
 			local yaw = rng:NextInteger(0, 1) * math.pi / 2 + rng:NextNumber(-0.1, 0.1)
 			for k = 0, 3 do
-				part(scares, "Drag", Vector3.new(1.0, 0.05, 2.6), CFrame.new(centre + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, yaw, 0) * CFrame.new(rng:NextNumber(-0.5, 0.5), 0, (k - 1.5) * 2.5), col.BLOOD, Enum.Material.Slate, false)
+				part(scares, "Drag", Vector3.new(1.0, 0.05, 2.6), CFrame.new(centre + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, yaw, 0) * CFrame.new(rng:NextNumber(-0.5, 0.5), 0, (k - 1.5) * 2.5), col.BLOOD, Enum.Material.SmoothPlastic, false)
 			end
 		else
 			local closed = closedSides(s[1], s[2])
 			if #closed > 0 then
 				local d = closed[rng:NextInteger(1, #closed)]
 				local at = centre + DIR[d] * (U - 0.05) + Vector3.new(0, rng:NextNumber(1.6, 4.4), 0)
-				part(scares, "Smear", Vector3.new(rng:NextNumber(0.6, 1.2), rng:NextNumber(1.6, 3.2), 0.05), CFrame.lookAt(at, at - DIR[d]), col.BLOOD, Enum.Material.Slate, false)
+				part(scares, "Smear", Vector3.new(rng:NextNumber(0.6, 1.2), rng:NextNumber(1.6, 3.2), 0.05), CFrame.lookAt(at, at - DIR[d]), col.BLOOD, Enum.Material.SmoothPlastic, false)
 			end
 		end
 		stains += 1

@@ -19,10 +19,12 @@
 
 local Hud = {
 	HealthBar = {
-		Width = 92,
-		Height = 11,
-		Margin = 12,
-		TextSize = 9,
+		-- (2026-11-02: bigger, and moved up to where the area's name was; the name now stands below it)
+		Width = 150,
+		Height = 18,
+		Margin = 14,
+		MarginBottom = 50,
+		TextSize = 13,
 		Stops = {
 			{ At = 1.00, Color = Color3.fromRGB(86, 186, 82) }, -- green
 			{ At = 0.66, Color = Color3.fromRGB(226, 210, 70) }, -- yellow

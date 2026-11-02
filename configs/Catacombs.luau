@@ -38,7 +38,7 @@ local Catacombs = {
 		Down = { X = 141, Z = -786.75, Radius = 14, Well = 6, Top = 2, Bottom = -70, Turns = 2.75, Clockwise = true },
 		Up = { X = -152, Z = -923.25, Radius = 14, Well = 6, Top = 2, Bottom = -70, Turns = 3.25, Clockwise = false },
 		Width = 7, -- the walking width of a stair
-		BrokenShare = 0.14, -- share of the planks missing or hanging (the walk itself is never broken)
+		BrokenShare = 0.3, -- share of the planks missing or hanging (the walk itself is never broken)
 	},
 
 	-- The mountain that shuts the yard: from wall to wall, across the yard, with one cave in it.
@@ -60,7 +60,7 @@ local Catacombs = {
 	Lantern = {
 		Item = "lantern",
 		Range = 30, -- studs of light round the bearer
-		Brightness = 2.6,
+		Brightness = 2.1,
 		Color = Color3.fromRGB(255, 190, 110),
 		Shadows = true, -- the walls stop the light (without it the maze would glow through its walls)
 	},

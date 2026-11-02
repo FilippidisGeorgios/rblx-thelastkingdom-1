@@ -71,26 +71,64 @@ local function build(hand: BasePart): Model
 
 	-- everything is placed relative to the hand: the ring at the hand, the body hanging 0.9 below it
 	-- (a cylinder's axis is its X: this one is a thin disc standing in the plane of the hand)
-	local ring = part(model, "Ring", Vector3.new(0.08, 0.5, 0.5), BRASS, Enum.Material.Metal, Enum.PartType.Cylinder)
-	weld(hand, ring, CFrame.new(0, -0.35, 0))
+	-- (2026-11-02, more real: an old hand lantern of black iron and aged brass, with a bail to hold it by, a domed cap with a
+	-- chimney, four corner posts with rims, panes of smoky glass, a pot with a stub of candle and a small teardrop flame)
+	local RUST = Color3.fromRGB(58, 40, 30)
+	local AGED = Color3.fromRGB(112, 88, 48)
+	-- the bail: a ring in the hand, two thin wires up from the cap's sides to an arch
+	local ring = part(model, "Ring", Vector3.new(0.07, 0.42, 0.42), BRASS, Enum.Material.Metal, Enum.PartType.Cylinder)
+	weld(hand, ring, CFrame.new(0, -0.3, 0))
+	for i, s in { -1, 1 } do
+		local wire = part(model, "Bail" .. i, Vector3.new(0.04, 0.5, 0.04), IRON, Enum.Material.Metal)
+		weld(hand, wire, CFrame.new(s * 0.2, -0.62, 0) * CFrame.Angles(0, 0, math.rad(-s * 18)))
+	end
+	local arch = part(model, "Arch", Vector3.new(0.04, 0.04, 0.34), IRON, Enum.Material.Metal)
+	weld(hand, arch, CFrame.new(0, -0.38, 0) * CFrame.Angles(0, math.rad(90), 0))
 
-	local cap = part(model, "Cap", Vector3.new(0.62, 0.14, 0.62), IRON, Enum.Material.Metal)
-	weld(hand, cap, CFrame.new(0, -0.78, 0))
-	local base = part(model, "Base", Vector3.new(0.6, 0.12, 0.6), IRON, Enum.Material.Metal)
-	weld(hand, base, CFrame.new(0, -1.5, 0))
+	-- the cap: a wide dome, a chimney and a small knob
+	local dome = part(model, "Dome", Vector3.new(0.2, 0.7, 0.7), IRON, Enum.Material.Metal, Enum.PartType.Cylinder)
+	weld(hand, dome, CFrame.new(0, -0.84, 0) * CFrame.Angles(0, 0, math.rad(90)))
+	local chimney = part(model, "Chimney", Vector3.new(0.16, 0.34, 0.34), RUST, Enum.Material.Metal, Enum.PartType.Cylinder)
+	weld(hand, chimney, CFrame.new(0, -0.74, 0) * CFrame.Angles(0, 0, math.rad(90)))
+	local knob = part(model, "Knob", Vector3.new(0.12, 0.12, 0.12), AGED, Enum.Material.Metal, Enum.PartType.Ball)
+	weld(hand, knob, CFrame.new(0, -0.62, 0))
 
-	local glass = part(model, "Glass", Vector3.new(0.46, 0.6, 0.46), cfg.Color, Enum.Material.Glass)
-	glass.Transparency = 0.55
-	glass.Reflectance = 0
-	weld(hand, glass, CFrame.new(0, -1.14, 0))
-
-	for i, c in { { 0.27, 0.27 }, { -0.27, 0.27 }, { 0.27, -0.27 }, { -0.27, -0.27 } } do
-		local bar = part(model, "Bar" .. i, Vector3.new(0.05, 0.64, 0.05), IRON, Enum.Material.Metal)
-		weld(hand, bar, CFrame.new(c[1], -1.14, c[2]))
+	-- rims, top and bottom
+	for _, y in { -0.93, -1.5 } do
+		local rim = part(model, "Rim", Vector3.new(0.6, 0.07, 0.6), IRON, Enum.Material.Metal)
+		weld(hand, rim, CFrame.new(0, y, 0))
 	end
 
-	local flame = part(model, "Flame", Vector3.new(0.2, 0.28, 0.2), Color3.fromRGB(255, 214, 140), Enum.Material.Neon, Enum.PartType.Ball)
-	weld(hand, flame, CFrame.new(0, -1.16, 0))
+	-- panes of smoky glass
+	local glass = part(model, "Glass", Vector3.new(0.46, 0.52, 0.46), cfg.Color:Lerp(Color3.fromRGB(120, 100, 70), 0.4), Enum.Material.Glass)
+	glass.Transparency = 0.6
+	glass.Reflectance = 0.04
+	weld(hand, glass, CFrame.new(0, -1.21, 0))
+
+	for i, c in { { 0.26, 0.26 }, { -0.26, 0.26 }, { 0.26, -0.26 }, { -0.26, -0.26 } } do
+		local bar = part(model, "Bar" .. i, Vector3.new(0.05, 0.6, 0.05), IRON, Enum.Material.Metal)
+		weld(hand, bar, CFrame.new(c[1], -1.22, c[2]))
+		local foot = part(model, "Foot" .. i, Vector3.new(0.07, 0.1, 0.07), RUST, Enum.Material.Metal)
+		weld(hand, foot, CFrame.new(c[1], -1.58, c[2]))
+	end
+	-- a cross band round the middle
+	local band = part(model, "Band", Vector3.new(0.52, 0.04, 0.52), AGED, Enum.Material.Metal)
+	weld(hand, band, CFrame.new(0, -1.22, 0))
+
+	-- the oil pot and a stub of candle with its wick
+	local pot = part(model, "Pot", Vector3.new(0.12, 0.34, 0.34), AGED, Enum.Material.Metal, Enum.PartType.Cylinder)
+	weld(hand, pot, CFrame.new(0, -1.44, 0) * CFrame.Angles(0, 0, math.rad(90)))
+	local candle = part(model, "Candle", Vector3.new(0.2, 0.1, 0.1), Color3.fromRGB(226, 210, 170), Enum.Material.SmoothPlastic, Enum.PartType.Cylinder)
+	candle.Size = Vector3.new(0.26, 0.11, 0.11)
+	weld(hand, candle, CFrame.new(0, -1.31, 0) * CFrame.Angles(0, 0, math.rad(90)))
+	local wick = part(model, "Wick", Vector3.new(0.02, 0.1, 0.02), Color3.fromRGB(30, 24, 20), Enum.Material.Fabric)
+	weld(hand, wick, CFrame.new(0, -1.22, 0))
+
+	-- the flame: a small teardrop (a round body and a small tip), the body is the one that carries the light
+	local tip = part(model, "FlameTip", Vector3.new(0.09, 0.09, 0.09), Color3.fromRGB(255, 232, 170), Enum.Material.Neon, Enum.PartType.Ball)
+	weld(hand, tip, CFrame.new(0, -1.03, 0))
+	local flame = part(model, "Flame", Vector3.new(0.16, 0.16, 0.16), Color3.fromRGB(255, 190, 110), Enum.Material.Neon, Enum.PartType.Ball)
+	weld(hand, flame, CFrame.new(0, -1.13, 0))
 
 	local light = Instance.new("PointLight")
 	light.Name = "LanternLight"

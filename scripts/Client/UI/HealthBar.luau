@@ -31,7 +31,7 @@ function HealthBar.create(gui: ScreenGui): Handle
 	local root = Instance.new("Frame")
 	root.Name = "HealthBar"
 	root.AnchorPoint = Vector2.new(0, 1)
-	root.Position = UDim2.new(0, cfg.Margin, 1, -cfg.Margin)
+	root.Position = UDim2.new(0, cfg.Margin, 1, -(cfg.MarginBottom or cfg.Margin))
 	root.Size = UDim2.fromOffset(cfg.Width, cfg.Height)
 	root.BackgroundColor3 = Color3.fromRGB(14, 12, 12)
 	root.BackgroundTransparency = 0.25

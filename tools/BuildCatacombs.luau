@@ -49,14 +49,14 @@ assert(area4, "Decorations.Area4 is not there")
 --==========================================================================
 -- Small tools
 --==========================================================================
-local STONE = Color3.fromRGB(88, 82, 76)
-local STONE_DARK = Color3.fromRGB(62, 58, 55)
-local FLOORC = Color3.fromRGB(70, 66, 62)
+local STONE = Color3.fromRGB(214, 190, 134) -- sand, yellow-beige (2026-11-02: nothing here is grey stone)
+local STONE_DARK = Color3.fromRGB(190, 164, 112)
+local FLOORC = Color3.fromRGB(205, 182, 128)
 local WOOD = Color3.fromRGB(88, 62, 38)
 local WOOD_DARK = Color3.fromRGB(58, 40, 26)
 local IRON = Color3.fromRGB(48, 44, 42)
 local BONE = Color3.fromRGB(196, 186, 160)
-local BLOOD = Color3.fromRGB(78, 12, 12)
+local BLOOD = Color3.fromRGB(54, 4, 9) -- dark blood, bordeaux
 local CLOTH = Color3.fromRGB(118, 102, 84)
 
 local function part(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material, collide: boolean?): Part
@@ -329,7 +329,7 @@ local function buildMountain()
 						mat = if n > 0.12 then Enum.Material.Mud else Enum.Material.Ground
 					else
 						local s = strata * 0.8 + n * 0.5
-						mat = if s > 0.5 then Enum.Material.Rock elseif s < -0.34 then Enum.Material.Ground else Enum.Material.Sandstone
+						mat = if s > 0.5 then Enum.Material.Sand elseif s < -0.34 then Enum.Material.Ground else Enum.Material.Sandstone
 					end
 					if mat ~= runMat then
 						flush(yb)
@@ -364,7 +364,7 @@ local function buildCaveAndSign()
 	local mouth = folder(surface, "Mouth")
 	local z0 = M.FrontZ + 2
 	local function slab(name: string, size: Vector3, at: Vector3, tilt: number)
-		local p = part(mouth, name, size, CFrame.new(at) * CFrame.Angles(math.rad(rng:NextNumber(-4, 4)), math.rad(rng:NextNumber(-6, 6)), math.rad(tilt)), Color3.fromRGB(96, 74, 54), Enum.Material.Rock, true)
+		local p = part(mouth, name, size, CFrame.new(at) * CFrame.Angles(math.rad(rng:NextNumber(-4, 4)), math.rad(rng:NextNumber(-6, 6)), math.rad(tilt)), Color3.fromRGB(96, 74, 54), Enum.Material.Sand, true)
 		return p
 	end
 	slab("JambW", Vector3.new(5, 12, 9), Vector3.new(caveX - w / 2 - 2.5, 2 + 6, z0 - 3), 2)
@@ -433,7 +433,7 @@ local function buildCaveAndSign()
 	for k = 1, 8 do
 		local bx = signX + rng:NextNumber(-signW / 2, signW / 2)
 		local edge = if k % 2 == 0 then signH / 2 else -signH / 2
-		part(surface, "SignChunk" .. k, Vector3.new(rng:NextNumber(5, 12), rng:NextNumber(3, 7), 6), CFrame.new(bx, 2 + 40 + edge, signZ - 2) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-15, 15))), Color3.fromRGB(94, 72, 52), Enum.Material.Rock, false)
+		part(surface, "SignChunk" .. k, Vector3.new(rng:NextNumber(5, 12), rng:NextNumber(3, 7), 6), CFrame.new(bx, 2 + 40 + edge, signZ - 2) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-15, 15))), Color3.fromRGB(94, 72, 52), Enum.Material.Sand, false)
 	end
 	table.insert(report, "cave, barrier, painted words")
 	return report
@@ -476,7 +476,7 @@ local function buildTable()
 	for k = 1, 3 do
 		local sx = M.Cave.X + (k - 2) * 18 + 28
 		part(surface, "Stake" .. k, Vector3.new(0.5, 7, 0.5), CFrame.new(sx, 2 + 3.5, M.FrontZ + 14 + k * 2) * CFrame.Angles(0, 0, math.rad(rng:NextNumber(-6, 6))), WOOD_DARK, Enum.Material.Wood, false)
-		ball(surface, "Skull" .. k, 1.3, CFrame.new(sx, 2 + 7.2, M.FrontZ + 14 + k * 2), BONE, Enum.Material.Slate)
+		ball(surface, "Skull" .. k, 1.3, CFrame.new(sx, 2 + 7.2, M.FrontZ + 14 + k * 2), BONE, Enum.Material.Sand)
 	end
 	return report
 end
@@ -520,14 +520,14 @@ local function spiral(name: string, s: any, landing: number, opening: number)
 		local y0, y1 = bottom - 3, top + 14
 		if near(opening, 360 / segs * 1.6) then
 			-- a doorway at the foot: wall above it only
-			part(wallRing, "Lintel", Vector3.new(seg + 0.3, y1 - (bottom + H), 1.6), cf + Vector3.new(0, (y1 + bottom + H) / 2, 0) - Vector3.new(0, 0, 0), colour, Enum.Material.Cobblestone, true)
+			part(wallRing, "Lintel", Vector3.new(seg + 0.3, y1 - (bottom + H), 1.6), cf + Vector3.new(0, (y1 + bottom + H) / 2, 0) - Vector3.new(0, 0, 0), colour, Enum.Material.Sand, true)
 		elseif near(landing, 360 / segs * 1.7) then
 			-- the way in at the top: a doorway as high as the cave, lintel above
-			part(wallRing, "Lintel", Vector3.new(seg + 0.3, y1 - (top + 10), 1.6), cf + Vector3.new(0, (y1 + top + 10) / 2, 0), colour, Enum.Material.Cobblestone, true)
+			part(wallRing, "Lintel", Vector3.new(seg + 0.3, y1 - (top + 10), 1.6), cf + Vector3.new(0, (y1 + top + 10) / 2, 0), colour, Enum.Material.Sand, true)
 			-- (the sill of the doorway: its top is the level of the landing; it was 6 studs lower, a pit between the cave and the landing)
-			part(wallRing, "Under", Vector3.new(seg + 0.3, top - y0, 1.6), cf + Vector3.new(0, (y0 + top) / 2, 0), colour, Enum.Material.Cobblestone, true)
+			part(wallRing, "Under", Vector3.new(seg + 0.3, top - y0, 1.6), cf + Vector3.new(0, (y0 + top) / 2, 0), colour, Enum.Material.Sand, true)
 		else
-			part(wallRing, "Wall", Vector3.new(seg + 0.3, y1 - y0, 1.6), cf + Vector3.new(0, (y0 + y1) / 2, 0), colour, Enum.Material.Cobblestone, true)
+			part(wallRing, "Wall", Vector3.new(seg + 0.3, y1 - y0, 1.6), cf + Vector3.new(0, (y0 + y1) / 2, 0), colour, Enum.Material.Sand, true)
 		end
 	end
 
@@ -577,7 +577,7 @@ local function spiral(name: string, s: any, landing: number, opening: number)
 	end
 
 	-- the floor at the foot: a disc, its top at the bottom of the last step
-	local floor = pillar(model, "Floor", R * 2 + 1, 2, Vector3.new(cx, bottom - 1, cz), FLOORC, Enum.Material.Slate, true)
+	local floor = pillar(model, "Floor", R * 2 + 1, 2, Vector3.new(cx, bottom - 1, cz), FLOORC, Enum.Material.Sand, true)
 	floor.Name = "Floor"
 
 	-- the well: an invisible column so that nobody can step off the inside edge, and a railing, broken in places
@@ -599,7 +599,7 @@ local function spiral(name: string, s: any, landing: number, opening: number)
 		end
 	end
 	-- a pillar of old masonry in the middle for the eye to fall along
-	pillar(model, "Core", 3.4, top - bottom + 10, Vector3.new(cx, (top + bottom) / 2 + 3, cz), STONE_DARK, Enum.Material.Cobblestone, false)
+	pillar(model, "Core", 3.4, top - bottom + 10, Vector3.new(cx, (top + bottom) / 2 + 3, cz), STONE_DARK, Enum.Material.Sand, false)
 	return model
 end
 
@@ -617,13 +617,13 @@ local function buildShafts()
 	carveShaft(down, 10)
 	carveShaft(up, 4)
 	spiral("Down", { X = down.X, Z = down.Z, Radius = down.Radius, Well = down.Well, Top = down.Top, Bottom = down.Bottom, Turns = down.Turns, Clockwise = down.Clockwise, BrokenShare = cfg.Stairs.BrokenShare }, 90, 180)
-	spiral("Up", { X = up.X, Z = up.Z, Radius = up.Radius, Well = up.Well, Top = up.Top, Bottom = up.Bottom, Turns = up.Turns, Clockwise = up.Clockwise, BrokenShare = 0.1 }, 270, 0)
+	spiral("Up", { X = up.X, Z = up.Z, Radius = up.Radius, Well = up.Well, Top = up.Top, Bottom = up.Bottom, Turns = up.Turns, Clockwise = up.Clockwise, BrokenShare = 0.25 }, 270, 0)
 	-- the shaft's cut takes the ground of the cave with it (a round hole 19 wide): a floor of stone from the cave's mouth to the
 	-- landing, level with it, so that the way in has no pit in it
-	local sill = part(stairs, "CaveSill", Vector3.new(24, 1.4, 14), CFrame.new(down.X, down.Top - 0.7, down.Z + down.Radius + 5), FLOORC, Enum.Material.Cobblestone, true)
+	local sill = part(stairs, "CaveSill", Vector3.new(24, 1.4, 14), CFrame.new(down.X, down.Top - 0.7, down.Z + down.Radius + 5), FLOORC, Enum.Material.Sand, true)
 	sill.Name = "CaveSill"
 	-- a cap over the top of the down shaft, inside the rock (the ground above it is the mountain)
-	local cap = pillar(stairs, "DownCap", down.Radius * 2 + 4, 3, Vector3.new(down.X, down.Top + 11.5, down.Z), STONE_DARK, Enum.Material.Rock, true)
+	local cap = pillar(stairs, "DownCap", down.Radius * 2 + 4, 3, Vector3.new(down.X, down.Top + 11.5, down.Z), STONE_DARK, Enum.Material.Sand, true)
 	cap.Name = "DownCap"
 	table.insert(report, "two shafts carved and built")
 
@@ -636,17 +636,17 @@ local function buildShafts()
 	local w = 12
 	local len = sx1 - sx0
 	local cx = (sx0 + sx1) / 2
-	part(room, "Floor", Vector3.new(len + 1, SLAB, w + 4), CFrame.new(cx, FLOOR - SLAB / 2, zc), FLOORC, Enum.Material.Slate, true)
-	part(room, "Ceiling", Vector3.new(len + 1, SLAB, w + 4), CFrame.new(cx, FLOOR + H + SLAB / 2, zc), STONE_DARK, Enum.Material.Cobblestone, true)
-	part(room, "WallN", Vector3.new(len + 1, H, 2), CFrame.new(cx, FLOOR + H / 2, zc + w / 2 + 1), STONE, Enum.Material.Cobblestone, true)
-	part(room, "WallS", Vector3.new(len + 1, H, 2), CFrame.new(cx, FLOOR + H / 2, zc - w / 2 - 1), STONE, Enum.Material.Cobblestone, true)
+	part(room, "Floor", Vector3.new(len + 1, SLAB, w + 4), CFrame.new(cx, FLOOR - SLAB / 2, zc), FLOORC, Enum.Material.Sand, true)
+	part(room, "Ceiling", Vector3.new(len + 1, SLAB, w + 4), CFrame.new(cx, FLOOR + H + SLAB / 2, zc), STONE_DARK, Enum.Material.Sand, true)
+	part(room, "WallN", Vector3.new(len + 1, H, 2), CFrame.new(cx, FLOOR + H / 2, zc + w / 2 + 1), STONE, Enum.Material.Sand, true)
+	part(room, "WallS", Vector3.new(len + 1, H, 2), CFrame.new(cx, FLOOR + H / 2, zc - w / 2 - 1), STONE, Enum.Material.Sand, true)
 	-- the crawl in the west wall (two units wide; the lintel above it keeps standing bodies out)
 	local crawlW = 2 * U
 	local sideW = (w - crawlW) / 2
 	for _, side in { -1, 1 } do
-		part(room, "WestWall", Vector3.new(2, H, sideW), CFrame.new(sx0 + 1, FLOOR + H / 2, zc + side * (crawlW / 2 + sideW / 2)), STONE, Enum.Material.Cobblestone, true)
+		part(room, "WestWall", Vector3.new(2, H, sideW), CFrame.new(sx0 + 1, FLOOR + H / 2, zc + side * (crawlW / 2 + sideW / 2)), STONE, Enum.Material.Sand, true)
 	end
-	part(room, "CrawlLintel", Vector3.new(3 * U, H - CRAWL, crawlW), CFrame.new(sx0 + 0.5, FLOOR + CRAWL + (H - CRAWL) / 2, zc), STONE_DARK, Enum.Material.Cobblestone, true)
+	part(room, "CrawlLintel", Vector3.new(3 * U, H - CRAWL, crawlW), CFrame.new(sx0 + 0.5, FLOOR + CRAWL + (H - CRAWL) / 2, zc), STONE_DARK, Enum.Material.Sand, true)
 	-- the way to the shaft is the ring's own doorway: nothing to build but the sill
 	-- furniture: a bench, a straw bed, a table with a candle, a chest of dry things
 	part(room, "Bench", Vector3.new(5, 0.5, 1.4), CFrame.new(cx + 2, FLOOR + 1.6, zc + w / 2 - 1.2), WOOD, Enum.Material.Wood, true)
@@ -673,18 +673,18 @@ local function buildShafts()
 		{ "WallW", Vector3.new(2, 15, half * 2), Vector3.new(ux - half, up.Top + 7.5, uz) },
 		{ "WallE", Vector3.new(2, 15, half * 2), Vector3.new(ux + half, up.Top + 7.5, uz) },
 	} do
-		part(m, spec[1] :: string, spec[2] :: Vector3, CFrame.new(spec[3] :: Vector3), STONE, Enum.Material.Cobblestone, true)
+		part(m, spec[1] :: string, spec[2] :: Vector3, CFrame.new(spec[3] :: Vector3), STONE, Enum.Material.Sand, true)
 	end
 	-- the south wall has the door (toward the yard and the gate), 8 wide and 11 high, open
-	part(m, "WallSTop", Vector3.new(half * 2, 4, 2), CFrame.new(ux, up.Top + 13, uz - half), STONE, Enum.Material.Cobblestone, true)
+	part(m, "WallSTop", Vector3.new(half * 2, 4, 2), CFrame.new(ux, up.Top + 13, uz - half), STONE, Enum.Material.Sand, true)
 	for _, side in { -1, 1 } do
-		part(m, "WallSSide", Vector3.new(half - 4, 11, 2), CFrame.new(ux + side * (4 + (half - 4) / 2), up.Top + 5.5, uz - half), STONE, Enum.Material.Cobblestone, true)
+		part(m, "WallSSide", Vector3.new(half - 4, 11, 2), CFrame.new(ux + side * (4 + (half - 4) / 2), up.Top + 5.5, uz - half), STONE, Enum.Material.Sand, true)
 	end
-	part(m, "Roof", Vector3.new(half * 2 + 3, 2, half * 2 + 3), CFrame.new(ux, roofY + 1, uz), STONE_DARK, Enum.Material.Slate, true)
-	part(m, "RoofRidge", Vector3.new(half * 2 + 3, 3, 4), CFrame.new(ux, roofY + 3.2, uz), STONE_DARK, Enum.Material.Slate, true)
+	part(m, "Roof", Vector3.new(half * 2 + 3, 2, half * 2 + 3), CFrame.new(ux, roofY + 1, uz), STONE_DARK, Enum.Material.Sand, true)
+	part(m, "RoofRidge", Vector3.new(half * 2 + 3, 3, 4), CFrame.new(ux, roofY + 3.2, uz), STONE_DARK, Enum.Material.Sand, true)
 	-- the same floor as at the cave: the shaft's cut takes the ground round its doorway, so a sill of stone is laid from the
 	-- landing out across the cut to the ground of the yard
-	local exitSill = part(m, "ExitSill", Vector3.new(24, 1.4, 14), CFrame.new(ux, up.Top - 0.7, uz - up.Radius - 3.5), FLOORC, Enum.Material.Cobblestone, true)
+	local exitSill = part(m, "ExitSill", Vector3.new(24, 1.4, 14), CFrame.new(ux, up.Top - 0.7, uz - up.Radius - 3.5), FLOORC, Enum.Material.Sand, true)
 	exitSill.Name = "ExitSill"
 	local top = part(marks, "ExitTop", Vector3.new(4, 4, 4), CFrame.new(ux, up.Top + 3, uz - 9.5), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic, false)
 	top.Transparency = 1
@@ -745,8 +745,8 @@ local function buildPlan()
 	T:FillBlock(CFrame.new((wx0 + wx1) / 2, -63, -840), Vector3.new(wx1 - wx0, 26, 72), Enum.Material.Air)
 	table.insert(report, "water taken out of the plan's footprint")
 
-	part(planFolder, "Floor", Vector3.new(sizeX, SLAB, sizeZ), CFrame.new(cx, FLOOR - SLAB / 2, cz), FLOORC, Enum.Material.Slate, true)
-	part(planFolder, "Ceiling", Vector3.new(sizeX, SLAB, sizeZ), CFrame.new(cx, FLOOR + H + SLAB / 2, cz), STONE_DARK, Enum.Material.Cobblestone, true)
+	part(planFolder, "Floor", Vector3.new(sizeX, SLAB, sizeZ), CFrame.new(cx, FLOOR - SLAB / 2, cz), FLOORC, Enum.Material.Sand, true)
+	part(planFolder, "Ceiling", Vector3.new(sizeX, SLAB, sizeZ), CFrame.new(cx, FLOOR + H + SLAB / 2, cz), STONE_DARK, Enum.Material.Sand, true)
 
 	local walls = folder(planFolder, "Walls")
 	local count = 0
@@ -754,7 +754,7 @@ local function buildPlan()
 		local wx0, wz0 = unitX(rect.i), unitZ(rect.j)
 		local sx, sz = rect.w * U, rect.h * U
 		local colour = if (rect.i + rect.j) % 5 == 0 then STONE_DARK else STONE
-		part(walls, "Wall", Vector3.new(sx, H, sz), CFrame.new(wx0 + sx / 2, FLOOR + H / 2, wz0 - sz / 2), colour, Enum.Material.Cobblestone, true)
+		part(walls, "Wall", Vector3.new(sx, H, sz), CFrame.new(wx0 + sx / 2, FLOOR + H / 2, wz0 - sz / 2), colour, Enum.Material.Sand, true)
 		count += 1
 	end
 	table.insert(report, count .. " wall blocks")
@@ -767,7 +767,7 @@ local function buildPlan()
 		if not seen[key] then
 			seen[key] = true
 			local px, pz = unitX(cu.i), unitZ(cu.j)
-			part(lintels, "Lintel", Vector3.new(U, H - CRAWL, U), CFrame.new(px + U / 2, FLOOR + CRAWL + (H - CRAWL) / 2, pz - U / 2), STONE_DARK, Enum.Material.Cobblestone, true)
+			part(lintels, "Lintel", Vector3.new(U, H - CRAWL, U), CFrame.new(px + U / 2, FLOOR + CRAWL + (H - CRAWL) / 2, pz - U / 2), STONE_DARK, Enum.Material.Sand, true)
 		end
 	end
 	table.insert(report, ("%d low units"):format(#crawlUnits))
@@ -806,7 +806,7 @@ local function buildPlan()
 		beam.Name = "Beam"
 	end
 	for k = 1, 4 do
-		part(bm, "Rubble", Vector3.new(rng:NextNumber(1.5, 3), rng:NextNumber(0.8, 1.6), rng:NextNumber(1.5, 2.6)), CFrame.new(bx + rng:NextNumber(-3, 3), FLOOR + 0.6, bz + rng:NextNumber(-1.6, 1.6)) * CFrame.Angles(0, math.rad(rng:NextNumber(0, 180)), 0), STONE_DARK, Enum.Material.Slate, true)
+		part(bm, "Rubble", Vector3.new(rng:NextNumber(1.5, 3), rng:NextNumber(0.8, 1.6), rng:NextNumber(1.5, 2.6)), CFrame.new(bx + rng:NextNumber(-3, 3), FLOOR + 0.6, bz + rng:NextNumber(-1.6, 1.6)) * CFrame.Angles(0, math.rad(rng:NextNumber(0, 180)), 0), STONE_DARK, Enum.Material.Sand, true)
 	end
 	bm.PrimaryPart = bm:FindFirstChildWhichIsA("BasePart")
 	table.insert(report, "barricade")
@@ -851,10 +851,10 @@ local function buildPlan()
 	local ecx = (ex0 + ex1) / 2
 	local ez = cellCentre(ec, er).Z
 	local corr = folder(root, "ExitCorridor")
-	part(corr, "Floor", Vector3.new(ex0 - ex1 + 4, SLAB, 11), CFrame.new(ecx, FLOOR - SLAB / 2, ez), FLOORC, Enum.Material.Slate, true)
-	part(corr, "Ceiling", Vector3.new(ex0 - ex1 + 4, SLAB, 11), CFrame.new(ecx, FLOOR + H + SLAB / 2, ez), STONE_DARK, Enum.Material.Cobblestone, true)
+	part(corr, "Floor", Vector3.new(ex0 - ex1 + 4, SLAB, 11), CFrame.new(ecx, FLOOR - SLAB / 2, ez), FLOORC, Enum.Material.Sand, true)
+	part(corr, "Ceiling", Vector3.new(ex0 - ex1 + 4, SLAB, 11), CFrame.new(ecx, FLOOR + H + SLAB / 2, ez), STONE_DARK, Enum.Material.Sand, true)
 	for _, side in { -1, 1 } do
-		part(corr, "Wall", Vector3.new(ex0 - ex1 + 4, H, 2), CFrame.new(ecx, FLOOR + H / 2, ez + side * (2 * U / 2 + 1)), STONE, Enum.Material.Cobblestone, true)
+		part(corr, "Wall", Vector3.new(ex0 - ex1 + 4, H, 2), CFrame.new(ecx, FLOOR + H / 2, ez + side * (2 * U / 2 + 1)), STONE, Enum.Material.Sand, true)
 	end
 	return report
 end

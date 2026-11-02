@@ -38,7 +38,7 @@ local Theme = require(script.Parent.Theme)
 
 local AreaHud = {}
 
-local MARGIN = 28
+local MARGIN = 14
 local RISE = 14 -- how far a name travels as it arrives or leaves
 local STROKE_BASE = 0.3 -- the outline's opacity when the name is fully up
 local OUT = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
@@ -98,7 +98,7 @@ function AreaHud.create(): Handle
 	local root = Instance.new("Frame")
 	root.Name = "Area"
 	root.AnchorPoint = Vector2.new(0, 1)
-	root.Position = UDim2.new(0, MARGIN, 1, -MARGIN)
+	root.Position = UDim2.new(0, MARGIN, 1, -10) -- (below the health bar, 2026-11-02)
 	root.Size = UDim2.fromOffset(420, 46)
 	root.BackgroundTransparency = 1
 	root.ClipsDescendants = false
@@ -118,7 +118,7 @@ function AreaHud.create(): Handle
 		label.Size = UDim2.new(1, 0, 0, 34)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.TextYAlignment = Enum.TextYAlignment.Bottom
-		label.TextSize = 30
+		label.TextSize = 27
 		label.TextColor3 = Theme.Color.Gold
 		label.TextTransparency = 1
 		label.Text = ""
