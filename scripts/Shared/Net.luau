@@ -62,6 +62,7 @@ local EVENT_NAMES: { string } = {
 	"RequestClaimPrize", -- client -> server: the level of the road's prize to take (Domain/Prizes decides if it may be taken)
 	"ClientReady", -- client -> server: this player's loading screen has gone (the world is drawn); the arrival scene waits for it
 	"RequestCrouch", -- client -> server: a boolean, duck down (true) or stand up (false); the server checks there is room to stand
+	"RequestLanternCover", -- client -> server: a boolean, close the lantern's shutter (true) or open it (false); the King's Wood
 }
 local FUNCTION_NAMES: { string } = {}
 

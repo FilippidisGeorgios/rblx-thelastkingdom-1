@@ -70,9 +70,9 @@ raised."** The dead keep their old orders (the Huntsman his round, the gatekeepe
 3. **Each fire wakes dead in the leaves** (the woodsmen and the lost: the ordinary dead in rot) round the wood, more with more players.
 4. When the fourth burns, far off the gate groans up: the trial is done. The Huntsman still hunts until you are out.
 
-**Deeds (never needed for the gate):**
-- **The Huntsman's journal**: six pages in the lodge and the huts, his own hand and his men's. Read all six for a prize.
-- **The broken footbridge** over the Hollow: mend it with planks from the Smithy's woodyard (area 5) for a short, dry way across.
+**Deed (never needed for the gate):** the Huntsman's journal: six pages in the lodge and the huts, his own hand and his men's.
+Read all six for a prize. (A mended footbridge with the woodyard's planks was planned and left out: the Hollow is dry mud, so a
+bridge would carry nobody anywhere.)
 
 ## 6. The places
 
@@ -98,7 +98,18 @@ raised."** The dead keep their old orders (the Huntsman his round, the gatekeepe
 - **Nothing stuck anywhere without a reason** (the developer's rule): every hut, stone, cart and fire is there for the story or the
   errand.
 
-## 8. Built where
+## 8. What was learned building it (2026-11-03)
+
+- `generate_mesh` makes toy-like trees; `generate_material` makes real ones. Grow the shape, generate the skin.
+- Roblox wraps a material round a cylinder: bark on a cylinder trunk has rings, not furrows. Trunks are two or three blocks
+  turned round the axis (eight or twelve sides); limbs and roots stay cylinders.
+- Generated materials come at Roblox's own scale: set `StudsPerTile` (bark 5-6, moss 4, leaves 3.5, needles 2.5, the floor 4.5).
+- Terrain overrides are global per base material: the wood uses Salt, Pebble and Asphalt, which nothing else in the place uses.
+- A test that teleports a body far must stream the ground first (`RequestStreamAroundAsync`), or the body falls through it,
+  drops under -500, loses its root and the run counts as wiped.
+- A prompt is only pressed when it is shown, and it is only shown when it is on screen: in tests, hold the camera on it.
+
+## 9. Built where
 
 | What | File |
 |---|---|

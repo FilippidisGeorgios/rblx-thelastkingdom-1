@@ -84,6 +84,7 @@ local TASKS: { [string]: any } = {
 	exit = require(script.Parent.Trial.Exit),
 	cellar = require(script.Parent.Trial.Cellar),
 	catacombs = require(script.Parent.Trial.Catacombs),
+	forest = require(script.Parent.Trial.Forest),
 }
 
 local PRESSURE: { [string]: any } = {

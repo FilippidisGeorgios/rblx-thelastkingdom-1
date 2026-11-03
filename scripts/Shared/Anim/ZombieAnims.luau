@@ -684,6 +684,7 @@ local KIND: { [string]: string } = {
 	undead_sentinel = "bash",
 	undead_knight = "sweep",
 	the_king = "bash",
+	the_huntsman = "thrust", -- the boar spear
 }
 
 local function attackFrames(a: Attack, W: number, S: number, R: number): { Frame }

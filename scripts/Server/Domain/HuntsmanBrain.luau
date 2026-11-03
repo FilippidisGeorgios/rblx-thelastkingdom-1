@@ -61,7 +61,8 @@ function HuntsmanBrain.sees(cfg: any, eye: Vector3, look: Vector3, light: Light)
 		return false
 	end
 	local offset = light.at - eye
-	local distance = offset.Magnitude
+	-- measured along the ground: his eyes are high and a lantern hangs at the hip, and "8 studs from him" means from his feet
+	local distance = flat(offset).Magnitude
 	if distance <= TOUCH then
 		return true
 	end

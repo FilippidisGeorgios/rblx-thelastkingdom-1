@@ -44,15 +44,22 @@ local function variants(base: string): { string }
 end
 
 local MATS: { [string]: { material: Enum.Material, names: { string } } } = {}
-local function mat(key: string, material: Enum.Material, base: string)
+-- `tile`: studs one picture of the material covers (2026-11-03: at Roblox's own size the needles were as big as fern
+-- fronds and the bark's furrows as wide as a hand)
+local function mat(key: string, material: Enum.Material, base: string, tile: number)
 	MATS[key] = { material = material, names = variants(base) }
+	for _, v in MaterialService:GetDescendants() do
+		if v:IsA("MaterialVariant") and table.find(MATS[key].names, v.Name) then
+			v.StudsPerTile = tile
+		end
+	end
 end
 function Trees.loadMaterials()
-	mat("oak", Enum.Material.Wood, "OakBark")
-	mat("beech", Enum.Material.Wood, "BeechBark")
-	mat("moss", Enum.Material.Grass, "ForestMoss")
-	mat("leaf", Enum.Material.LeafyGrass, "Foliage")
-	mat("needle", Enum.Material.LeafyGrass, "SpruceNeedles")
+	mat("oak", Enum.Material.Wood, "OakBark", 5)
+	mat("beech", Enum.Material.Wood, "BeechBark", 6)
+	mat("moss", Enum.Material.Grass, "ForestMoss", 4)
+	mat("leaf", Enum.Material.LeafyGrass, "Foliage", 3.5)
+	mat("needle", Enum.Material.LeafyGrass, "SpruceNeedles", 2.5)
 end
 
 type Look = { material: Enum.Material, variant: string, color: Color3 }
@@ -87,6 +94,43 @@ local function limb(parent: Instance, a: Vector3, b: Vector3, r: number, l: Look
 	apply(p, l)
 	p.Parent = parent
 	return p
+end
+
+--[[
+	A piece of trunk from `a` to `b`: blocks turned round the axis (two make an eight-sided trunk, three a twelve-sided
+	one for the thickest). Not a cylinder: Roblox wraps a material ROUND a cylinder, so the bark's furrows ran round the
+	trunk like the rings of a birch (2026-11-03, tried and seen; a material generated "sideways" came out the same). On a
+	block standing along the trunk the furrows run up it, as they do on a tree.
+]]
+local function trunkPiece(parent: Instance, a: Vector3, b: Vector3, r: number, l: Look, rng: Random, solid: boolean): { Part }
+	local d = b - a
+	local len = d.Magnitude
+	local up = d.Unit
+	-- a frame whose Y runs along the trunk
+	local side = if math.abs(up.Y) > 0.95 then Vector3.new(1, 0, 0) else Vector3.new(0, 1, 0):Cross(up).Unit
+	local base = CFrame.fromMatrix((a + b) / 2, side, up)
+	local sides = if r > 2 then 3 else 2
+	local w = r * 2 * (if sides == 3 then 0.97 else 0.93)
+	local turn = rng:NextNumber(0, math.pi / 2)
+	local list = {}
+	for k = 0, sides - 1 do
+		local p = Instance.new("Part")
+		p.Name = if solid then "Trunk" else "TrunkUpper"
+		p.Size = Vector3.new(w, len + r * 0.5, w)
+		p.CFrame = base * CFrame.Angles(0, turn + k * (math.pi / 2 / sides), 0)
+		p.Anchored = true
+		p.CanCollide = solid
+		p.CanQuery = solid
+		p.CanTouch = false
+		p.CastShadow = true
+		apply(p, l)
+		p.Parent = parent
+		table.insert(list, p)
+	end
+	return list
+end
+Trees.trunkPiece = function(parent: Instance, a: Vector3, b: Vector3, r: number, material: Enum.Material, variant: string, color: Color3, seed: number, solid: boolean): { Part }
+	return trunkPiece(parent, a, b, r, { material = material, variant = variant, color = color }, Random.new(seed), solid)
 end
 
 -- a leaf mass: a squashed ball, turned at random
@@ -156,17 +200,10 @@ end
 
 -- the foot: a flare that widens into the ground, and roots that dive into it
 local function foot(model: Model, base: Vector3, r0: number, s: any, bark: Look, moss: Look, rng: Random)
-	local flare = Instance.new("Part")
-	flare.Name = "Flare"
-	flare.Shape = Enum.PartType.Cylinder
-	flare.Size = Vector3.new(2.4, r0 * 2.7, r0 * 2.7)
-	flare.CFrame = CFrame.new(base + Vector3.new(0, 0.4, 0)) * CFrame.Angles(0, rng:NextNumber(0, 6.28), math.rad(90))
-	flare.Anchored = true
-	flare.CanCollide = false
-	flare.CanQuery = false
-	flare.CanTouch = false
-	apply(flare, if rng:NextNumber() < s.mossFoot then moss else bark)
-	flare.Parent = model
+	-- a low collar, mostly in the ground (a tall one read as a green box round the foot)
+	for _, p in trunkPiece(model, base - Vector3.new(0, 1.4, 0), base + Vector3.new(0, 0.5, 0), r0 * 1.16, if rng:NextNumber() < s.mossFoot * 0.6 then moss else bark, rng, false) do
+		p.Name = "Flare"
+	end
 
 	local n = rng:NextInteger(s.roots[1], s.roots[2])
 	local start = rng:NextNumber(0, math.pi * 2)
@@ -238,7 +275,7 @@ function Trees.grow(kind: string, base: Vector3, seed: number, scale: number?): 
 		dir = wander(rng, (dir + UP * 0.25).Unit, s.wobble)
 		local nxt = at + dir * (height / s.segs)
 		-- the lower trunk is solid: it collides and stops sight
-		limb(model, at, nxt, r, if i == 1 and rng:NextNumber() < s.mossFoot * 0.5 then moss else bark, rng, i <= 2)
+		trunkPiece(model, at, nxt, r, if i == 1 and rng:NextNumber() < s.mossFoot * 0.5 then moss else bark, rng, i <= 2)
 		table.insert(trunk, { at = nxt, dir = dir, r = r, t = t })
 		at = nxt
 	end
@@ -336,7 +373,7 @@ function Trees.spruce(base: Vector3, seed: number, scale: number?): (Model, numb
 	for i = 1, segs do
 		local r = r0 * (1 - 0.8 * (i / segs))
 		local nxt = at + wander(rng, dir, 0.03) * (height / segs)
-		limb(model, at, nxt, r, bark, rng, i <= 2)
+		trunkPiece(model, at, nxt, r, bark, rng, i <= 2)
 		at = nxt
 	end
 	local top = at
@@ -393,17 +430,18 @@ function Trees.hollow(base: Vector3, seed: number, scale: number?): (Model, numb
 		if i ~= 1 and i ~= staves then -- the two either side of the mouth are left out: the way in
 			local at = base + Vector3.new(math.cos(a), 0, math.sin(a)) * (inside + wall * 0.5)
 			local tilt = Vector3.new(math.cos(a), 0, math.sin(a)) * -0.06
-			limb(model, at - Vector3.new(0, 1, 0), at + (UP + tilt).Unit * (12 * k), wall * 0.62, if rng:NextNumber() < 0.3 then moss else bark, rng, true)
+			trunkPiece(model, at - Vector3.new(0, 1, 0), at + (UP + tilt).Unit * (12 * k), wall * 0.62, if rng:NextNumber() < 0.3 then moss else bark, rng, true)
 		end
 	end
 	-- the trunk above the room, closed
 	local roofAt = base + Vector3.new(0, 12 * k, 0)
-	limb(model, roofAt - Vector3.new(0, 1.5, 0), roofAt + Vector3.new(rng:NextNumber(-1, 1), 14 * k, rng:NextNumber(-1, 1)), inside + wall * 0.8, bark, rng, true)
+	trunkPiece(model, roofAt - Vector3.new(0, 1.5, 0), roofAt + Vector3.new(rng:NextNumber(-1, 1), 14 * k, rng:NextNumber(-1, 1)), inside + wall * 0.8, bark, rng, true)
 	foot(model, base, inside + wall, { roots = { 7, 9 }, rootLen = { 3, 4.5 }, mossFoot = 0.7 }, bark, moss, rng)
 	-- remove the flare (it would fill the room)
-	local flare = model:FindFirstChild("Flare")
-	if flare then
-		flare:Destroy()
+	for _, flare in model:GetChildren() do
+		if flare.Name == "Flare" then
+			flare:Destroy()
+		end
 	end
 	-- a few dead limbs high up and some leaves
 	local leaf = look(rng, "leaf", Color3.fromRGB(112, 128, 98))

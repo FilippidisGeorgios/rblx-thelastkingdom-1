@@ -13,6 +13,10 @@
 	It looks once a second at who holds the item, so a body that died and came back, or one that took the lantern after
 	the others, gets it without anything having to tell this service.
 
+	THE SHUTTER (the King's Wood, docs/systems/Forest.md). A player may cover the lantern (key F: `RequestLanternCover`):
+	its light drops to `configs/Forest.Cover` (a glimmer at the feet), the glass goes dark, and the player carries the
+	attribute `LanternCovered`, which the Huntsman reads (he sees an open lantern far, a covered one only close).
+
 	Place: Forgotten Lands ONLY (Server/World).
 ]]
 
@@ -24,6 +28,7 @@ local GameService = require(Server.Services.GameService)
 local BackpackService = require(script.Parent.BackpackService)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Config = require(ReplicatedStorage.Shared.Config)
+local Net = require(ReplicatedStorage.Shared.Net)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
 local LanternService = {}
@@ -183,12 +188,13 @@ local function hasLantern(player: Player): boolean
 	return ok and n > 0
 end
 
--- Below the ground the lantern is the only light a body carries: the glow of a blade or a charm is put out while they
--- are down there, and lit again as they come up. (The lantern's own light is never touched.)
+-- Below the ground and in the King's Wood the lantern is the only light a body carries: the glow of a blade or a charm
+-- is put out while they are there, and lit again as they come out. (The lantern's own light is never touched.)
 local function quietOtherLights(character: Model)
 	local cfg = Config.get("Catacombs")
 	local below = (cfg.DarkBelow or -20) :: number
-	local quiet = character:GetPivot().Position.Y < below
+	local at = character:GetPivot().Position
+	local quiet = at.Y < below or Config.get("Forest").contains(at)
 	local held = character:FindFirstChild(MODEL)
 	for _, d in character:GetDescendants() do
 		if d:IsA("Light") and not (held and d:IsDescendantOf(held)) then
@@ -200,6 +206,23 @@ local function quietOtherLights(character: Model)
 				d.Enabled = true
 			end
 		end
+	end
+end
+
+-- The held lantern's light and glass as the shutter says.
+local function shutter(player: Player, held: Instance)
+	local covered = player:GetAttribute("LanternCovered") == true
+	local cfg = Config.get("Catacombs").Lantern
+	local cover = Config.get("Forest").Cover
+	local light = held:FindFirstChild("LanternLight", true)
+	if light and light:IsA("PointLight") then
+		light.Range = if covered then cover.Range else cfg.Range
+		light.Brightness = if covered then cover.Brightness else cfg.Brightness
+	end
+	local glass = held:FindFirstChild("Glass")
+	if glass and glass:IsA("BasePart") then
+		glass.Transparency = if covered then 0.05 else 0.6
+		glass.Color = if covered then Color3.fromRGB(34, 28, 22) else cfg.Color:Lerp(Color3.fromRGB(120, 100, 70), 0.4)
 	end
 end
 
@@ -215,11 +238,40 @@ local function refresh(player: Player)
 	if wants and not held then
 		local hand = handOf(character)
 		if hand then
-			build(hand).Parent = character
+			held = build(hand)
+			held.Parent = character
+			shutter(player, held)
 		end
 	elseif held and not wants then
 		held:Destroy()
+		player:SetAttribute("LanternCovered", nil)
 	end
+end
+
+--[[
+	Closes (`on` true) or opens the shutter of `player`'s lantern. Nothing happens to a player without a lantern.
+]]
+function LanternService.setCovered(player: Player, on: boolean)
+	if not hasLantern(player) then
+		player:SetAttribute("LanternCovered", nil)
+		return
+	end
+	player:SetAttribute("LanternCovered", if on then true else nil)
+	local held = player.Character and player.Character:FindFirstChild(MODEL)
+	if held then
+		shutter(player, held)
+	end
+end
+
+function LanternService.isCovered(player: Player): boolean
+	return player:GetAttribute("LanternCovered") == true
+end
+
+-- Where `player`'s lantern burns (its flame), or nil without one.
+function LanternService.flameOf(player: Player): Vector3?
+	local held = player.Character and player.Character:FindFirstChild(MODEL)
+	local flame = held and held:FindFirstChild("Flame")
+	return if flame and flame:IsA("BasePart") then flame.Position else nil
 end
 
 --[[
@@ -244,6 +296,11 @@ function LanternService.Start()
 	if GameService.getPlaceRole() ~= Constants.PlaceRole.World then
 		return
 	end
+	Net.getEvent("RequestLanternCover").OnServerEvent:Connect(function(player: Player, on: any)
+		if type(on) == "boolean" then
+			LanternService.setCovered(player, on)
+		end
+	end)
 	task.spawn(function()
 		while true do
 			for _, player in Players:GetPlayers() do

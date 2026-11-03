@@ -197,13 +197,16 @@ local Items = {
 	oil_jar = { DisplayName = "Jar of Lamp Oil", Category = "QuestItem", Stackable = true, MaxStack = 2, Banked = false, Use = "Pour it on the door at the end of the yard." },
 	unlit_torch = { DisplayName = "Unlit Torch", Category = "QuestItem", Stackable = false, Banked = false, Use = "Light it at the forge." },
 	axe = { DisplayName = "Woodsman's Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the dead trees in the yard." },
-	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "To board the doors of the Great Hall." },
+	-- (they boarded the Great Hall's doors until the King's Wood took its place, 2026-11-03: the woodyard deed still pays)
+	plank = { DisplayName = "Plank", Category = "QuestItem", Stackable = true, MaxStack = 16, Banked = false, Use = "Cut at the Smithy's woodyard." },
 	cellar_key = { DisplayName = "Cellar Key", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the door at the foot of the cellar stair, beside the kitchen." },
 	-- The Catacombs (docs/systems/Catacombs.md). The lantern is given at the table by the mountain and is carried to the
 	-- end of the run (the forest will not be walkable without it); the key and the axe are found in the dark.
 	lantern = { DisplayName = "Oil Lantern", Category = "QuestItem", Stackable = false, Banked = false, Use = "Your light in the dark places. Keep it: you will need it to the end." },
 	catacomb_key = { DisplayName = "Cold Iron Key", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the iron door at the foot of the stair that leads up and out of the Catacombs." },
 	catacomb_axe = { DisplayName = "Hewing Axe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For the fallen beams across the exit road. Every blow is loud." },
+	-- The King's Wood (docs/systems/Forest.md): one pot for each watch-fire; its old wood is wet and will only take with pitch.
+	pitch = { DisplayName = "Pot of Pitch", Category = "QuestItem", Stackable = true, MaxStack = 4, Banked = false, Use = "Pour it on the wet wood of a watch-fire, then light it from your lantern." },
 	keep_key = { DisplayName = "Key of the Marshal's Door", Category = "QuestItem", Stackable = false, Banked = false, Use = "Opens the little door in the west of the keep's hall: the way up and out." },
 	mangonel_stone = { DisplayName = "Mangonel Stone", Category = "QuestItem", Stackable = false, Banked = false, Use = "Load it in the sling of the mangonel in the Inner Ward." },
 	pickaxe = { DisplayName = "Miner's Pickaxe", Category = "QuestItem", Stackable = false, Banked = false, Use = "For rubble. Keep it." },

@@ -1,3 +1,45 @@
+## Version 0.44.0 — The King's Wood (area 6): a big dark forest, grown trees, a huntsman who sees light
+
+What the developer asked for (2026-11-03): the forest in place of one area, big, with something practical to do, the sight short
+again (the lantern from the catacombs carried up to and through it), a figure of its own, the dead's rot clothing for every figure,
+very good design and decoration, and generated, very realistic trees. Design and reasons: `docs/systems/Forest.md`.
+
+- **Area 6 is now the King's Wood** (the Great Hall's trial was one siege; the Inner Ward is still the big fight). Its 24 models
+  were MOVED to `ServerStorage.Assets.Retired.Area6`, its trial is kept in `configs/RetiredTrials`. The wood broke through the west
+  wall (between two buttresses, north of the side tower: broken courses, fallen stone; copies of every wall piece changed are in
+  `Retired.Area6Wall`), runs across the old moat (the **Hollow**: the water taken out between two earth dams, mud, puddles, reeds,
+  a sunk cart, a fallen giant across it) and on into an **outer wood** 300 by 240 studs. `AreaService` counts all of it as area 6
+  ("THE KING'S WOOD", "Keep your light low."). Invisible walls behind the trees keep everyone in. Terrain backup:
+  `ServerStorage.ForestTerrainBackup`.
+- **The trees are grown, not generated.** Whole trees, a trunk and a log made with `generate_mesh` came out as toys (a stump with a
+  face, a lollipop beech); the materials made with `generate_material` came out like photographs. So `tools/ForestTrees.luau` grows
+  each tree from its own seed (oak, beech, spruce, dead, the orchard's fruit trees, hollow giants to hide in): a leaning,
+  bending, narrowing trunk, a collar and roots diving into the ground, limbs that fork, leaf masses with broken edges, spruce
+  boughs that hang; dressed in generated OakBark, BeechBark, ForestMoss, Foliage, SpruceNeedles. Trunks are blocks round the
+  axis, not cylinders: Roblox wraps a material round a cylinder, so the bark's furrows ran round the trunk (seen, and a "sideways"
+  material did not help). About 440 trees, ~38,000 parts in the wood; 81 FPS in a Studio play test with all of it streamed.
+- **The ground**: forest floor, moss and worn paths are generated materials on terrain bases nothing else in the place uses
+  (Salt, Pebble, Asphalt), so the yards elsewhere are untouched. Under the trees: logs, stumps, stones, ferns, brambles, mushrooms.
+- **The places** (each there for the story or the errand): the gamekeepers' board with the rule and a dead gamekeeper, the old
+  orchard in a ruined wall, the charcoal burners' clearing, the Hollow, the stag stones (a ring round a fire, a stag's skull on the
+  tallest), the Huntsman's lodge (antlers over the door, his table, bed, trophies, the pitch store), the woodcutter's hut.
+- **The errand** (`Trial/Forest`): find pots of pitch (6 of 9 places, rolled), pour one on each of four watch-fires and light it
+  from your lantern; a fire catches for 6 s (its flare is seen across the wood), then burns for the run: a safe place he will not
+  enter. Each fire wakes dead in the leaves. Four fires: the gate groans up. Six pages are the deed (`deed_forest_pages`).
+- **The Huntsman** (`Domain/HuntsmanBrain` with `Tests/Forest.spec`, `Trial/Huntsman`, body by `tools/BuildHuntsman`): the King's
+  Master of the Hunt, on the first rig like the Doctor, in rot cloth and leather, a stag's skull with antlers (generated mesh) for a
+  face, gloved hands, a horn, a boar spear. He sees LIGHT: an open lantern at 70 studs, a covered one at 8 (6 crouched), never
+  behind a trunk or inside a fire's glow; he blows his horn, hunts at 14.5 (a walker does 16), searches where it went out, strikes
+  for 50, and cannot die: hurt enough (300 times the party's health curve) he goes back into the dark for 25 s.
+- **Cover the lantern: F** (a lantern button on phones; `RequestLanternCover`, `LanternService.setCovered`, `LanternController`):
+  a glimmer of 5 studs. In the wood, as below the ground, a blade's own glow is put out; the lantern wavers and a heart beats
+  as he comes near (`DreadController`).
+- **The dark**: light zone `Forest` (no flat light, no sky glow, a thick haze).
+- Checked in play: the trial starts, the Huntsman walks his round through the breach, sees an open lantern at 35 studs, blows,
+  hunts, strikes; loses a covered one, searches, goes back; is driven off at 510 for one player; pitch taken, poured and lit with
+  the real prompts; fires count 1, 2 of 4. **321 specs pass.** Not yet: a person walking the whole wood start to end, all four
+  fires and the gate in one go, the Huntsman's clips judged in motion, a phone.
+
 ## Version 0.43.3 — The catacombs checked again: a crawler that really crawls, one lantern on the table
 
 The developer asked (2026-11-03) for the catacombs to be perfected and checked again before the forest. A play-through of the whole area (the table,

@@ -1,16 +1,17 @@
 --!strict
 --[[
 	DreadController
-	What the catacombs do to the player's own senses (docs/systems/Catacombs.md, "Fear"). Only the player's own screen and ears:
-	nothing here changes what the server knows, so it can never be unfair.
+	What the dark places do to the player's own senses (docs/systems/Catacombs.md "Fear", docs/systems/Forest.md). Only the
+	player's own screen and ears: nothing here changes what the server knows, so it can never be unfair.
 
-	  * THE LANTERN BREATHES. Under the ground (below `configs/Catacombs.DarkBelow`) the light of the held lantern wavers a little
-	    all the time, and when the plague doctor is near it flickers hard, shrinks and gutters, the nearer he is.
+	  * THE LANTERN BREATHES. Under the ground (below `configs/Catacombs.DarkBelow`) and in the King's Wood the light of the
+	    held lantern wavers a little all the time, and when the plague doctor (below) or the Huntsman (in the wood) is near it
+	    flickers hard, shrinks and gutters, the nearer he is. A covered lantern (key F) is the glimmer `Forest.Cover` says.
 	  * A HEART. A slow heartbeat grows with his nearness: silent beyond `Dread.HeartFrom` studs, loud at his feet.
 	  * A DRONE. A low, constant, unsettling sound while the player is below the ground, so the silence is never empty.
 
 	Sounds are named in `configs/Catacombs.Dread` (Roblox's own library; a sound that does not load is simply silent).
-	Place: client (boots in both places; active only below the ground of the Forgotten Lands).
+	Place: client (boots in both places; active only in the dark places of the Forgotten Lands).
 ]]
 
 local Players = game:GetService("Players")
@@ -43,18 +44,28 @@ function DreadController.Start()
 		return
 	end
 	local dread = cfg.Dread
+	local okForest, forest = pcall(Config.get, "Forest")
+	if not okForest then
+		forest = nil
+	end
 	local player = Players.LocalPlayer
 	local drone = makeSound(dread.Drone, "CatacombDrone")
 	local heart = makeSound(dread.Heart, "CatacombHeart")
-	local baseRange: number? = nil
-	local baseBright: number? = nil
 	local t = 0
 
-	local function doctorDistance(origin: Vector3): number
+	-- the lantern's own light: open (`Catacombs.Lantern`) or covered (`Forest.Cover`); the server sets the same for the others
+	local function base(): (number, number)
+		if player:GetAttribute("LanternCovered") == true and forest then
+			return forest.Cover.Range, forest.Cover.Brightness
+		end
+		return cfg.Lantern.Range, cfg.Lantern.Brightness
+	end
+
+	local function hunterDistance(origin: Vector3, attribute: string): number
 		local best = math.huge
-		-- the Doctor is the one model that carries the attribute `Doctor`
+		-- the Doctor carries the attribute `Doctor`, the Huntsman `Hunter`
 		for _, m in Workspace:GetChildren() do
-			if m:IsA("Model") and m:GetAttribute("Doctor") then
+			if m:IsA("Model") and m:GetAttribute(attribute) then
 				local d = (m:GetPivot().Position - origin).Magnitude
 				if d < best then
 					best = d
@@ -82,9 +93,10 @@ function DreadController.Start()
 			drone:Stop()
 		end
 
+		local inWood = forest ~= nil and forest.contains(root.Position)
 		local near = 0 -- 0 far .. 1 at his feet
-		if below then
-			local d = doctorDistance(root.Position)
+		if below or inWood then
+			local d = hunterDistance(root.Position, if below then "Doctor" else "Hunter")
 			near = math.clamp(1 - (d - dread.HeartTo) / (dread.HeartFrom - dread.HeartTo), 0, 1)
 		end
 
@@ -102,19 +114,16 @@ function DreadController.Start()
 		local held = character and character:FindFirstChild("HeldLantern")
 		local light = held and held:FindFirstChild("LanternLight", true) :: PointLight?
 		if light then
-			if not baseRange or not light:GetAttribute("TLK_Base") then
-				baseRange, baseBright = light.Range, light.Brightness
-				light:SetAttribute("TLK_Base", true)
-			end
-			if below then
+			local baseRange, baseBright = base()
+			if below or inWood then
 				local waver = math.noise(t * 2.3, 7) * 0.5 + math.noise(t * 9, 3) * 0.25
 				-- a hard flicker when he is near: bursts, not a smooth change
 				local gutter = near * (math.noise(t * 21, 5) * 0.5 + 0.5) ^ 2
-				light.Range = (baseRange :: number) * (1 + waver * dread.Waver) * (1 - near * dread.Shrink) * (1 - gutter * 0.25)
-				light.Brightness = (baseBright :: number) * (1 + waver * dread.Waver * 1.5) * (1 - gutter * 0.7)
+				light.Range = baseRange * (1 + waver * dread.Waver) * (1 - near * dread.Shrink) * (1 - gutter * 0.25)
+				light.Brightness = baseBright * (1 + waver * dread.Waver * 1.5) * (1 - gutter * 0.7)
 			else
-				light.Range = baseRange :: number
-				light.Brightness = baseBright :: number
+				light.Range = baseRange
+				light.Brightness = baseBright
 			end
 		end
 	end)

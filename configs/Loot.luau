@@ -337,6 +337,10 @@ local Loot = {
 		deed_catacomb_pages = {
 			Always = { { Item = "grave_silver", Min = 3, Max = 4 }, { Item = "saints_medal", Min = 1, Max = 1 } },
 		},
+		-- The six pages of the King's Wood (the Huntsman's book and his men's), all read.
+		deed_forest_pages = {
+			Always = { { Item = "grave_silver", Min = 3, Max = 4 }, { Item = "star_shard", Min = 1, Max = 1 } },
+		},
 		-- A cache in a crawl pocket: a refuge with a little in it.
 		catacomb_pocket = {
 			Gold = { Chance = 0.7, Min = 3, Max = 8 },

@@ -124,6 +124,16 @@ local function cyl(parent: Instance, name: string, a: Vector3, b: Vector3, r: nu
 	return part(parent, name, Vector3.new(len, r * 2, r * 2), CFrame.lookAt((a + b) / 2, b) * CFrame.Angles(0, math.rad(90), 0), color, material, o)
 end
 
+-- a piece of bark-covered wood from `a` to `b` (a log, a stump, a fallen trunk): blocks round the axis, so the bark's
+-- furrows run along it (on a cylinder they run round it: see ForestTrees.trunkPiece)
+local function barkPiece(parent: Instance, name: string, a: Vector3, b: Vector3, r: number, variantName: string, color: Color3, collide: boolean): { Part }
+	local list = Trees.trunkPiece(parent, a, b, r, Enum.Material.Wood, variantName, color, math.random(1, 1e6), collide)
+	for _, p in list do
+		p.Name = name
+	end
+	return list
+end
+
 local function blob(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material, opts: { [string]: any }?): Part
 	local p = part(parent, name, size, cf, color, material, opts)
 	local m = Instance.new("SpecialMesh")
@@ -309,7 +319,8 @@ local function overrides()
 			MaterialService:SetBaseMaterialOverride(pr[1], name)
 			for _, v in MaterialService:GetDescendants() do
 				if v:IsA("MaterialVariant") and v.Name == name then
-					v.StudsPerTile = if pr[2] == "ForestPath" then 9 else 11
+					-- small enough that a leaf is a leaf (at 11 they were the size of a hand spread wide)
+					v.StudsPerTile = if pr[2] == "ForestPath" then 6 else 4.5
 				end
 			end
 		else
@@ -696,8 +707,8 @@ local function buildUnder()
 			local b = a + dir * len + Vector3.new(0, rng:NextNumber(-0.6, 0.6), 0)
 			local mid = (a + b) / 2 + Vector3.new(rng:NextNumber(-0.6, 0.6), 0, rng:NextNumber(-0.6, 0.6))
 			local bark = variant("OakBark", rng)
-			cyl(f, "Log", a, mid, r, barkColor, Enum.Material.Wood, { variant = bark, collide = true })
-			cyl(f, "Log", mid, b, r * 0.85, barkColor, Enum.Material.Wood, { variant = bark, collide = true })
+			barkPiece(f, "Log", a, mid, r, bark, barkColor, true)
+			barkPiece(f, "Log", mid, b, r * 0.85, bark, barkColor, true)
 			-- the moss on its back
 			cyl(f, "LogMoss", a + Vector3.new(0, r * 0.35, 0), mid + Vector3.new(0, r * 0.3, 0), r * 0.72, mossColor, Enum.Material.Grass, { variant = variant("ForestMoss", rng), shadow = false })
 			-- a stub of branch
@@ -718,7 +729,7 @@ local function buildUnder()
 			local r = rng:NextNumber(1, 2)
 			local h = rng:NextNumber(1.2, 3.5)
 			local bark = variant("OakBark", rng)
-			cyl(f, "Stump", base, base + Vector3.new(rng:NextNumber(-0.2, 0.2), h, rng:NextNumber(-0.2, 0.2)), r, barkColor, Enum.Material.Wood, { variant = bark, collide = true })
+			barkPiece(f, "Stump", base, base + Vector3.new(rng:NextNumber(-0.2, 0.2), h - r * 0.25, rng:NextNumber(-0.2, 0.2)), r, bark, barkColor, true)
 			-- the cut face, pale and rotten
 			cyl(f, "StumpTop", base + Vector3.new(0, h - 0.05, 0), base + Vector3.new(0, h + 0.08, 0), r * 0.92, Color3.fromRGB(150, 126, 96), Enum.Material.Wood)
 			for k = 1, rng:NextInteger(3, 5) do
@@ -1064,8 +1075,8 @@ local function buildPlaces()
 		local b = ground(-306, -1312) + Vector3.new(0, 1.2, 0)
 		local bark = variant("OakBark", rng)
 		local mid = (a + b) / 2 + Vector3.new(0, 1.5, 0)
-		cyl(m, "FallenTrunk", a, mid, 2.6, Color3.fromRGB(176, 166, 152), Enum.Material.Wood, { variant = bark, collide = true })
-		cyl(m, "FallenTrunk", mid, b, 2.2, Color3.fromRGB(176, 166, 152), Enum.Material.Wood, { variant = bark, collide = true })
+		barkPiece(m, "FallenTrunk", a, mid, 2.6, bark, Color3.fromRGB(176, 166, 152), true)
+		barkPiece(m, "FallenTrunk", mid, b, 2.2, bark, Color3.fromRGB(176, 166, 152), true)
 		cyl(m, "FallenMoss", a + Vector3.new(0, 1, 0), mid + Vector3.new(0, 0.9, 0), 1.9, Color3.fromRGB(150, 160, 140), Enum.Material.Grass, { variant = variant("ForestMoss", rng), shadow = false })
 		for k = 1, 9 do
 			local ang = k / 9 * math.pi * 2
@@ -1154,9 +1165,11 @@ local function buildPlaces()
 		cyl(m, "ChoppingBlock", block - Vector3.new(0, 0.2, 0), block + Vector3.new(0, 1.6, 0), 1.1, Color3.fromRGB(150, 120, 90), Enum.Material.Wood, { variant = variant("OakBark", rng), collide = true })
 		cyl(m, "AxeHaft", block + Vector3.new(0, 1.6, 0), block + Vector3.new(0.6, 4, 0.3), 0.1, WOOD, Enum.Material.Wood)
 		part(m, "AxeHead", Vector3.new(0.9, 0.7, 0.15), CFrame.new(block + Vector3.new(0.05, 1.75, 0)), IRON, Enum.Material.CorrodedMetal)
-		mark("Pitch6", at + Vector3.new(0, 0.8, 0))
+		-- the pot and the page at opposite ends of the hut (two prompts on E a hand apart flicker between each other)
+		local hutCf = CFrame.new(at) * CFrame.Angles(0, math.rad(200), 0)
+		mark("Pitch6", (hutCf * CFrame.new(-2.6, 0.8, 1.8)).Position)
 		mark("Pitch7", block + Vector3.new(1.6, 0.6, 0))
-		mark("Page4", at + Vector3.new(1.5, 1.2, 0.5))
+		mark("Page4", (hutCf * CFrame.new(2.6, 1.2, -1.2)).Position)
 	end
 
 	-- the marks the trial reads: his round, where the dead rise, and the hiding trees

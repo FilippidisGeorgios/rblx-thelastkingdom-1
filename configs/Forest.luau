@@ -223,4 +223,16 @@ local Forest = {
 	PagesPrize = "deed_forest_pages",
 }
 
+-- Whether `p` is in the wood: inside the walls, in the breach, in the Hollow or in the outer wood.
+function Forest.contains(p: Vector3): boolean
+	local function inBox(box: any): boolean
+		return p.X >= math.min(box.X0, box.X1) and p.X <= math.max(box.X0, box.X1) and p.Z >= math.min(box.Z0, box.Z1) and p.Z <= math.max(box.Z0, box.Z1)
+	end
+	if inBox(Forest.Inner) or inBox(Forest.Hollow) or inBox(Forest.Outer) then
+		return true
+	end
+	-- the strip between the inner wood and the Hollow, outside the wall
+	return p.X < -171 and p.X > -232 and p.Z <= Forest.Inner.Z0 and p.Z >= Forest.Inner.Z1
+end
+
 return table.freeze(Forest)

@@ -58,6 +58,21 @@ local LightZones = {
 			FadeOut = 1.6,
 		},
 
+		-- the King's Wood (docs/systems/Forest.md): night under the trees. No flat light, no glow from the sky, a thick haze
+		-- that swallows what the lantern does not reach; a little left so that a crown against the sky can still be told
+		-- from the sky (the shape of the wood, not the way through it)
+		Forest = {
+			Ambient = Color3.fromRGB(2, 2, 3),
+			OutdoorAmbient = Color3.fromRGB(4, 5, 8),
+			Brightness = 0.05,
+			ExposureCompensation = 0.6,
+			EnvironmentDiffuseScale = 0,
+			EnvironmentSpecularScale = 0.02,
+			AtmosphereDensity = 0.42,
+			FadeIn = 2.6,
+			FadeOut = 2.4,
+		},
+
 		-- under the ground: black but for what burns
 		Cellar = {
 			Ambient = Color3.fromRGB(6, 6, 8),

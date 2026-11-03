@@ -30,11 +30,18 @@
 ]]
 
 local Catacombs = require(script.Parent.Catacombs)
+local Forest = require(script.Parent.Forest)
 
 -- Nine pages in the Catacombs, each on a little table that the builder named Paper1 .. Paper9.
 local CatacombPages = {}
 for i, page in Catacombs.Pages do
 	table.insert(CatacombPages, { at = "Decorations.Area4.Catacombs.Marks.Paper" .. i, title = page.title, sign = page.sign, lines = page.lines })
+end
+
+-- Six pages in the King's Wood, each on a mark the builder named Page1 .. Page6.
+local ForestPages = {}
+for i, page in Forest.Pages do
+	table.insert(ForestPages, { at = "Decorations.Area6.Forest.Marks.Page" .. i, title = page.title, sign = page.sign, lines = page.lines })
 end
 
 local Trials = {
@@ -244,25 +251,23 @@ local Trials = {
 	},
 
 	--======================================================================
-	-- 6 — Great Hall. The siege.
+	-- 6 — The King's Wood (it took the Great Hall's place; the old trial is kept in `RetiredTrials`).
 	--
-	-- The hall has four doorways and, on the Great Hall's own terms, a pause:
-	-- 75 seconds in which to fetch planks and nail the doors (up to six a door,
-	-- four seal it), then a horn, then three waves of spearmen and archers that
-	-- come to the DOORS and break them. The barricades are things the dead
-	-- attack, so the boards are health, not decoration. Boarding is a deed
-	-- (nothing waits on it); the gate rises when the siege is cleared.
+	-- The lord's garden behind the hall grew into the King's hunting wood, broke the west wall and swallowed the yard. Night under
+	-- the trees, and only the lantern from the catacombs to see by. The Huntsman keeps the wood: he sees light and nothing
+	-- else (cover the lantern, F). The gamekeepers' rule: when the four watch-fires burn, the hunt is over and the gate is
+	-- raised. Pots of pitch lie about the wood; each fire is poured and lit from a lantern, and each wakes the dead in the
+	-- leaves. The errand is one task (`Trial/Forest`, docs/systems/Forest.md). Six pages are the deed.
 	--======================================================================
 	[6] = {
+		-- the wood calls its own dead (each fire wakes some), and the Huntsman: no wave in the yard
 		ownsWaves = true,
 
 		phases = {
 			{
-				id = "hold",
-				hint = "Board the doors, then hold the hall",
-				tasks = {
-					{ id = "siege", kind = "siege", encounter = "area_6", grace = 75 },
-				},
+				id = "fires",
+				hint = "Light the four watch-fires (%d of %d)",
+				tasks = { { id = "forest", kind = "forest" } },
 			},
 		},
 
@@ -270,14 +275,10 @@ local Trials = {
 
 		deeds = {
 			{
-				id = "boards",
-				kind = "board",
-				hall = "Decorations.Area6.GreatHall",
-				maxPlanks = 6,
-				sealPlanks = 4,
-				healthPerPlank = 150,
-				nailHold = 1.1,
-				racks = { { door = 2, planks = 8 }, { door = 4, planks = 8 } },
+				id = "pages",
+				kind = "letters",
+				prize = Forest.PagesPrize,
+				letters = ForestPages,
 			},
 		},
 	},

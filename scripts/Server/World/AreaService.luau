@@ -143,7 +143,7 @@ local AREAS = {
 	{ label = "KITCHENS", subtitle = "Cold ovens. A boarded well." },
 	{ label = "CATACOMBS", subtitle = "Do not run. Do not speak." },
 	{ label = "SMITHY", subtitle = "It was still working when it stopped." },
-	{ label = "GREAT HALL", subtitle = "The roof is gone. The table is not." },
+	{ label = "THE KING'S WOOD", subtitle = "Keep your light low." }, -- it took the Great Hall's place (docs/systems/Forest.md)
 	{ label = "THE ROWS", subtitle = "The only cheerful place in the castle." },
 	{ label = "INNER WARD", subtitle = "The line broke here." },
 	{ label = "KEEP STEPS", subtitle = "Whatever it was, it went in there." },
@@ -221,6 +221,11 @@ local function areaAt(position: Vector3): number?
 		return nil
 	end
 	if math.abs(position.X) > HALF_W then
+		-- the King's Wood goes out through the broken west wall: beyond it, it is still area 6
+		local forest = Config.get("Forest")
+		if forest.contains(position) then
+			return forest.Area
+		end
 		return nil
 	end
 	local index = math.floor((Z_START - position.Z) / CHAMBER_D) + 1

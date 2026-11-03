@@ -243,6 +243,31 @@ function Icons.crouch(props: Props): Frame
 end
 
 --============================================================================
+-- Lantern: a hand lantern with its bail, the glass lit (the cover button in the King's Wood)
+--============================================================================
+function Icons.lantern(props: Props): Frame
+	local r = root(props)
+	r.Name = "Lantern"
+	local iron = Color3.fromRGB(52, 46, 42)
+	local glow = props.Tint or Color3.fromRGB(255, 214, 140)
+	local px = math.max(1, (props.Size or 24) / 20)
+	local bail = frame(r, 0.5, 0.14, 0.34, 0.16)
+	bail.BackgroundTransparency = 1
+	round(bail)
+	stroke(bail, iron:Lerp(Color3.new(1, 1, 1), 0.35), px * 1.4)
+	local cap = frame(r, 0.5, 0.3, 0.56, 0.12, iron:Lerp(Color3.new(1, 1, 1), 0.2))
+	round(cap, 0.4)
+	local glass = frame(r, 0.5, 0.58, 0.46, 0.42)
+	shade(glass, glow:Lerp(Color3.new(1, 1, 1), 0.3), glow:Lerp(Color3.fromRGB(150, 80, 30), 0.5))
+	stroke(glass, iron, px * 1.6)
+	local flame = frame(r, 0.5, 0.6, 0.12, 0.2, Color3.fromRGB(255, 246, 210))
+	round(flame)
+	local foot = frame(r, 0.5, 0.84, 0.58, 0.1, iron:Lerp(Color3.new(1, 1, 1), 0.2))
+	round(foot, 0.4)
+	return r
+end
+
+--============================================================================
 -- Laurel
 --============================================================================
 function Icons.laurel(props: Props): Frame

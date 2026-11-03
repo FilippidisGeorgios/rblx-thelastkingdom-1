@@ -429,6 +429,25 @@ local Enemies = {
 		Body = { "plague_doctor" },
 	},
 
+	--[[
+		The Huntsman of the King's Wood (area 6, docs/systems/Forest.md). No `AI` block: he sees only light, and
+		`Server/World/Trial/Huntsman` walks him with `Domain/HuntsmanBrain`. He cannot die: his health is a wall, and when he
+		has taken `configs/Forest.Huntsman.Endure` he goes back into the dark for a while and is made whole again.
+	]]
+	the_huntsman = {
+		DisplayName = "The Huntsman",
+		Faction = "Enemies",
+		Archetype = "Boss",
+		MaxHealth = 100000,
+		Armour = 0.1,
+		Stats = {},
+		DamageType = "Physical",
+		Resistances = {},
+		Tier = "Boss",
+		Abilities = {},
+		Body = { "the_huntsman" },
+	},
+
 	--======================================================================
 	-- THE CURED — area 3
 	--======================================================================

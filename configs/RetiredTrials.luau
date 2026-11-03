@@ -6,6 +6,9 @@
 	[4] The Graveyard, "carry the fire": four braziers, graves that open section by section, the belfry bell. It gave its place to the
 	Catacombs (2026-10-31, docs/systems/Catacombs.md): the burying ground is still in the yard behind the mountain, but its trial
 	is not run. To bring it back, move this entry into `Trials.luau` and say what happens to the Catacombs.
+
+	[6] The Great Hall, "the siege": board the four doors with planks, then hold the hall against three waves. It gave its place to the
+	King's Wood (2026-11-03, docs/systems/Forest.md): the hall and its yard were moved to `ServerStorage.Assets.Retired.Area6`.
 ]]
 
 local RetiredTrials = {
@@ -71,6 +74,45 @@ local RetiredTrials = {
 					{ id = "undead_runner", count = 3 },
 					{ id = "undead_brute_heavy", count = 1 },
 				},
+			},
+		},
+	},
+
+	--======================================================================
+	-- 6 — Great Hall. The siege.
+	--
+	-- The hall has four doorways and, on the Great Hall's own terms, a pause:
+	-- 75 seconds in which to fetch planks and nail the doors (up to six a door,
+	-- four seal it), then a horn, then three waves of spearmen and archers that
+	-- come to the DOORS and break them. The barricades are things the dead
+	-- attack, so the boards are health, not decoration. Boarding is a deed
+	-- (nothing waits on it); the gate rises when the siege is cleared.
+	--======================================================================
+	[6] = {
+		ownsWaves = true,
+
+		phases = {
+			{
+				id = "hold",
+				hint = "Board the doors, then hold the hall",
+				tasks = {
+					{ id = "siege", kind = "siege", encounter = "area_6", grace = 75 },
+				},
+			},
+		},
+
+		pressure = {},
+
+		deeds = {
+			{
+				id = "boards",
+				kind = "board",
+				hall = "Decorations.Area6.GreatHall",
+				maxPlanks = 6,
+				sealPlanks = 4,
+				healthPerPlank = 150,
+				nailHold = 1.1,
+				racks = { { door = 2, planks = 8 }, { door = 4, planks = 8 } },
 			},
 		},
 	},

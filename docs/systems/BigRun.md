@@ -13,6 +13,10 @@ escape. *Crouch* = ducking down to fit a low passage.
 > hunts by sound. Written down in `docs/systems/Catacombs.md`; it replaces this page's sections 6 and 10 for the catacombs. The forest will need the
 > lantern from the catacombs, so it comes after them (not before the gate as first thought).
 
+> **2026-11-03 update.** The forest is built as AREA 6, the King's Wood (it took the Great Hall's place and goes out through the
+> broken west wall): `docs/systems/Forest.md`. It replaces this page's "Dark Forest (before the gate)": the party carries weapons,
+> the hunter sees light instead of hearing, and there is one of him.
+
 ## 0. What is built so far (0.41.0, 2026-10-30)
 
 | Piece | Where | State |
