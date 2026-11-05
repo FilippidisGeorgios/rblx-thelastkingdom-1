@@ -1,4 +1,9 @@
 --[[
+	RETIRED 2026-11-05. The developer did not like trees built of blocks: two or three textured blocks round one trunk showed
+	the bark twice where they overlapped, the branches never came out thin, and the moss read as green pieces stuck on. The
+	wood now stands on store-made mesh trees (`tools/ForestDress.luau`); the grown ones are kept in
+	ServerStorage.Assets.Retired.ForestTreesGrown and their materials in ServerStorage.Assets.Retired.Materials.
+
 	ForestTrees — the tree grower of the King's Wood (docs/systems/Forest.md). A library, not a tool to run by itself:
 	`tools/BuildForest.luau` loads it (the runner puts it in a ModuleScript beside the builder) and grows every tree with it.
 

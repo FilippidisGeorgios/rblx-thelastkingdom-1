@@ -109,11 +109,13 @@ local MAT = {
 	oak = { Mat.Wood, "TLK_OakBeam", Color3.fromRGB(168, 150, 132), 0.1 },
 	oakDark = { Mat.Wood, "TLK_OakBeam", Color3.fromRGB(116, 100, 88), 0.1 },
 	planks = { Mat.WoodPlanks, "TLK_OldPlanks", Color3.fromRGB(176, 156, 136), 0.1 },
-	rubble = { Mat.Cobblestone, "TLK_Rubble", Color3.fromRGB(150, 144, 136), 0.08 },
+	-- rubble and cobbles were photo stone (TLK_Rubble / TLK_Cobbles: stones with black joints); the developer asked
+	-- (2026-11-05) for plain stone everywhere, "like cement with a few strokes": the castle walls' own Slate
+	rubble = { Mat.Slate, nil, Color3.fromRGB(120, 115, 109), 0.08 },
 	charred = { Mat.Wood, "TLK_Charred", Color3.fromRGB(70, 62, 58), 0.1 },
 	shingles = { Mat.RoofShingles, "TLK_Shingles", Color3.fromRGB(196, 192, 186), 0.06 },
 	burlap = { Mat.Fabric, "TLK_Burlap", Color3.fromRGB(158, 146, 126), 0.08 },
-	cobbles = { Mat.Cobblestone, "TLK_Cobbles", Color3.fromRGB(190, 186, 180), 0.06 },
+	cobbles = { Mat.Slate, nil, Color3.fromRGB(128, 124, 118), 0.06 },
 	iron = { Mat.CorrodedMetal, nil, Color3.fromRGB(64, 54, 48), 0.08 },
 	ironDark = { Mat.Metal, nil, Color3.fromRGB(40, 38, 38), 0.05 },
 	soot = { Mat.Slate, nil, Color3.fromRGB(34, 31, 30), 0.05 },
@@ -1813,19 +1815,19 @@ local function paintGround(z0: number, z1: number, roads: { any }, mudAround: { 
 	end
 end
 
--- Terrain textures for the whole place: the generated variants take over the
--- base materials, so the moat's mud and the bridge's cobbles match the yards.
+-- Terrain textures for the whole place: the generated mud takes over the base
+-- material, so the moat's mud matches the yards. The roads and yards are plain
+-- stone ground (Concrete), not cobbles: the photo cobbles (TLK_Cobbles) were
+-- taken out on 2026-11-05 ("like cement with a few strokes").
 local function terrainLook()
 	pcall(function()
 		if hasVariant("TLK_YardMud") then
 			MaterialService:SetBaseMaterialOverride(Enum.Material.Mud, "TLK_YardMud")
 		end
-		if hasVariant("TLK_Cobbles") then
-			MaterialService:SetBaseMaterialOverride(Enum.Material.Cobblestone, "TLK_Cobbles")
-		end
+		MaterialService:SetBaseMaterialOverride(Enum.Material.Cobblestone, "")
 	end)
 	Terrain:SetMaterialColor(Enum.Material.Mud, Color3.fromRGB(80, 72, 64)) -- browner, not red: red mud reads as blood
-	Terrain:SetMaterialColor(Enum.Material.Cobblestone, Color3.fromRGB(118, 112, 104))
+	Terrain:SetMaterialColor(Enum.Material.Concrete, Color3.fromRGB(104, 100, 93))
 	Terrain:SetMaterialColor(Enum.Material.LeafyGrass, Color3.fromRGB(70, 78, 48))
 end
 
@@ -2354,12 +2356,7 @@ local function headstone(parent: Instance, cf: CFrame, kind: string?)
 		local piece = part(parent, "Headstone", Vector3.new(w * rand(0.8, 1), 0.45, rand(1.4, 2.2)), cf * CFrame.new(jit(0.4), 0.2, -rand(1.4, 2)) * CFrame.Angles(jit(0.08), jit(0.4), jit(0.06)), "stone", tint)
 		piece.CastShadow = false
 	end
-	if top > 0 and chance(0.55) then
-		-- lichen along the top, where the rain sits
-		local l = part(parent, "Lichen", Vector3.new(rand(0.8, 1.6), 0.12, 0.5), lean * CFrame.new(jit(0.3), top - 0.02, 0), "thatchOld", Color3.fromRGB(92, 100, 70))
-		l.CastShadow = false
-		l.CanCollide = false
-	end
+	-- (no lichen: green pieces laid on stone were taken out on 2026-11-05, the developer does not want them)
 end
 
 -- Two lengths of oak lashed together: what you put on a grave in a hurry.
@@ -2951,7 +2948,7 @@ local function area1()
 	local guardLane = { Vector2.new(-34, -48), Vector2.new(-70, -52), Vector2.new(-90, -55) }
 	local barracksLane = { Vector2.new(4, -120), Vector2.new(-40, -150), Vector2.new(-100, -166) }
 	paintGround(2, zFar + 2, {
-		{ path = road, width = 13, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 13, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = guardLane, width = 6, material = Enum.Material.Mud },
 		{ path = barracksLane, width = 5, material = Enum.Material.Mud },
 	}, { { Vector2.new(-62, -128), 22 }, { Vector2.new(10, -175), 16 } })
@@ -3247,7 +3244,7 @@ local function area2()
 	local zNear, zFar = Castle.chamberBounds(2)
 	local road = { Vector2.new(153, zNear - 16), Vector2.new(118, -262), Vector2.new(60, -282), Vector2.new(10, -300), Vector2.new(-45, -332), Vector2.new(-95, -380), Vector2.new(-132, -430), Vector2.new(-153, zFar + 14) }
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = { Vector2.new(30, -292), Vector2.new(50, -395) }, width = 7, material = Enum.Material.Mud },
 		{ path = { Vector2.new(-60, -345), Vector2.new(-110, -318) }, width = 6, material = Enum.Material.Mud },
 	}, { { Vector2.new(56, -322), 30 }, { Vector2.new(55, -392), 22 }, { Vector2.new(-30, -405), 16 } })
@@ -3420,7 +3417,7 @@ local function area3()
 	local zNear, zFar = Castle.chamberBounds(3)
 	local road = { Vector2.new(-153, zNear - 16), Vector2.new(-122, -512), Vector2.new(-70, -538), Vector2.new(-10, -562), Vector2.new(40, -598), Vector2.new(90, -640), Vector2.new(128, -684), Vector2.new(153, zFar + 14) }
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = { Vector2.new(-40, -552), Vector2.new(-80, -620) }, width = 7, material = Enum.Material.Mud },
 		{ path = { Vector2.new(10, -568), Vector2.new(55, -556) }, width = 6, material = Enum.Material.Mud },
 	}, { { Vector2.new(-25, -590), 12 }, { Vector2.new(130, -560), 14 } })
@@ -3752,9 +3749,9 @@ local function area4()
 
 	digTrench(TRENCH, 30, 8, 8)
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = yardPath, width = 7, material = Enum.Material.Mud },
-		{ path = outRoad, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = outRoad, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 	}, { { Vector2.new(72, -906), 20 }, { Vector2.new(60, -868), 14 }, { Vector2.new(126, -930), 12 }, { Vector2.new(-55, -812), 12 } }, {
 		{ x0 = CY.x0, x1 = CY.x1, z0 = CY.zS, z1 = CY.zN, material = Enum.Material.LeafyGrass, alt = Enum.Material.Grass },
 		{ x0 = 0, x1 = 150, z0 = -952, z1 = -830, material = Enum.Material.Mud, alt = Enum.Material.Grass },
@@ -4305,7 +4302,7 @@ local function area5()
 	local sawCf = CFrame.new(28, GROUND, -1046)
 	digTrench(sawCf, 14, 5, 7)
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = mineTrack, width = 7, material = Enum.Material.Mud },
 		{ path = yardLane, width = 6, material = Enum.Material.Mud },
 	}, { { Vector2.new(-45, -1080), 18 }, { Vector2.new(14, -1158), 16 }, { Vector2.new(-100, -1146), 14 }, { Vector2.new(30, -1046), 12 } }, {
@@ -4915,7 +4912,7 @@ local function area6()
 	local road = { Vector2.new(153, zNear - 16), Vector2.new(128, -1272), Vector2.new(84, -1300), Vector2.new(46, -1318), Vector2.new(32, -1330), Vector2.new(32, -1392), Vector2.new(14, -1404), Vector2.new(-40, -1420), Vector2.new(-100, -1428), Vector2.new(-146, -1436), Vector2.new(-153, zFar + 14) }
 	local solarLane = { Vector2.new(-100, -1428), Vector2.new(-104, -1380), Vector2.new(-100, -1360) }
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 12, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 12, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = solarLane, width = 6, material = Enum.Material.Mud },
 	}, { { Vector2.new(-45, -1300), 26 }, { Vector2.new(70, -1330), 14 } }, {
 		{ x0 = -72, x1 = -24, z0 = -1410, z1 = -1388, material = Enum.Material.LeafyGrass, alt = Enum.Material.Grass },
@@ -5373,11 +5370,11 @@ local function area7()
 	local upperRow = { Vector2.new(-122, -1546), Vector2.new(72, -1546) }
 	local lowerRow = { Vector2.new(-100, -1662), Vector2.new(100, -1664) }
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 10, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
-		{ path = upperRow, width = 10, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
-		{ path = lowerRow, width = 10, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 10, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
+		{ path = upperRow, width = 10, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
+		{ path = lowerRow, width = 10, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 	}, { { Vector2.new(20, -1700), 14 }, { Vector2.new(-60, -1700), 10 } }, {
-		{ x0 = -46, x1 = 46, z0 = -1637, z1 = -1574, material = Enum.Material.Cobblestone, alt = Enum.Material.Cobblestone },
+		{ x0 = -46, x1 = 46, z0 = -1637, z1 = -1574, material = Enum.Material.Concrete, alt = Enum.Material.Concrete },
 		{ x0 = -10, x1 = 40, z0 = -1712, z1 = -1684, material = Enum.Material.LeafyGrass, alt = Enum.Material.Mud },
 	})
 	task.wait()
@@ -6269,11 +6266,11 @@ local function area9()
 	local zNear, zFar = Castle.chamberBounds(9)
 	local road = { Vector2.new(-153, zNear - 16), Vector2.new(-140, -2020), Vector2.new(-95, -2048), Vector2.new(-40, -2068), Vector2.new(0, -2085), Vector2.new(0, -2118) }
 	paintGround(zNear - 2, zFar + 2, {
-		{ path = road, width = 14, material = Enum.Material.Cobblestone, verge = Enum.Material.Mud },
+		{ path = road, width = 14, material = Enum.Material.Concrete, verge = Enum.Material.Mud },
 		{ path = { Vector2.new(70, -2075), Vector2.new(120, -2075) }, width = 4, material = Enum.Material.Pebble },
 		{ path = { Vector2.new(95, -2050), Vector2.new(95, -2100) }, width = 4, material = Enum.Material.Pebble },
 	}, { { Vector2.new(-120, -2160), 16 } }, {
-		{ x0 = -64, x1 = 64, z0 = -2152, z1 = -2058, material = Enum.Material.Cobblestone, alt = Enum.Material.Cobblestone },
+		{ x0 = -64, x1 = 64, z0 = -2152, z1 = -2058, material = Enum.Material.Concrete, alt = Enum.Material.Concrete },
 		{ x0 = 72, x1 = 118, z0 = -2098, z1 = -2052, material = Enum.Material.LeafyGrass, alt = Enum.Material.Grass },
 	})
 	task.wait()

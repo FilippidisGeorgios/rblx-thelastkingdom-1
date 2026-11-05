@@ -450,7 +450,7 @@ local function buildRoad()
 			local p = a:Lerp(b, j / steps)
 			-- Mud verges first, then the paving down the middle.
 			paint(p.X, p.Y, ROAD_W / 2 + 4, { Enum.Material.Grass, Enum.Material.Ground }, Enum.Material.Mud)
-			paint(p.X, p.Y, ROAD_W / 2 - 2, { Enum.Material.Grass, Enum.Material.Ground, Enum.Material.Mud }, Enum.Material.Cobblestone)
+			paint(p.X, p.Y, ROAD_W / 2 - 2, { Enum.Material.Grass, Enum.Material.Ground, Enum.Material.Mud }, Enum.Material.Concrete)
 		end
 	end
 	print(("[BuildLand] road: %d stamps"):format(painted))

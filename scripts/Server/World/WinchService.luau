@@ -440,7 +440,7 @@ local function buildWinch(parent: Instance)
 	local base = CFrame.new(WINCH.X, floor, WINCH.Z)
 
 	-- A stone pad, so it does not read as dropped on the mud.
-	part(frame, "Pad", Vector3.new(14, 1, 10), base * CFrame.new(0, 0.4, 0), PALETTE.stonePale, Enum.Material.Cobblestone)
+	part(frame, "Pad", Vector3.new(14, 1, 10), base * CFrame.new(0, 0.4, 0), PALETTE.stonePale, Enum.Material.Slate)
 
 	-- Two uprights and the beam they carry.
 	for _, dx in { -5, 5 } do

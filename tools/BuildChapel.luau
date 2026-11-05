@@ -212,7 +212,7 @@ end
 do
 	local m, at = model("Reliquary", -8)
 	-- the stone table, with a linen cloth hanging off it
-	part(m, "Plinth", Vector3.new(7, 3.6, 3.4), at * CFrame.new(0, 1.8, 0), STONE, Enum.Material.Cobblestone, true)
+	part(m, "Plinth", Vector3.new(7, 3.6, 3.4), at * CFrame.new(0, 1.8, 0), STONE, Enum.Material.Slate, true)
 	part(m, "Slab", Vector3.new(7.4, 0.5, 3.8), at * CFrame.new(0, 3.85, 0), STONE_PALE, Enum.Material.Slate, true)
 	part(m, "Cloth", Vector3.new(5, 0.06, 2.4), at * CFrame.new(0, 4.13, 0), LINEN, Enum.Material.Fabric)
 	part(m, "ClothHang", Vector3.new(5, 1.6, 0.06), at * CFrame.new(0, 3.3, 1.72), LINEN, Enum.Material.Fabric)
@@ -256,14 +256,14 @@ do
 	part(m, "Step2", Vector3.new(8.6, 0.5, 5.4), at * CFrame.new(0, 0.75, -0.2), STONE, Enum.Material.Slate, true)
 	part(m, "Step3", Vector3.new(7.2, 0.5, 4.2), at * CFrame.new(0, 1.25, -0.4), STONE_PALE, Enum.Material.Slate, true)
 	-- the altar
-	part(m, "Block", Vector3.new(5.4, 2.6, 2.4), at * CFrame.new(0, 2.8, -0.4), STONE, Enum.Material.Cobblestone, true)
+	part(m, "Block", Vector3.new(5.4, 2.6, 2.4), at * CFrame.new(0, 2.8, -0.4), STONE, Enum.Material.Slate, true)
 	part(m, "Cap", Vector3.new(5.8, 0.4, 2.8), at * CFrame.new(0, 4.3, -0.4), STONE_PALE, Enum.Material.Slate, true)
 	-- nine shallow places along the cap, one for each shard
 	for i = 0, 8 do
 		part(m, "Place", Vector3.new(0.34, 0.08, 0.34), at * CFrame.new(-2.4 + i * 0.6, 4.54, 0.4), Color3.fromRGB(34, 32, 32), Enum.Material.Slate)
 	end
 	-- the stele behind it, with nine niches in three rows of three
-	part(m, "Stele", Vector3.new(5.0, 10.0, 1.2), at * CFrame.new(0, 6.5, -2.2), STONE_DARK, Enum.Material.Cobblestone, true)
+	part(m, "Stele", Vector3.new(5.0, 10.0, 1.2), at * CFrame.new(0, 6.5, -2.2), STONE_DARK, Enum.Material.Slate, true)
 	part(m, "SteleCap", Vector3.new(5.4, 0.7, 1.5), at * CFrame.new(0, 11.7, -2.2), STONE, Enum.Material.Slate, true)
 	for row = 0, 2 do
 		for col = 0, 2 do
@@ -353,7 +353,7 @@ end
 -- flagstones under all four, so the chapel reads as one place
 for i = 0, 4 do
 	local x = -40 + i * 16
-	local slab = part(root, "Flags", Vector3.new(11, 0.2, 9), CFrame.new(BASE + Vector3.new(x, 0.1, 0)), STONE_DARK, Enum.Material.Cobblestone, false)
+	local slab = part(root, "Flags", Vector3.new(11, 0.2, 9), CFrame.new(BASE + Vector3.new(x, 0.1, 0)), STONE_DARK, Enum.Material.Slate, false)
 	slab.CanQuery = false
 end
 

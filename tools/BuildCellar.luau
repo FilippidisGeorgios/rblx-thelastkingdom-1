@@ -267,7 +267,7 @@ do
 	for z = STAIR_Z0, STAIR_Z1 + 1, -1 do
 		local y = rampY(z - 0.5)
 		box(stairM, "Step", STAIR_X - halfW, STAIR_X + halfW, FLOOR - 1, y - 0.15, z, z - 1, FLAG, Enum.Material.Slate, false)
-		part(stairM, "Nosing", Vector3.new(STAIR_W, 0.14, 0.22), CFrame.new(STAIR_X, y - 0.1, z - 0.1), STONE, Enum.Material.Cobblestone)
+		part(stairM, "Nosing", Vector3.new(STAIR_W, 0.14, 0.22), CFrame.new(STAIR_X, y - 0.1, z - 0.1), STONE, Enum.Material.Slate)
 	end
 	-- the landing floor
 	box(stairM, "LandingFloor", STAIR_X - halfW, STAIR_X + halfW, FLOOR - 1, FLOOR, STAIR_Z1, DOOR_Z, FLAG, Enum.Material.Slate)
@@ -276,8 +276,8 @@ end
 -- the walls of the trench, two studs of run at a time, standing from below the ramp to above the ground
 -- (each wall is 1 stud inside the stair's width and 2 outside it: 3 studs thick, which is what hides the terrain's edge)
 for z = STAIR_Z0, DOOR_Z + 1, -2 do
-	box(stairM, "TrenchWall", STAIR_X - halfW - 3, STAIR_X - halfW, FLOOR - 1, GROUND + 1.6, z, z - 2, STONE, Enum.Material.Cobblestone)
-	box(stairM, "TrenchWall", STAIR_X + halfW, STAIR_X + halfW + 3, FLOOR - 1, GROUND + 1.6, z, z - 2, STONE, Enum.Material.Cobblestone)
+	box(stairM, "TrenchWall", STAIR_X - halfW - 3, STAIR_X - halfW, FLOOR - 1, GROUND + 1.6, z, z - 2, STONE, Enum.Material.Slate)
+	box(stairM, "TrenchWall", STAIR_X + halfW, STAIR_X + halfW + 3, FLOOR - 1, GROUND + 1.6, z, z - 2, STONE, Enum.Material.Slate)
 end
 -- the cap: a coping of dark stone along the top of each wall
 for _, side in { -1, 1 } do
@@ -312,9 +312,9 @@ end
 --==========================================================================
 local WALL = 2
 -- the wall: two piers and a lintel round the opening, in the door's wall (z from -692 to -694)
-box(doorM, "WallW", HALL.x0 - WALL, STAIR_X - DOOR_W / 2, FLOOR - 1, TOP, DOOR_Z, DOOR_Z - WALL, STONE, Enum.Material.Cobblestone)
-box(doorM, "WallE", STAIR_X + DOOR_W / 2, HALL.x1 + WALL, FLOOR - 1, TOP, DOOR_Z, DOOR_Z - WALL, STONE, Enum.Material.Cobblestone)
-box(doorM, "Lintel", STAIR_X - DOOR_W / 2, STAIR_X + DOOR_W / 2, FLOOR + DOOR_H, TOP, DOOR_Z, DOOR_Z - WALL, STONE_DARK, Enum.Material.Cobblestone)
+box(doorM, "WallW", HALL.x0 - WALL, STAIR_X - DOOR_W / 2, FLOOR - 1, TOP, DOOR_Z, DOOR_Z - WALL, STONE, Enum.Material.Slate)
+box(doorM, "WallE", STAIR_X + DOOR_W / 2, HALL.x1 + WALL, FLOOR - 1, TOP, DOOR_Z, DOOR_Z - WALL, STONE, Enum.Material.Slate)
+box(doorM, "Lintel", STAIR_X - DOOR_W / 2, STAIR_X + DOOR_W / 2, FLOOR + DOOR_H, TOP, DOOR_Z, DOOR_Z - WALL, STONE_DARK, Enum.Material.Slate)
 box(doorM, "Threshold", STAIR_X - DOOR_W / 2, STAIR_X + DOOR_W / 2, FLOOR - 1, FLOOR, DOOR_Z, DOOR_Z - WALL, FLAG, Enum.Material.Slate)
 -- the leaves: two oak doors hinged at the jambs (each leaf's pivot is its hinge edge, so the game swings them with PivotTo)
 local leafW = DOOR_W / 2
@@ -351,12 +351,12 @@ torch(stairM, Vector3.new(STAIR_X + halfW - 0.2, FLOOR + 5.2, DOOR_Z + 2), Vecto
 --==========================================================================
 carve(HALL.x0 - 1, HALL.x1 + 1, FLOOR - 0.6, HALL_TOP, HALL.z0 - 1, HALL.z1 + 1)
 box(larderM, "Floor", HALL.x0 - WALL, HALL.x1 + WALL, FLOOR - 1, FLOOR, HALL.z0 - WALL, DOOR_Z, FLAG, Enum.Material.Slate)
-box(larderM, "WallSouth", HALL.x0 - WALL, HALL.x1 + WALL, FLOOR - 1, TOP, HALL.z0 - WALL, HALL.z0, STONE, Enum.Material.Cobblestone)
-box(larderM, "WallWest", HALL.x0 - WALL, HALL.x0, FLOOR - 1, TOP, HALL.z0, DOOR_Z, STONE, Enum.Material.Cobblestone)
+box(larderM, "WallSouth", HALL.x0 - WALL, HALL.x1 + WALL, FLOOR - 1, TOP, HALL.z0 - WALL, HALL.z0, STONE, Enum.Material.Slate)
+box(larderM, "WallWest", HALL.x0 - WALL, HALL.x0, FLOOR - 1, TOP, HALL.z0, DOOR_Z, STONE, Enum.Material.Slate)
 -- the east wall has the low opening to the crawl: a lintel and two piers, 3.4 clear
-box(larderM, "WallEastNorth", HALL.x1, HALL.x1 + WALL, FLOOR - 1, TOP, CRAWL_Z + CRAWL_W / 2, DOOR_Z, STONE, Enum.Material.Cobblestone)
-box(larderM, "WallEastSouth", HALL.x1, HALL.x1 + WALL, FLOOR - 1, TOP, HALL.z0, CRAWL_Z - CRAWL_W / 2, STONE, Enum.Material.Cobblestone)
-box(larderM, "CrawlLintel", HALL.x1, HALL.x1 + WALL, FLOOR + CRAWL_H, TOP, CRAWL_Z - CRAWL_W / 2, CRAWL_Z + CRAWL_W / 2, STONE_DARK, Enum.Material.Cobblestone)
+box(larderM, "WallEastNorth", HALL.x1, HALL.x1 + WALL, FLOOR - 1, TOP, CRAWL_Z + CRAWL_W / 2, DOOR_Z, STONE, Enum.Material.Slate)
+box(larderM, "WallEastSouth", HALL.x1, HALL.x1 + WALL, FLOOR - 1, TOP, HALL.z0, CRAWL_Z - CRAWL_W / 2, STONE, Enum.Material.Slate)
+box(larderM, "CrawlLintel", HALL.x1, HALL.x1 + WALL, FLOOR + CRAWL_H, TOP, CRAWL_Z - CRAWL_W / 2, CRAWL_Z + CRAWL_W / 2, STONE_DARK, Enum.Material.Slate)
 -- the ceiling: a stone slab under the earth, with oak beams under it
 box(larderM, "Ceiling", HALL.x0 - WALL, HALL.x1 + WALL, HALL_TOP, TOP, HALL.z0 - WALL, DOOR_Z, STONE_DARK, Enum.Material.Slate)
 for x = HALL.x0 + 3, HALL.x1 - 2, 6 do
@@ -428,7 +428,7 @@ end
 	z -711.9
 ]]
 local function crawlWall(name: string, x0: number, x1: number, z0: number, z1: number)
-	box(crawlM, name, x0, x1, FLOOR - 1, CRAWL_TOP, z0, z1, STONE, Enum.Material.Cobblestone)
+	box(crawlM, name, x0, x1, FLOOR - 1, CRAWL_TOP, z0, z1, STONE, Enum.Material.Slate)
 end
 crawlWall("A_North", -64, -52.1, -696.5, -695.1)
 crawlWall("A_SouthWest", -64, -58.5, -702.9, -701.5)
@@ -452,18 +452,18 @@ candle(crawlM, Vector3.new(-55.9, FLOOR + 0.1, -701.3), 0.5)
 local c = CISTERN
 carve(c.x0, c.x1, FLOOR - 0.6, c.top, c.z0, c.z1)
 box(cisternM, "Floor", c.x0 - WALL, c.x1 + WALL, FLOOR - 1, FLOOR, c.z0 - WALL, c.z1 + WALL, FLAG, Enum.Material.Slate)
-box(cisternM, "WallSouth", c.x0 - WALL, c.x1 + WALL, FLOOR - 1, TOP, c.z0 - WALL, c.z0, STONE, Enum.Material.Cobblestone)
-box(cisternM, "WallNorth", c.x0 - WALL, c.x1 + WALL, FLOOR - 1, TOP, c.z1, c.z1 + WALL, STONE, Enum.Material.Cobblestone)
-box(cisternM, "WallEast", c.x1, c.x1 + WALL, FLOOR - 1, TOP, c.z0, c.z1, STONE, Enum.Material.Cobblestone)
+box(cisternM, "WallSouth", c.x0 - WALL, c.x1 + WALL, FLOOR - 1, TOP, c.z0 - WALL, c.z0, STONE, Enum.Material.Slate)
+box(cisternM, "WallNorth", c.x0 - WALL, c.x1 + WALL, FLOOR - 1, TOP, c.z1, c.z1 + WALL, STONE, Enum.Material.Slate)
+box(cisternM, "WallEast", c.x1, c.x1 + WALL, FLOOR - 1, TOP, c.z0, c.z1, STONE, Enum.Material.Slate)
 -- the west wall, with the low mouth of the crawl in it
-box(cisternM, "WallWestNorth", c.x0 - WALL, c.x0, FLOOR - 1, TOP, -705.5, c.z1, STONE, Enum.Material.Cobblestone)
-box(cisternM, "WallWestSouth", c.x0 - WALL, c.x0, FLOOR - 1, TOP, c.z0, -710.5, STONE, Enum.Material.Cobblestone)
-box(cisternM, "MouthLintel", c.x0 - WALL, c.x0, CH, TOP, -710.5, -705.5, STONE_DARK, Enum.Material.Cobblestone)
+box(cisternM, "WallWestNorth", c.x0 - WALL, c.x0, FLOOR - 1, TOP, -705.5, c.z1, STONE, Enum.Material.Slate)
+box(cisternM, "WallWestSouth", c.x0 - WALL, c.x0, FLOOR - 1, TOP, c.z0, -710.5, STONE, Enum.Material.Slate)
+box(cisternM, "MouthLintel", c.x0 - WALL, c.x0, CH, TOP, -710.5, -705.5, STONE_DARK, Enum.Material.Slate)
 box(cisternM, "Ceiling", c.x0 - WALL, c.x1 + WALL, c.top, TOP, c.z0 - WALL, c.z1 + WALL, STONE_DARK, Enum.Material.Slate)
 -- columns carrying the vault
 for _, x in { c.x0 + 5, c.x0 + 13 } do
 	for _, z in { c.z0 + 4, c.z1 - 4 } do
-		box(cisternM, "Column", x - 0.9, x + 0.9, FLOOR, c.top, z - 0.9, z + 0.9, STONE, Enum.Material.Cobblestone)
+		box(cisternM, "Column", x - 0.9, x + 0.9, FLOOR, c.top, z - 0.9, z + 0.9, STONE, Enum.Material.Slate)
 	end
 end
 -- the water: ankle deep, dark, and still (it does not collide; you wade)
@@ -472,7 +472,7 @@ pool.Transparency = 0.35
 pool.Reflectance = 0.15
 pool.CanQuery = false
 -- the dais at the east end, with the hoard on it
-box(cisternM, "Dais", c.x1 - 5, c.x1, FLOOR, FLOOR + 1.1, c.z0 + 4, c.z1 - 4, STONE, Enum.Material.Cobblestone)
+box(cisternM, "Dais", c.x1 - 5, c.x1, FLOOR, FLOOR + 1.1, c.z0 + 4, c.z1 - 4, STONE, Enum.Material.Slate)
 local hoard = chest(cisternM, "Hoard", CFrame.new(c.x1 - 2.6, FLOOR + 1.1, (c.z0 + c.z1) / 2) * CFrame.Angles(0, math.rad(-90), 0))
 -- bones beside it: whoever hid this did not leave
 part(cisternM, "Bones", Vector3.new(2.6, 0.3, 1.1), CFrame.new(c.x1 - 3.6, FLOOR + 1.3, (c.z0 + c.z1) / 2 + 3.4) * CFrame.Angles(0, math.rad(20), 0), Color3.fromRGB(206, 196, 168), Enum.Material.Slate)
@@ -493,7 +493,7 @@ for i, at in mounds do
 	local pit = part(m, "Pit", Vector3.new(0.2, 3.2, 3.2), CFrame.new(at + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(26, 22, 20), Enum.Material.Slate, Enum.PartType.Cylinder)
 	for k = 1, 6 do
 		local a = k * math.pi / 3
-		part(m, "Rubble", Vector3.new(0.9 + (k % 3) * 0.3, 0.5, 0.8), CFrame.new(at + Vector3.new(math.cos(a) * 1.9, 0.3, math.sin(a) * 1.9)) * CFrame.Angles(0.2 * k, k, 0.1), STONE, Enum.Material.Cobblestone)
+		part(m, "Rubble", Vector3.new(0.9 + (k % 3) * 0.3, 0.5, 0.8), CFrame.new(at + Vector3.new(math.cos(a) * 1.9, 0.3, math.sin(a) * 1.9)) * CFrame.Angles(0.2 * k, k, 0.1), STONE, Enum.Material.Slate)
 	end
 	m.PrimaryPart = pit
 end

@@ -23,6 +23,11 @@
 
 	Everything it makes lives in Workspace.Gameplay.Battleground.Decorations.Area6.Forest.<Section>. A section that is run
 	again first removes what it made before. NOTE: a tool, not game code; the result lives in the place (save it).
+
+	2026-11-05: AFTER `trees`, `under` and `places`, run `tools/ForestDress.luau`. The developer did not want trees and
+	ferns built out of blocks (the bark showed twice where blocks overlapped, the branches were never thin) nor any green
+	moss laid on wood or stone: ForestDress puts store-made mesh trees and ferns where the grown ones stood, the low fallen
+	fence along the invisible walls, and plain dark wood in place of the photo bark. The moss pieces are no longer made here.
 ]]
 
 local ONLY = "retire"
@@ -335,7 +340,7 @@ local function region(x0: number, y0: number, z0: number, x1: number, y1: number
 	return Region3.new(a, b):ExpandToGrid(4)
 end
 
-local SURFACES = { Enum.Material.Grass, Enum.Material.Mud, Enum.Material.Ground, Enum.Material.Cobblestone, Enum.Material.LeafyGrass, Enum.Material.Sand, Enum.Material.Rock }
+local SURFACES = { Enum.Material.Grass, Enum.Material.Mud, Enum.Material.Ground, Enum.Material.Concrete, Enum.Material.LeafyGrass, Enum.Material.Sand, Enum.Material.Rock }
 
 local function paintBox(box: any, y0: number, y1: number, to: Enum.Material)
 	local r = region(box.X0, y0, box.Z0, box.X1, y1, box.Z1)
@@ -674,7 +679,6 @@ local function buildUnder()
 	local f = section("Under")
 	local rng = Random.new(6161)
 	local barkColor = Color3.fromRGB(176, 166, 152)
-	local mossColor = Color3.fromRGB(150, 160, 140)
 	local leaf = Color3.fromRGB(104, 124, 88)
 	local n = { logs = 0, stumps = 0, stones = 0, ferns = 0, brambles = 0, mushrooms = 0 }
 
@@ -709,8 +713,7 @@ local function buildUnder()
 			local bark = variant("OakBark", rng)
 			barkPiece(f, "Log", a, mid, r, bark, barkColor, true)
 			barkPiece(f, "Log", mid, b, r * 0.85, bark, barkColor, true)
-			-- the moss on its back
-			cyl(f, "LogMoss", a + Vector3.new(0, r * 0.35, 0), mid + Vector3.new(0, r * 0.3, 0), r * 0.72, mossColor, Enum.Material.Grass, { variant = variant("ForestMoss", rng), shadow = false })
+			-- (no moss on its back: green pieces on wood and stone were taken out on 2026-11-05)
 			-- a stub of branch
 			local side = dir:Cross(Vector3.new(0, 1, 0)) * (if rng:NextNumber() < 0.5 then 1 else -1)
 			cyl(f, "LogBranch", mid, mid + (side + Vector3.new(0, 0.6, 0)).Unit * rng:NextNumber(2, 4), r * 0.3, barkColor, Enum.Material.Wood, { variant = bark })
@@ -904,8 +907,7 @@ local function standingStone(parent: Instance, at: Vector3, h: number, yaw: numb
 	local s = Vector3.new(rng:NextNumber(2.6, 3.8), h, rng:NextNumber(1.4, 2.2))
 	local cf = CFrame.new(at + Vector3.new(0, h / 2 - 1.2, 0)) * CFrame.Angles(0, yaw, 0) * CFrame.Angles(math.rad(lean), 0, math.rad(rng:NextNumber(-4, 4)))
 	part(parent, "Stone", s, cf, Color3.fromRGB(110, 108, 100), Enum.Material.Slate, { collide = true })
-	-- moss up its north face
-	part(parent, "StoneMoss", Vector3.new(s.X * 0.9, h * rng:NextNumber(0.3, 0.6), 0.2), cf * CFrame.new(0, -h * 0.25, -s.Z / 2 - 0.05), Color3.fromRGB(150, 160, 140), Enum.Material.Grass, { variant = variant("ForestMoss", rng), shadow = false })
+	-- (no moss up its north face: taken out on 2026-11-05)
 end
 
 local function skull(parent: Instance, cf: CFrame, scale: number): Instance?
@@ -1021,7 +1023,7 @@ local function buildPlaces()
 				if nearPath(p.X, p.Z) > 4 and rng:NextNumber() > 0.18 then
 					local h = rng:NextNumber(1.2, 3.4)
 					local y = groundY(p.X, p.Z)
-					part(m, "WallStone", Vector3.new(len / steps + 0.4, h, 1.6), CFrame.lookAt(Vector3.new(p.X, y + h / 2 - 0.3, p.Z), Vector3.new(b.X, y + h / 2 - 0.3, b.Z)) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-3, 3))), STONE:Lerp(Color3.fromRGB(90, 100, 80), rng:NextNumber(0, 0.5)), Enum.Material.Cobblestone, { collide = true })
+					part(m, "WallStone", Vector3.new(len / steps + 0.4, h, 1.6), CFrame.lookAt(Vector3.new(p.X, y + h / 2 - 0.3, p.Z), Vector3.new(b.X, y + h / 2 - 0.3, b.Z)) * CFrame.Angles(0, math.rad(90), math.rad(rng:NextNumber(-3, 3))), STONE:Lerp(Color3.fromRGB(90, 100, 80), rng:NextNumber(0, 0.5)), Enum.Material.Slate, { collide = true })
 				end
 			end
 		end
@@ -1077,7 +1079,6 @@ local function buildPlaces()
 		local mid = (a + b) / 2 + Vector3.new(0, 1.5, 0)
 		barkPiece(m, "FallenTrunk", a, mid, 2.6, bark, Color3.fromRGB(176, 166, 152), true)
 		barkPiece(m, "FallenTrunk", mid, b, 2.2, bark, Color3.fromRGB(176, 166, 152), true)
-		cyl(m, "FallenMoss", a + Vector3.new(0, 1, 0), mid + Vector3.new(0, 0.9, 0), 1.9, Color3.fromRGB(150, 160, 140), Enum.Material.Grass, { variant = variant("ForestMoss", rng), shadow = false })
 		for k = 1, 9 do
 			local ang = k / 9 * math.pi * 2
 			local out = Vector3.new(0.5, math.cos(ang), math.sin(ang))
@@ -1140,7 +1141,7 @@ local function buildPlaces()
 		for k = -2, 2 do
 			skull(m, cf * CFrame.new(k * 2.6, 6.2, 5.6) * CFrame.Angles(0, 0, 0), 0.7)
 		end
-		part(m, "Hearth", Vector3.new(4, 2.4, 2), cf * CFrame.new(-6.4, 1.2, 4.5), STONE, Enum.Material.Cobblestone, { collide = true })
+		part(m, "Hearth", Vector3.new(4, 2.4, 2), cf * CFrame.new(-6.4, 1.2, 4.5), STONE, Enum.Material.Slate, { collide = true })
 		mark("Page1", (cf * CFrame.new(-3.5, 3.4, 1)).Position)
 		mark("Page2", (cf * CFrame.new(5, 2.2, 0.5)).Position)
 		mark("Page3", (cf * CFrame.new(0, 1.2, 4.6)).Position)

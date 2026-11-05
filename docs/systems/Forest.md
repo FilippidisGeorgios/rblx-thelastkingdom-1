@@ -90,10 +90,23 @@ bridge would carry nobody anywhere.)
 
 ## 7. The look
 
-- **Trees** are generated meshes (`generate_mesh`): ancient oak, beech, spruce, dead oak, and more, each a few times over at different
-  sizes and turns. Every tree has an unseen round trunk that collides and stops sight; the crown neither collides nor stops sight.
-- **The ground** is terrain: leaf litter, moss, mud and roots (generated MaterialVariants), never the grass of the yards.
-- **Undergrowth**: ferns, brambles, mossy stones, fallen logs, stumps, mushrooms, generated too.
+- **Trees** (since 2026-11-05) are store-made mesh models, not blocks: silver firs for the dense dark, oaks for the broadleaves
+  (and the five ancient ones), leafless trees with thin twigs, and the hills' own plain bare trees, which the developer likes
+  (`tools/ForestDress.luau`, kit in `ServerStorage.Assets.ForestKit`). Every tree has an unseen round trunk that collides and stops
+  sight; the crown neither collides nor stops sight. No crown grows into the castle's stone or a hut.
+- **The ground** is terrain: leaf litter, mud and worn paths (generated MaterialVariants), never the grass of the yards.
+- **Undergrowth**: mesh ferns (where the blade-built ferns and the bramble balls were), fallen logs and stumps in plain dark wood,
+  mushrooms. **No moss or lichen pieces on anything** (the developer, 2026-11-05).
+- **The edge**: a low broken rail fence (posts and two rails, some leaning, some fallen, a bay missing here and there) runs on the
+  line of the invisible walls round the outer wood, so a player sees where the wood ends; the walls stand from y -20 to 300,
+  far above any tree (they reach about y 75) and nothing in the wood can be climbed.
+
+**How the map runs (for the developer, 2026-11-05).** The run walks the castle from the gate south, area by area. The wood is area
+6: you come in from the Smithy through the gate in the north wall at the east end, and you leave by the gate in the south wall at
+the west end, to the Rows. Between the two gates is the inner wood (inside the walls). Through the broken west wall you can go out
+across the dry moat (the Hollow) into the outer wood; the castle walls close the inner wood, and the fence with its invisible wall
+closes the outer wood on its three open sides. Two of the four watch-fires are outside (the Hollow, the stag stones), so the outer
+wood is part of the errand, not a detour.
 - **Paths** are worn earth, a little lower than the ground round them, so a lantern shows where they run.
 - **Nothing stuck anywhere without a reason** (the developer's rule): every hut, stone, cart and fire is there for the story or the
   errand.
@@ -109,6 +122,17 @@ bridge would carry nobody anywhere.)
   drops under -500, loses its root and the run counts as wiped.
 - A prompt is only pressed when it is shown, and it is only shown when it is on screen: in tests, hold the camera on it.
 
+**Learned 2026-11-05 (the second look).**
+- Trees built of blocks fail twice: two textured blocks round one trunk show the bark twice where they overlap, and a branch of
+  blocks is never thin. Free PBR mesh trees from the store (strip their scripts, tint `SurfaceAppearance.Color` darker, make the
+  leaves untouchable and shadowless, add an unseen trunk) look like a wood and cost a fraction: the wood went from 37,765
+  parts to 5,317.
+- Store models can carry hidden UI scripts (two "dead tree" models did): keep only the MeshPart.
+- A MeshPart's `TextureID` ignores `Color`; to darken a pale textured mesh, drop the texture and give it a plain material.
+- The Huntsman is moved ten times a second by the server; an anchored root's new place reaches a client as a jump (0.72 studs,
+  nine times a second, while his legs walked smoothly). `ZombieAnimController` now draws every one of the dead a little behind
+  the server, between its last two places (moved on 319 of 321 frames, largest step 0.09).
+
 ## 9. Built where
 
 | What | File |
@@ -119,5 +143,6 @@ bridge would carry nobody anywhere.)
 | His body in the world | `Server/World/Trial/Huntsman.luau` |
 | Covering the lantern | `LanternService` (`RequestLanternCover`), `Client/Controllers/LanternController.luau` |
 | The dark | `configs/LightZones` `Forest` |
-| The stone, the trees, the ground | `tools/BuildForest.luau` (the trees from `ServerStorage.Assets.Forest`) |
+| The stone, the ground, the places | `tools/BuildForest.luau` |
+| The mesh trees, ferns, edge fence, plain bark | `tools/ForestDress.luau` (kit `ServerStorage.Assets.ForestKit`; the grown trees kept in `Retired.ForestTreesGrown`) |
 | The figure | `tools/BuildHuntsman.luau` (`ServerStorage.Assets.Undead.the_huntsman`) |

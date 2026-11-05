@@ -137,7 +137,7 @@ local function build(index: number, at: Vector3, side: number): Camp
 	local firePos = place(0, 0, 0)
 	for i = 0, 8 do
 		local a = i * math.pi * 2 / 9
-		part(model, "Stone", Vector3.new(1.5, 1.0, 1.3), firePos * CFrame.new(math.cos(a) * 2.1, 0.5, math.sin(a) * 2.1) * CFrame.Angles(0, -a, 0), STONE, Enum.Material.Cobblestone)
+		part(model, "Stone", Vector3.new(1.5, 1.0, 1.3), firePos * CFrame.new(math.cos(a) * 2.1, 0.5, math.sin(a) * 2.1) * CFrame.Angles(0, -a, 0), STONE, Enum.Material.Slate)
 	end
 	for i = 0, 4 do
 		local a = i * math.pi * 2 / 5 + 0.3

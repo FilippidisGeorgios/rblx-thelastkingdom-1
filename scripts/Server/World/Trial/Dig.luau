@@ -112,7 +112,7 @@ end
 --[[
 	A piece of the collapse. A heap that is all one kind of block looks like a
 	pile of crates, so the pieces are mixed the way a fallen arch mixes them:
-	rough Slate and Cobblestone for the walling, paler cut stone from the arch
+	rough Slate for the walling (plain stone, never the photo cobbles), paler cut stone from the arch
 	itself (blocks, and wedges: the broken voussoirs), a few column drums, lumps
 	of earth, the odd bit of granite. `packed` darkens the lot: the stones in the
 	hard length are older and wetter.
@@ -131,7 +131,7 @@ local function rock(parent: Instance, name: string, size: Vector3, cf: CFrame, p
 		material = Enum.Material.Concrete
 		color = Color3.fromRGB(116, 110, 100):Lerp(STONE[rng:NextInteger(1, #STONE)], 0.4)
 	elseif r < 0.42 then
-		material = Enum.Material.Cobblestone
+		material = Enum.Material.Slate
 	elseif r < 0.5 then
 		material = Enum.Material.Granite
 	elseif r < 0.56 then

@@ -43,6 +43,18 @@ Evidence: `assets/Images/Reference/look-ab-test_2026-10-17.jpg` (before / A / B)
    stock values, two to three times what the game runs at (`LightService` retunes them from
    `configs/Hub.luau`). Turn on `tools/PreviewRuntimeLights.luau` to look, and turn it **off**
    before saving.
+6. **Stone is plain (the developer, 2026-11-05).** Walls, footings, chimneys, fences, steps:
+   the castle walls' own `Slate`, in their tone (about 104-120 grey-brown). Roads and yards:
+   `Concrete` terrain, "like cement with a few strokes". **Never** a photo of stones with dark
+   joints (the generated `TLK_Rubble` / `TLK_Cobbles` were taken out of the whole place: they
+   read as glued bricks, too sharp and too bright for the rest), never brick, never cobbles.
+7. **No green laid on things.** No moss or lichen pieces on trunks, logs or stones, and no
+   material with moss baked into it (the generated bark had it). Green is for leaves and ferns.
+8. **Organic shapes are models, not blocks.** Trees, ferns, bushes, fences: mesh models (the
+   store's free PBR ones are good; strip their scripts, tint their skins darker). Two textured
+   blocks that overlap show their texture twice at the seam: never build a trunk, a rock or a
+   wall face out of overlapping textured blocks. The hills' plain dark-wood bare trees are the
+   developer's own and are liked: copy them, do not "improve" them.
 
 ### 1.3 Palette
 

@@ -87,7 +87,7 @@ local C = {
 
 local M = {
 	stone = Enum.Material.Slate,
-	cobble = Enum.Material.Cobblestone,
+	cobble = Enum.Material.Slate,
 	wood = Enum.Material.WoodPlanks,
 	log = Enum.Material.Wood,
 	iron = Enum.Material.Metal,

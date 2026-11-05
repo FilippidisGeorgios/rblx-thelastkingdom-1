@@ -12,7 +12,7 @@
 	mud, grass or stone). Only the top layer is touched, and water is left alone.
 
 	THE RECIPE (the numbers are in `R` below; the reasons are here)
-	  Roads      Cobblestone, with the dirt showing through where it is worn and the odd slick of
+	  Roads      plain stone ground (Concrete; photo cobbles were taken out 2026-11-05), with the dirt showing through where it is worn and the odd slick of
 	             mud. A road that is perfect everywhere is a road nobody ever walked on.
 	  Lane edges Mud. Everything that walks the road tramples a few studs either side of it.
 	  Shores     Mud, where Ground meets Water.
@@ -73,7 +73,7 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local T = workspace.Terrain
 
 local Air, Water, Sand, Ground = Enum.Material.Air, Enum.Material.Water, Enum.Material.Sand, Enum.Material.Ground
-local Mud, Cobble, Grass, Rock = Enum.Material.Mud, Enum.Material.Cobblestone, Enum.Material.Grass, Enum.Material.Rock
+local Mud, Cobble, Grass, Rock = Enum.Material.Mud, Enum.Material.Concrete, Enum.Material.Grass, Enum.Material.Rock
 
 local function waypoint(name: string)
 	pcall(function()

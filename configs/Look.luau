@@ -115,6 +115,7 @@ local Look = {
 				Sand = Color3.fromRGB(207, 203, 167),
 				Rock = Color3.fromRGB(99, 100, 102),
 				Cobblestone = Color3.fromRGB(134, 134, 118),
+				Concrete = Color3.fromRGB(134, 134, 118), -- the roads and yards since 2026-11-05 (plain stone ground, no cobbles)
 				Pavement = Color3.fromRGB(143, 144, 135),
 			},
 		},
@@ -171,13 +172,14 @@ local Look = {
 				Grass = Color3.fromRGB(66, 82, 44),
 				Mud = Color3.fromRGB(52, 44, 38),
 				Ground = Color3.fromRGB(84, 74, 62), -- packed earth
-				-- No Sand is left once tools/PaintGround has run (the roads are Cobblestone now);
+				-- No Sand is left once tools/PaintGround has run (the roads are plain stone ground, Concrete, since 2026-11-05);
 				-- this is only what a restored ground would look like.
 				Sand = Color3.fromRGB(132, 118, 96),
 				Rock = Color3.fromRGB(74, 74, 78),
 				-- The roads are how a player finds the way, so the paving is a clear step lighter
 				-- than the earth around it: it must still read as a cross from the air.
 				Cobblestone = Color3.fromRGB(124, 120, 110),
+				Concrete = Color3.fromRGB(124, 120, 110), -- the roads and yards since 2026-11-05 (plain stone ground, no cobbles)
 				Pavement = Color3.fromRGB(100, 98, 92),
 			},
 		},
@@ -242,6 +244,7 @@ local Look = {
 				Sand = Color3.fromRGB(176, 142, 98),
 				Rock = Color3.fromRGB(104, 92, 112),
 				Cobblestone = Color3.fromRGB(128, 116, 112),
+				Concrete = Color3.fromRGB(128, 116, 112), -- the roads and yards since 2026-11-05 (plain stone ground, no cobbles)
 				Pavement = Color3.fromRGB(136, 126, 124),
 			},
 		},
@@ -295,6 +298,7 @@ local Look = {
 				Rock = Color3.fromRGB(82, 78, 74),
 				Slate = Color3.fromRGB(74, 72, 70),
 				Cobblestone = Color3.fromRGB(132, 123, 90),
+				Concrete = Color3.fromRGB(132, 123, 90), -- the roads and yards since 2026-11-05 (plain stone ground, no cobbles)
 				Sand = Color3.fromRGB(143, 126, 95),
 				Basalt = Color3.fromRGB(30, 30, 37),
 				LeafyGrass = Color3.fromRGB(115, 132, 74),
@@ -366,6 +370,7 @@ local Look = {
 				Slate = Color3.fromRGB(62, 62, 66),
 				Basalt = Color3.fromRGB(40, 40, 46),
 				Cobblestone = Color3.fromRGB(106, 102, 94),
+				Concrete = Color3.fromRGB(106, 102, 94), -- the roads and yards since 2026-11-05 (plain stone ground, no cobbles)
 				Sand = Color3.fromRGB(96, 86, 72),
 			},
 			-- Black, still, and only just reflective: a moat nobody has cleaned in

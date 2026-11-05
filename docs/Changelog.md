@@ -1,3 +1,39 @@
+## Version 0.44.1 — Plain stone, no moss, model trees, the wood's fence, smooth steps
+
+What the developer asked for (2026-11-05), after walking the wood: take out every green moss piece on trunks and stones; replace
+the "intense" photo stone (stones with black joints, sharp, bright, on many houses and in the wood) with plain stone, "like cement
+with a few strokes"; make the wood's edge a simple fallen fence of a few sticks with a very tall invisible wall; trees like the
+hills' bare wooden ones and dense trees with thin twigs, as MODELS, not blocks (overlapping textured blocks show the photo twice);
+look at how the monsters move; find more FPS. Rules now in `docs/systems/Presentation.md` 1.2 (6-8).
+
+- **Moss out.** 65 moss pieces on logs, stones and the fallen giant, 27 lichen pieces on headstones, and the moss skin on 2,158
+  trunk and root pieces. The generated bark had moss baked in: the 580 pieces still wearing it are plain dark wood now.
+  `BuildForest` and `BuildWards` no longer make moss or lichen.
+- **Plain stone everywhere.** 2,555 parts (1,519 `TLK_Rubble`, 1,036 plain `Cobblestone` that the place drew with the
+  `TLK_Cobbles` photo) are `Slate` in the castle walls' tone (old material kept in each part's `TLK_OrigStone` attribute); every
+  cobbled road and yard (6,783 terrain cells) is `Concrete` ground; the Cobblestone override is cleared and the photo materials
+  (and the moss and tree skins nothing uses any more) moved to `ServerStorage.Assets.Retired.Materials`. Every tool and the
+  three runtime makers (`CampService`, `WinchService`, `Trial/Dig`) use Slate / Concrete now; `configs/Look` has Concrete colours.
+- **Model trees** (`tools/ForestDress.luau`, kit `ServerStorage.Assets.ForestKit` from free Creator Store models, listed in the
+  tool): 438 grown trees replaced in place by silver firs, oaks, leafless trees with thin twigs and copies of the hills' bare
+  trees; the five hollow giants by big oaks; 7 crowns that touched the castle's stone became narrow firs (2 left out). 333
+  blade-built ferns and 378 bramble balls became 711 mesh ferns. The grown trees are kept in `Retired.ForestTreesGrown`. Two store
+  models carried a hidden UI script: only their mesh was kept.
+- **The wood's edge**: a low broken rail fence (123 bays: 48 standing, 50 leaning, 25 fallen; 12 gone) on the line of the invisible walls
+  round the outer wood; the walls now stand from y -20 to 300.
+- **Smooth steps** (`ZombieAnimController`): an anchored root moved by the server reaches a client as jumps (the Huntsman: 0.72
+  studs nine times a second). Every one of the dead is now drawn a little behind the server, between its last two places:
+  measured in play, the Huntsman's body moved on 319 of 321 frames, largest step 0.09 studs.
+- **FPS**: Workspace from about 100,300 parts to 67,856 (the wood alone from 37,765 to 5,317); `CanTouch` off on
+  53,729 anchored parts nothing touches (no script uses `Touched`); shadows off on 1,947 small parts; 1,285 meshes set to automatic
+  detail. Studio play on this PC: 110 FPS at the gate, 113 in the wood (this PC was already fast; the gain is for phones and weak
+  PCs). 321 specs pass; both places build with Rojo; the Hub's scripts were brought level with disk (it lacked the forest files).
+- The Hub had no photo stone. Its Chapel (8 parts, `tools/BuildChapel`) is plain stone now and the paths `tools/PaintGround`
+  had cobbled (285 cells) are Concrete; the developer's own Hub buildings (11 Cobblestone parts in the blacksmith kit and
+  House 1) were left as they are.
+- Not done: the wood has not been walked start to end by a person; a phone test; a walking zombie's smooth steps measured (the
+  test character was killed first; the Huntsman, the same code path, was measured).
+
 ## Version 0.44.0 — The King's Wood (area 6): a big dark forest, grown trees, a huntsman who sees light
 
 What the developer asked for (2026-11-03): the forest in place of one area, big, with something practical to do, the sight short

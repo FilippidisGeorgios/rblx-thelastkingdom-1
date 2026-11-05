@@ -24,12 +24,22 @@
 	all: its tracks are stopped and it stands in its baked rest pose, which is what
 	a body that far is. They come back as it nears.
 
+	SMOOTH STEPS (2026-11-05). The server moves a body by setting its anchored root
+	a few times a second (the Huntsman ten times), and an anchored part's new place
+	reaches a client as a jump, not a glide: at 100 frames a second he hopped 0.72
+	studs nine times a second while his legs walked smoothly. So within ACTIVE_RANGE
+	every frame draws the root a little behind the server, between the last two
+	places it sent (SMOOTH_* below). A jump longer than SMOOTH_SNAP is a teleport and
+	is shown at once. Only the picture changes: hits, reach and sight stay on the
+	server's own numbers.
+
 	Place: client (boots in both places; nothing in the Hub carries the tag).
 	Phase: Enemy AI / Presentation.
 ]]
 
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -50,6 +60,14 @@ local RUN_PACE = 15
 local CRAWL_PACE = 6 -- the speed the crawl clip is authored for
 local FADE = 0.2
 
+-- smooth steps: how far behind the server a body is drawn (a share of the gap between its updates, within limits)
+local SMOOTH_SHARE = 1.15
+local SMOOTH_MIN = 0.02
+local SMOOTH_MAX = 0.2
+local SMOOTH_SNAP = 12 -- studs: a longer jump is a teleport, shown at once
+
+type Snapshot = { t: number, cf: CFrame }
+
 type Agent = {
 	model: Model,
 	animator: Animator,
@@ -63,6 +81,10 @@ type Agent = {
 	jitter: number, -- this body's own pace, a little off everyone else's
 	nextStumble: number,
 	crawler: boolean, -- no legs (the attribute CrawlerBody sets): it crawls and dies where it lies
+	-- smooth steps
+	snaps: { Snapshot }, -- the last places the server sent, oldest first
+	gap: number, -- the usual time between them
+	written: CFrame?, -- what this client last drew, to tell it from a new place from the server
 }
 
 local ids: ZombieAnims.Ids? = nil
@@ -196,6 +218,66 @@ local function maybeStumble(agent: Agent, now: number)
 	t:AdjustSpeed(0.85 + math.random() * 0.3)
 end
 
+local function samePlace(a: CFrame, b: CFrame): boolean
+	return (a.Position - b.Position).Magnitude < 1e-3 and a.LookVector:Dot(b.LookVector) > 0.99999
+end
+
+--[[
+	One frame of smooth steps for one body. Whatever the root holds now is either what this client drew last frame or a
+	new place the server has just sent (it overwrote the drawing): a new place is kept with the time it came. The root is
+	then drawn `delay` behind now, between the two places around that moment.
+]]
+local function smooth(agent: Agent, root: BasePart, now: number)
+	local current = root.CFrame
+	local snaps = agent.snaps
+	if not agent.written or not samePlace(current, agent.written :: CFrame) then
+		local last = snaps[#snaps]
+		if last then
+			local dt = now - last.t
+			if dt > 0.005 and dt < 1 then
+				agent.gap += (dt - agent.gap) * 0.2
+			end
+			if (current.Position - last.cf.Position).Magnitude > SMOOTH_SNAP then
+				table.clear(snaps) -- a teleport: no gliding across the map
+			end
+		end
+		table.insert(snaps, { t = now, cf = current })
+		if #snaps > 4 then
+			table.remove(snaps, 1)
+		end
+	end
+	if #snaps < 2 then
+		agent.written = current
+		return
+	end
+	local at = now - math.clamp(agent.gap * SMOOTH_SHARE, SMOOTH_MIN, SMOOTH_MAX)
+	local drawn = snaps[#snaps].cf
+	for i = #snaps, 2, -1 do
+		local a, b = snaps[i - 1], snaps[i]
+		if at >= a.t then
+			local span = b.t - a.t
+			drawn = if span > 0 then a.cf:Lerp(b.cf, math.clamp((at - a.t) / span, 0, 1)) else b.cf
+			break
+		end
+		drawn = a.cf
+	end
+	if not samePlace(drawn, current) then
+		root.CFrame = drawn
+	end
+	agent.written = root.CFrame
+end
+
+-- the server's own place again (a body that goes out of range or dies is left exactly where the server put it)
+local function release(agent: Agent)
+	local root = agent.model.PrimaryPart
+	local newest = agent.snaps[#agent.snaps]
+	if root and newest and agent.written and samePlace(root.CFrame, agent.written :: CFrame) then
+		root.CFrame = newest.cf
+	end
+	table.clear(agent.snaps)
+	agent.written = nil
+end
+
 local function activate(agent: Agent, on: boolean)
 	if agent.active == on then
 		return
@@ -205,6 +287,7 @@ local function activate(agent: Agent, on: boolean)
 		apply(agent)
 	else
 		stopAll(agent, 0)
+		release(agent)
 	end
 end
 
@@ -246,6 +329,9 @@ local function setup(instance: Instance)
 		jitter = 0.88 + math.random() * 0.24,
 		nextStumble = os.clock() + 4 + math.random() * 8,
 		crawler = model:GetAttribute("Crawler") == true,
+		snaps = {},
+		gap = 0.05,
+		written = nil,
 	}
 	agents[model] = agent
 
@@ -322,6 +408,23 @@ function ZombieAnimController.Start()
 	end
 	CollectionService:GetInstanceAddedSignal(TAG):Connect(setup)
 	CollectionService:GetInstanceRemovedSignal(TAG):Connect(remove)
+
+	-- smooth steps, every frame, for the bodies near enough to be animated (a dead body lies where the server put it)
+	RunService:BindToRenderStep("TLK_UndeadSmooth", Enum.RenderPriority.Camera.Value - 1, function()
+		local now = os.clock()
+		for model, agent in agents do
+			local root = model.PrimaryPart
+			if root and agent.active then
+				if model:GetAttribute("State") == "Death" then
+					if agent.written then
+						release(agent)
+					end
+				else
+					smooth(agent, root, now)
+				end
+			end
+		end
+	end)
 
 	task.spawn(function()
 		while true do
