@@ -57,12 +57,14 @@ local EVENT_NAMES: { string } = {
 	"CharmEvent", -- server -> client: a worn charm just did something { kind = "cue", charm, title, line }
 	"RequestProfile", -- client -> server: "my muster roll" (no arguments: you can only ask for your own)
 	"ProfileEvent", -- server -> client: { kind = "card", card = PlayerCard } or { kind = "unavailable" }
-	"RequestSettings", -- client -> server: { graphics = "Low"|"Medium"|"High"|"Ultra"?, shadows = boolean? } (checked by Shared/PlayerSettings)
+	"RequestSettings", -- client -> server: { graphics = "Low"|"Medium"|"High"|"Ultra"?, shadows = boolean?, mouseLock = boolean? } (checked by Shared/PlayerSettings)
 	"RequestInventory", -- client -> server: "my inventory" (the Hub fills the left-hand panel with the stash and the road's prizes)
 	"RequestClaimPrize", -- client -> server: the level of the road's prize to take (Domain/Prizes decides if it may be taken)
 	"ClientReady", -- client -> server: this player's loading screen has gone (the world is drawn); the arrival scene waits for it
 	"RequestCrouch", -- client -> server: a boolean, duck down (true) or stand up (false); the server checks there is room to stand
 	"RequestLanternCover", -- client -> server: a boolean, close the lantern's shutter (true) or open it (false); the King's Wood
+	"RequestRun", -- client -> server: a boolean, Shift held (true) or let go (false); the server runs the stamina (Services/MovementService)
+	"RequestRoll", -- client -> server: a Vector3, the way to roll (flat); the server spends the stamina and tells everyone to draw it
 }
 local FUNCTION_NAMES: { string } = {}
 

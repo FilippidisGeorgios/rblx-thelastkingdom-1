@@ -42,9 +42,9 @@ local Crouch = {
 	-- The key that toggles (an Enum.KeyCode name). A phone has a button instead.
 	Key = "C",
 
-	-- The key that is HELD: down while it is pressed, up when it is let go (the developer asked for Shift, 2026-10-31).
-	-- Letting go under a low ceiling does nothing: the server keeps the body down until there is room.
-	HoldKey = "LeftShift",
+	-- The key that is HELD: down while it is pressed, up when it is let go. It was Shift (2026-10-31); since 2026-11-05
+	-- Shift RUNS (configs/Movement), so there is no held key and C alone ducks and stands. A key name here brings it back.
+	HoldKey = nil :: string?,
 }
 
 return table.freeze(Crouch)

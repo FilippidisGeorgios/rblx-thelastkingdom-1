@@ -1,8 +1,8 @@
 --!strict
 --[[
 	SettingsService
-	Keeps what a player chose in the Settings panel (the picture quality and the shadows switch) in their
-	profile, and hands it to their client as two attributes (`GfxQuality`, `GfxShadows`), which is how the client
+	Keeps what a player chose in the Settings panel (the picture quality, the shadows switch, the mouse lock) in their
+	profile, and hands it to their client as attributes (`GfxQuality`, `GfxShadows`, `MouseLock`), which is how the client
 	knows in BOTH places: a choice made in the Hub is already there when the player arrives in the castle.
 
 	The client only REQUESTS (`RequestSettings`); `Shared/PlayerSettings` checks the request, so nothing but a
@@ -42,6 +42,7 @@ local saveToken: { [Player]: number } = {}
 local function publish(player: Player, settings: PlayerSettings.Settings)
 	player:SetAttribute("GfxQuality", settings.graphics)
 	player:SetAttribute("GfxShadows", settings.shadows)
+	player:SetAttribute("MouseLock", settings.mouseLock)
 end
 
 local function scheduleSave(player: Player)
@@ -74,7 +75,7 @@ local function onRequest(player: Player, request: any)
 	profile.settings = nextSettings
 	publish(player, nextSettings)
 	scheduleSave(player)
-	log:info(("%s: picture %s, shadows %s"):format(player.Name, tostring(nextSettings.graphics), tostring(nextSettings.shadows)))
+	log:info(("%s: picture %s, shadows %s, mouse lock %s"):format(player.Name, tostring(nextSettings.graphics), tostring(nextSettings.shadows), tostring(nextSettings.mouseLock)))
 end
 
 -- The profile loads a moment after the player joins; publish as soon as it is there.

@@ -48,7 +48,7 @@ export type Profile = {
 	stats: { [string]: any },
 	unlockedLore: { [string]: boolean },
 	achievements: { [string]: boolean },
-	settings: { graphics: string?, shadows: boolean? },
+	settings: { graphics: string?, shadows: boolean?, mouseLock: boolean? },
 	prizes: { claimed: { [string]: number }, titles: { [string]: boolean } },
 }
 

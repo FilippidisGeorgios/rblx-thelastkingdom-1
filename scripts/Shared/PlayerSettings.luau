@@ -6,6 +6,8 @@
 
 	  graphics   "Low" | "Medium" | "High" | "Ultra"      (absent = never chosen: the default for their device)
 	  shadows    true | false                              (absent = whatever the chosen quality starts at)
+	  mouseLock  true | false                              (absent = off: the mouse moves freely; on = it stays in the
+	                                                        middle with a small dot, and the body turns with the camera)
 
 	The client only ever REQUESTS a change; the server checks it here, so a tampered client can store nothing but
 	a quality that exists and a true or a false.
@@ -15,7 +17,7 @@
 
 local PlayerSettings = {}
 
-export type Settings = { graphics: string?, shadows: boolean? }
+export type Settings = { graphics: string?, shadows: boolean?, mouseLock: boolean? }
 
 export type Graphics = {
 	Order: { string },
@@ -38,6 +40,9 @@ function PlayerSettings.clean(stored: any, cfg: Graphics): Settings
 		if type(stored.shadows) == "boolean" then
 			out.shadows = stored.shadows
 		end
+		if type(stored.mouseLock) == "boolean" then
+			out.mouseLock = stored.mouseLock
+		end
 	end
 	return out
 end
@@ -48,7 +53,7 @@ end
 	ignored. Returns the new settings and whether anything changed.
 ]]
 function PlayerSettings.apply(current: Settings, request: any, cfg: Graphics): (Settings, boolean)
-	local next: Settings = { graphics = current.graphics, shadows = current.shadows }
+	local next: Settings = { graphics = current.graphics, shadows = current.shadows, mouseLock = current.mouseLock }
 	if type(request) ~= "table" then
 		return next, false
 	end
@@ -62,7 +67,10 @@ function PlayerSettings.apply(current: Settings, request: any, cfg: Graphics): (
 	elseif named then
 		next.shadows = cfg.Tiers[next.graphics :: string].Shadows
 	end
-	return next, next.graphics ~= current.graphics or next.shadows ~= current.shadows
+	if type(request.mouseLock) == "boolean" then
+		next.mouseLock = request.mouseLock
+	end
+	return next, next.graphics ~= current.graphics or next.shadows ~= current.shadows or next.mouseLock ~= current.mouseLock
 end
 
 --[[

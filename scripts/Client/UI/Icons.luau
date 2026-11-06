@@ -243,6 +243,72 @@ function Icons.crouch(props: Props): Frame
 end
 
 --============================================================================
+-- Run: a figure leaning into a stride, one leg reaching, one pushing off (the run button on a phone)
+--============================================================================
+function Icons.run(props: Props): Frame
+	local r = root(props)
+	r.Name = "Run"
+	local cloth = props.Tint or Theme.Color.Parchment
+	local dark = cloth:Lerp(Color3.new(0, 0, 0), 0.5)
+	local edge = dark:Lerp(Color3.new(0, 0, 0), 0.4)
+	local px = math.max(1, (props.Size or 24) / 20)
+	local function limb(x: number, y: number, w: number, h: number, rot: number, light: number?)
+		local f = frame(r, x, y, w, h)
+		f.Rotation = rot
+		round(f, 0.4)
+		shade(f, cloth:Lerp(Color3.new(1, 1, 1), light or 0), dark)
+		stroke(f, edge, px)
+	end
+	limb(0.34, 0.74, 0.14, 0.4, 42) -- the back leg, pushing off
+	limb(0.64, 0.72, 0.14, 0.38, -30) -- the front leg, reaching
+	limb(0.32, 0.4, 0.11, 0.3, 60) -- the back arm
+	limb(0.5, 0.45, 0.2, 0.42, 20, 0.1) -- the body, leaning in
+	limb(0.68, 0.36, 0.11, 0.28, -50) -- the front arm
+	local head = frame(r, 0.62, 0.15, 0.24, 0.24)
+	round(head)
+	shade(head, cloth:Lerp(Color3.new(1, 1, 1), 0.15), dark:Lerp(cloth, 0.3))
+	stroke(head, edge, px)
+	return r
+end
+
+--============================================================================
+-- Roll: a body curled into a ball inside the turn it makes (the roll button on a phone)
+--============================================================================
+function Icons.roll(props: Props): Frame
+	local r = root(props)
+	r.Name = "Roll"
+	local cloth = props.Tint or Theme.Color.Parchment
+	local dark = cloth:Lerp(Color3.new(0, 0, 0), 0.5)
+	local edge = dark:Lerp(Color3.new(0, 0, 0), 0.4)
+	local px = math.max(1, (props.Size or 24) / 20)
+	-- the turn: a ring, open at the top right, with the head of an arrow where it ends
+	local ring = frame(r, 0.5, 0.5, 0.94, 0.94)
+	ring.BackgroundTransparency = 1
+	round(ring)
+	stroke(ring, cloth, px * 1.6, 0.25)
+	local tip = frame(r, 0.78, 0.13, 0.2, 0.08, cloth)
+	tip.Rotation = 35
+	round(tip, 0.4)
+	local tip2 = frame(r, 0.88, 0.22, 0.2, 0.08, cloth)
+	tip2.Rotation = -55
+	round(tip2, 0.4)
+	-- the ball: the back curved round, the knees in, the head tucked
+	local back = frame(r, 0.48, 0.52, 0.46, 0.46)
+	round(back)
+	shade(back, cloth:Lerp(Color3.new(1, 1, 1), 0.1), dark)
+	stroke(back, edge, px)
+	local knees = frame(r, 0.6, 0.62, 0.22, 0.22)
+	round(knees)
+	shade(knees, cloth, dark)
+	stroke(knees, edge, px)
+	local head = frame(r, 0.36, 0.38, 0.2, 0.2)
+	round(head)
+	shade(head, cloth:Lerp(Color3.new(1, 1, 1), 0.15), dark:Lerp(cloth, 0.3))
+	stroke(head, edge, px)
+	return r
+end
+
+--============================================================================
 -- Lantern: a hand lantern with its bail, the glass lit (the cover button in the King's Wood)
 --============================================================================
 function Icons.lantern(props: Props): Frame

@@ -31,7 +31,8 @@ local WorkPoseController = {}
 
 WorkPoseController.Name = "WorkPoseController"
 
-type Joints = { [string]: Motor6D }
+-- a Motor6D on an older rig, an AnimationConstraint on Roblox's upgraded avatar joints (both have Transform)
+type Joints = { [string]: any }
 
 type State = {
 	character: Model,
@@ -67,7 +68,7 @@ local function findJoints(character: Model): Joints?
 	for name, where in JOINTS do
 		local limb = character:FindFirstChild(where[1])
 		local motor = limb and limb:FindFirstChild(where[2])
-		if motor and motor:IsA("Motor6D") then
+		if motor and (motor:IsA("Motor6D") or motor:IsA("AnimationConstraint")) then
 			out[name] = motor
 		end
 	end
@@ -352,7 +353,9 @@ function WorkPoseController.Init() end
 function WorkPoseController.Start()
 	-- After the engine's own animation step, so the pose is on top of whatever the
 	-- Animate script is playing (and before the frame is drawn).
-	RunService.Heartbeat:Connect(step)
+	-- (2026-11-05) before the physics step, not after it: an AnimationConstraint joint takes its Transform in the
+	-- physics solve, so a value written at Heartbeat was always one step stale and moved nothing
+	RunService.PreSimulation:Connect(step)
 end
 
 return WorkPoseController

@@ -27,6 +27,7 @@ local Workspace = game:GetService("Workspace")
 local Server = script.Parent.Parent
 local CrouchRules = require(Server.Domain.Crouch)
 local GameService = require(Server.Services.GameService)
+local MovementService = require(Server.Services.MovementService)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -151,6 +152,8 @@ end
 
 local function goDown(player: Player, humanoid: Humanoid, state: State)
 	local cfg = Config.get("Crouch")
+	-- a run gives its speed back first, so the crouch's share is taken from the walking speed (and given back to it)
+	MovementService.stopRun(player)
 	state.crouched = true
 	state.humanoid = humanoid
 	-- remember the standing body before it changes: the avatar's own scale, and how tall it is

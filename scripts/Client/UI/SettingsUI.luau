@@ -1,7 +1,9 @@
 --!strict
 --[[
 	SettingsUI
-	The Settings panel: the picture quality (Low, Medium, High, Ultra) and the shadows switch.
+	The Settings panel: the picture quality (Low, Medium, High, Ultra), the shadows switch, and (on a computer with a
+	mouse) the MOUSE LOCK switch: the mouse stays in the middle of the screen under a very small dot and the body turns
+	with the camera (Client/Controllers/MovementController; Roblox's own Shift lock is off, Shift runs).
 
 	It opens from the gear beside the chat. The panel rises and settles like a page being laid on a table, and
 	sinks away when it is closed (the burgundy X, the dark behind it, or the gear again).
@@ -15,6 +17,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Theme = require(script.Parent.Theme)
 local Components = require(script.Parent.Components)
@@ -22,7 +25,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 
 local SettingsUI = {}
 
-export type Change = { graphics: string?, shadows: boolean? }
+export type Change = { graphics: string?, shadows: boolean?, mouseLock: boolean? }
 
 local gui: ScreenGui? = nil
 local veil: Frame? = nil
@@ -272,13 +275,93 @@ local function build()
 	;(shadowsCaption :: TextLabel).TextYAlignment = Enum.TextYAlignment.Top
 	Components.divider(root, 9)
 
+	-- mouse lock (a computer with a mouse only: a phone turns the camera with a finger)
+	if UserInputService.MouseEnabled then
+		local lockRow = Components.group({ Name = "MouseLock", Size = UDim2.new(1, 0, 0, 34), LayoutOrder = 10, Parent = root })
+		local lockLabel = caption(lockRow, "MOUSE LOCK", 1)
+		lockLabel.Size = UDim2.new(1, -(TRACK_W + 10), 1, 0)
+
+		local button = Instance.new("TextButton")
+		button.Name = "LockSwitch"
+		button.Text = ""
+		button.AutoButtonColor = false
+		button.AnchorPoint = Vector2.new(1, 0.5)
+		button.Position = UDim2.new(1, 0, 0.5, 0)
+		button.Size = UDim2.fromOffset(TRACK_W, TRACK_H)
+		button.BackgroundTransparency = 1
+		button.ZIndex = 4
+		button.Parent = lockRow
+
+		local lockTrack = Instance.new("Frame")
+		lockTrack.Name = "Track"
+		lockTrack.Size = UDim2.fromScale(1, 1)
+		lockTrack.BorderSizePixel = 0
+		lockTrack.ZIndex = 4
+		lockTrack.Parent = button
+		Theme.corner(lockTrack, UDim.new(0.5, 0))
+		Theme.goldStroke(lockTrack, 1.2)
+
+		local lockKnob = Instance.new("Frame")
+		lockKnob.Name = "Knob"
+		lockKnob.Size = UDim2.fromOffset(KNOB, KNOB)
+		lockKnob.BackgroundColor3 = Theme.Color.Cream
+		lockKnob.BorderSizePixel = 0
+		lockKnob.ZIndex = 5
+		lockKnob.Parent = lockTrack
+		Theme.corner(lockKnob, UDim.new(0.5, 0))
+		Theme.surface(lockKnob, Theme.Color.Cream, Theme.Color.Parchment:Lerp(Theme.Color.Bronze, 0.35))
+
+		local lockWord = Instance.new("TextLabel")
+		lockWord.Name = "Word"
+		lockWord.BackgroundTransparency = 1
+		lockWord.Size = UDim2.fromOffset(TRACK_W - KNOB - 6, TRACK_H)
+		lockWord.TextSize = 12
+		lockWord.ZIndex = 5
+		lockWord.Parent = lockTrack
+		Theme.applyFont(lockWord, Theme.Role.Strong)
+
+		local player = Players.LocalPlayer
+		local function drawLock(animate: boolean)
+			local on = player:GetAttribute("MouseLock") == true
+			local info = if animate then Theme.Motion.Normal else TweenInfo.new(0)
+			TweenService:Create(lockKnob, info, { Position = UDim2.fromOffset(if on then TRACK_W - KNOB - 3 else 3, (TRACK_H - KNOB) / 2) }):Play()
+			TweenService:Create(lockTrack, info, { BackgroundColor3 = if on then Theme.Color.GreenTop else Color3.fromRGB(58, 42, 30) }):Play()
+			lockWord.Text = if on then "ON" else "OFF"
+			lockWord.TextColor3 = if on then Theme.Color.Cream else Theme.Color.Muted
+			lockWord.Position = if on then UDim2.fromOffset(0, 0) else UDim2.fromOffset(KNOB + 3, 0)
+		end
+		button.Activated:Connect(function()
+			if onChange then
+				onChange({ mouseLock = player:GetAttribute("MouseLock") ~= true })
+			end
+		end)
+		-- the server keeps the choice; the switch draws what it kept
+		player:GetAttributeChangedSignal("MouseLock"):Connect(function()
+			drawLock(true)
+		end)
+		drawLock(false)
+
+		local lockCaption = Components.label({
+			Name = "MouseLockCaption",
+			Text = "The mouse stays in the middle under a small dot and you turn with the camera. Shift runs, Q rolls.",
+			TextSize = Theme.TextSize.Micro,
+			TextColor = Theme.Color.Muted,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Size = UDim2.new(1, 0, 0, 40),
+			LayoutOrder = 11,
+			Parent = root,
+		})
+		lockCaption.TextYAlignment = Enum.TextYAlignment.Top
+		Components.divider(root, 12)
+	end
+
 	Components.label({
 		Name = "Footer",
 		Text = "This is only your own picture. It never changes what you can see in the castle.",
 		TextSize = Theme.TextSize.Micro,
 		TextColor = Theme.Color.Parchment,
 		Size = UDim2.new(1, 0, 0, 40),
-		LayoutOrder = 10,
+		LayoutOrder = 13,
 		Parent = root,
 	})
 

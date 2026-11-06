@@ -1,3 +1,28 @@
+## Version 0.45.0 — One walk for everybody, running with stamina, the roll on Q, the mouse lock
+
+What the developer asked for (2026-11-05): everybody walks the same, like "Command An Army"; Shift runs with stamina (6 s,
+fills after 1 s, full in 15 s), a blue bar under the health bar; Q rolls (a tumble, head under) toward the keys held, 1.5 s
+of the bar (four rolls on a full bar), quicker than walking and a little further; no back-step; Roblox's Shift lock out and
+our own mouse lock with a small dot in Settings; three whole movement sets to choose from. Design: `docs/systems/Movement.md`.
+
+- `configs/Movement`, `Shared/Stamina` (+ `Tests/Stamina.spec`, 8 tests), `Server/Services/MovementService` (both places:
+  the bar, the run's speed claim, the roll's cost; Roblox's Shift lock off), `Client/Controllers/MovementController` (the
+  bodies, Shift, Q, the bar, the mouse lock and its dot, phone buttons), `UI/StaminaBar`, `UI/Icons` run and roll, a MOUSE
+  LOCK switch in `UI/SettingsUI` kept in `profile.settings.mouseLock` (`Shared/PlayerSettings`, `SettingsService`).
+- `Shared/Anim/PlayerMoveAnims`: three sets (the soldier = the Command An Army walk on R15, the ranger, the veteran), each
+  idle, walk, run, jump, fall; one shared roll, sit, climb. Set 1 is in use; workspace attribute `TLK_MoveStyle` switches.
+- `Shared/Anim/ClipPlayer`: plays clips written in code by writing the joints at `RunService.PreSimulation`. Found today:
+  players' bodies use `AnimationConstraint` joints (only written before the physics step take effect), and the Roblox
+  reference says registered KeyframeSequence ids do not work outside Studio. `WorkPoseController` moved to PreSimulation
+  and takes AnimationConstraints too.
+- Crouch is C only (Shift runs now). Crouching stops a run; no roll while crouched.
+- Measured in play: 6.0 s of running at 24 studs a second, then 16 and no run until Shift is pressed again; the bar fills
+  0.5 a second after a 1 s wait; a roll 0.59 s, 20.2 studs (walking 9.4, running 14.1 in that time), bar 6 -> 4.5; five Q
+  presses = four rolls (4.5, 3, 1.5, 0). Mouse lock: mouse held, 4 px dot shown, camera over the shoulder, all undone when
+  switched off. 330 specs pass in the Hub; both places build; the Hub runs the same movement.
+- Not done: the developer's choice of set; a phone; two players at once; the dead's and the sword's clips in the published
+  game (if the reference is right they do not play there: to be looked at).
+
 ## Version 0.44.1 — Plain stone, no moss, model trees, the wood's fence, smooth steps
 
 What the developer asked for (2026-11-05), after walking the wood: take out every green moss piece on trunks and stones; replace
