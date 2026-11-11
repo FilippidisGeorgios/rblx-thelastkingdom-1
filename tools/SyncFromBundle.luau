@@ -4,7 +4,7 @@
 	Makes the place's scripts the same as the files on disk, from ONE model file (a "bundle") that holds every script of
 	the project. It is the same job Rojo does, for the times a script has to do it:
 
-	  1. On the developer's machine:  node <scratchpad>/mksync.js world     (or: default, for the Kingdom Hub)
+	  1. On the developer's machine:  node tools/mksync.js world     (or: default, for the Kingdom Hub)
 	     builds the bundle with Rojo itself (so the mapping is the project file's own) into Roblox Studio's content folder
 	     and prints its name.
 	  2. In Studio (command bar or the Studio tool):
