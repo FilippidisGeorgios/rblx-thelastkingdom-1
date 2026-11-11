@@ -4,12 +4,14 @@
 	The two small buttons beside the chat, at the top left, in both places:
 
 	  PROFILE   a head and shoulders (no word on it). Opens the Muster Roll (Controllers/ProfileController).
-	  SETTINGS  a grey cog (no word on it). Opens the Settings panel (UI/SettingsUI): the picture quality and the shadows switch.
+	  SETTINGS  a grey cog (no word on it). Opens the Settings panel (UI/SettingsUI): three pages, GAME (field of view,
+	            head bob, hold to crouch), PERFORMANCE (graphics, shadows) and KEYS.
 
 	(The INVENTORY tab on the left edge belongs to UI/BackpackHud, which also draws the pack and the Hub's inventory.)
 
 	It wires the Settings panel to the GraphicsController: a press is sent to the server as a request, and the panel
-	shows whatever the server has kept.
+	shows whatever the server has kept. (The mouse is held in the middle of the screen in first person: L lets it go to
+	press these buttons, Controllers/ViewController; P and B open the roll and the pack without it.)
 
 	Place: shared client (both places). Phase: Settings.
 

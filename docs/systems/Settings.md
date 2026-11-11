@@ -13,6 +13,32 @@ for these buttons: the picture says what it is), on a black plate with a dark-gr
 its leather, and the cog is grey. They lift on hover (the edge lightens), sink on press, and have a small gold number for a prize waiting. The panels open by
 sliding and settling from their button and slide away when closed (`Theme.Motion.Enter` / `Exit`).
 
+## 2a. Since 0.46.0 (2026-11-10): three pages, more settings, and a quality that only goes down inside a run
+
+The panel has three pages (`UI/SettingsUI`), and no small print under anything (the developer asked for names only):
+
+| Page | What is on it |
+|---|---|
+| **GAME** | FIELD OF VIEW (60 to 100, steps of 5, starts at 80), HEAD BOB (the picture steps with the feet; off for players it makes dizzy), HOLD TO CROUCH (Ctrl held, or pressed once) |
+| **PERFORMANCE** | GRAPHICS (Low, Medium, High, Ultra), SHADOWS (on, off) |
+| **KEYS** | what every key does (a computer only) |
+
+Kept in `profile.settings` (`fov`, `headBob`, `crouchHold`) and handed to the client as `ViewFov`, `ViewBob`,
+`CrouchHold`. The old `mouseLock` is dropped from a save when it is read.
+
+**Only down inside a run** (`configs/Graphics.Lock`, `PlayerSettings.allowed`, `SettingsService`). In the Forgotten
+Lands a quality that was lowered cannot be raised again until the player is back in the lobby (raising it in a fight
+was a way to freeze). The qualities above the best one still allowed are crossed out, and lowering asks first:
+**ARE YOU SURE?** "If you press YES, remember: you cannot raise the graphics again during this game. They can only be
+raised in the lobby." YES / NO. In the lobby there is no ceiling and no question. The server holds the ceiling
+(`GfxCeiling`), so a changed client cannot raise it either.
+
+**Low looks low** (`Surfaces` in the table of qualities). Medium: the fine surface pictures (SurfaceAppearance) are
+taken off. Low: that, every material becomes smooth plastic and the tiled pictures on walls are hidden: the world in
+plain colours, with a fifth of the particles and half the far lights. Shapes, colours, light and dark are the same on
+all four (the rule below still holds, and the spec still checks the table's keys). In the castle nothing that is taken
+off is kept to be put back (it never will be), which saves memory on exactly the machines that chose Low.
+
 ## 2. Settings (`Shared/PlayerSettings`, `configs/Graphics`, `Services/SettingsService`, `Controllers/GraphicsController`)
 
 **Picture: Low, Medium, High, Ultra.** **Shadows: ON / OFF.** Changeable in the Hub and in the castle; the choice is kept in

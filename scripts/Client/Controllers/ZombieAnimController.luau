@@ -18,7 +18,7 @@
 
 	WHY CLIENT ONLY. A clip registered with KeyframeSequenceProvider exists on the
 	machine that registered it, so every client builds the same set and plays it on
-	every body it can see (the same way WeaponAnimController poses the sword).
+	every body it can see (the same way BodyAnimController poses the sword).
 
 	DISTANCE. A body further than ACTIVE_RANGE from the camera is not animated at
 	all: its tracks are stopped and it stands in its baked rest pose, which is what

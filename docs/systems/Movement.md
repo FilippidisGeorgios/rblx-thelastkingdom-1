@@ -1,6 +1,22 @@
 # Movement: one walk for everybody, running with stamina, the roll, the mouse lock (2026-11-05)
 
-**Status:** BUILT (0.45.0). Numbers in `configs/Movement.luau`; rules in `Shared/Stamina` (with `Tests/Stamina.spec`).
+**Status:** BUILT (0.45.0), changed in 0.46.0. Numbers in `configs/Movement.luau`; rules in `Shared/Stamina` (with `Tests/Stamina.spec`).
+
+## What changed in 0.46.0 (2026-11-10)
+
+- **The game is first person** (`FirstPerson.md`): the mouse lock switch described below is gone; the mouse is always
+  held and L lets it go. The bodies are drawn by `Client/Controllers/BodyAnimController` now (`MovementController`
+  keeps the run, the dash and the bar).
+- **The roll no longer catches.** Measured on this page's build, the body rose 1.5 studs in every roll: it turned over
+  inside its own collision box, so the head and chest struck the ground half way round, and its facing was set by hand
+  at the start. Now your own body is only carried along the ground (the eyes dip instead) and the tumble is drawn on
+  the OTHER players' screens, where nothing collides, turning the way the body really goes (ahead, back or sideways).
+  Measured after: 0.57 s, 19.6 studs, never slower than 21 studs a second, rise 0.01. In the keys it is called a DASH.
+- **Every way.** The body faces where the eyes look, so the walk and the run each have forward, back and two sidestep
+  clips of the same stride, blended by the way the feet really go; turning on the spot shuffles the feet.
+- **Crouch is Ctrl** (C still works); a press toggles, or with HOLD TO CROUCH in Settings it is held. Ducked, the knees
+  are bent and the chest forward (the body is also still made shorter: that is what fits the low passages).
+- The clips of the hands (sword, spear, bow, armour, lantern) are in `Gear.md`.
 
 ## What the developer asked for (2026-11-05)
 

@@ -60,6 +60,9 @@ local function stateFor(player: Player): { [string]: any }?
 
 	local stock: { any } = {}
 	for weaponId, weapon in weapons do
+		if weapon.Forge == false then
+			continue -- not a thing the smith works on (the bow)
+		end
 		local level = levelOf(profile, weaponId)
 		local requiredLevel = (weapon.Requirements and weapon.Requirements.level) or 0
 		local locked = playerLevel < requiredLevel
@@ -109,7 +112,7 @@ local function onUpgradeRequest(player: Player, weaponId: any)
 	end
 	local weapon = weapons[weaponId]
 	local profile = DataService.get(player)
-	if not weapon or not profile then
+	if not weapon or weapon.Forge == false or not profile then
 		return
 	end
 

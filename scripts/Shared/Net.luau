@@ -44,7 +44,7 @@ local EVENT_NAMES: { string } = {
 	"AreaEvent", -- server -> client: which chamber you are in, and whether its gate is shut
 	"ObjectiveHint", -- server -> client: the one line at the top saying what to do now
 	"RequestToggleWeapon", -- client -> server: draw the weapon, or put it away
-	"WeaponState", -- server -> client: who has their weapon out, so arms can be posed
+	"WeaponState", -- (not sent any more: who holds what is the character's `Weapon` / `WeaponDrawn` attributes)
 	"IntroEvent", -- server -> client: the arrival scene (start / votes / end / arrived)
 	"RequestIntroSkip", -- client -> server: this player votes to skip the arrival scene
 	"DocumentEvent", -- server -> client: open a parchment (a recipe, a letter, a burial roll) for one player
@@ -57,7 +57,7 @@ local EVENT_NAMES: { string } = {
 	"CharmEvent", -- server -> client: a worn charm just did something { kind = "cue", charm, title, line }
 	"RequestProfile", -- client -> server: "my muster roll" (no arguments: you can only ask for your own)
 	"ProfileEvent", -- server -> client: { kind = "card", card = PlayerCard } or { kind = "unavailable" }
-	"RequestSettings", -- client -> server: { graphics = "Low"|"Medium"|"High"|"Ultra"?, shadows = boolean?, mouseLock = boolean? } (checked by Shared/PlayerSettings)
+	"RequestSettings", -- client -> server: { graphics = "Low"|"Medium"|"High"|"Ultra"?, shadows = boolean?, fov = number?, headBob = boolean?, crouchHold = boolean? } (checked by Shared/PlayerSettings)
 	"RequestInventory", -- client -> server: "my inventory" (the Hub fills the left-hand panel with the stash and the road's prizes)
 	"RequestClaimPrize", -- client -> server: the level of the road's prize to take (Domain/Prizes decides if it may be taken)
 	"ClientReady", -- client -> server: this player's loading screen has gone (the world is drawn); the arrival scene waits for it
@@ -65,6 +65,17 @@ local EVENT_NAMES: { string } = {
 	"RequestLanternCover", -- client -> server: a boolean, close the lantern's shutter (true) or open it (false); the King's Wood
 	"RequestRun", -- client -> server: a boolean, Shift held (true) or let go (false); the server runs the stamina (Services/MovementService)
 	"RequestRoll", -- client -> server: a Vector3, the way to roll (flat); the server spends the stamina and tells everyone to draw it
+	"RequestSelectWeapon", -- client -> server: a number, the place on the weapon bar to take in hand (0 = put it away)
+	"WeaponBar", -- server -> client: { weapons = { { id, name, kind } }, selected = number, drawn = boolean } (your own bar)
+	"RequestBow", -- client -> server: { kind = "draw" | "loose" | "cancel", aim = Vector3? } (World/RangedCombatService decides)
+	"RequestArmour", -- client -> server: a boolean, put the armour on (true) or take it off (false) (World/GearService)
+	"RequestLanternBelt", -- client -> server: a boolean, hang the lantern on the belt (true) or take it in the hand (false)
+	"RequestBack", -- client -> server: "armour" | "quiver", the one thing to carry on the back (World/GearService)
+}
+
+-- Things sent many times a second where only the newest matters (a lost one is not sent again).
+local UNRELIABLE_NAMES: { string } = {
+	"LookSync", -- client -> server: (pitch degrees); server -> the other clients: (userId, pitch degrees). Where a head looks.
 }
 local FUNCTION_NAMES: { string } = {}
 
@@ -85,7 +96,7 @@ end
 
 -- Build declared remotes on the server. Skipped entirely when nothing is
 -- declared, so Phase 1 creates no instances at all.
-if IS_SERVER and (#EVENT_NAMES > 0 or #FUNCTION_NAMES > 0) then
+if IS_SERVER and (#EVENT_NAMES > 0 or #FUNCTION_NAMES > 0 or #UNRELIABLE_NAMES > 0) then
 	local folder = getFolder()
 	if folder then
 		for _, name in EVENT_NAMES do
@@ -98,6 +109,13 @@ if IS_SERVER and (#EVENT_NAMES > 0 or #FUNCTION_NAMES > 0) then
 		for _, name in FUNCTION_NAMES do
 			if not folder:FindFirstChild(name) then
 				local remote = Instance.new("RemoteFunction")
+				remote.Name = name
+				remote.Parent = folder
+			end
+		end
+		for _, name in UNRELIABLE_NAMES do
+			if not folder:FindFirstChild(name) then
+				local remote = Instance.new("UnreliableRemoteEvent")
 				remote.Name = name
 				remote.Parent = folder
 			end
@@ -121,6 +139,13 @@ end
 function Net.getEvent(name: string): RemoteEvent
 	local remote = resolveFolder():WaitForChild(name, 10)
 	assert(remote and remote:IsA("RemoteEvent"), "Missing RemoteEvent: " .. name)
+	return remote
+end
+
+-- An event for things sent many times a second (a look, a position): a lost one is never sent again.
+function Net.getUnreliable(name: string): UnreliableRemoteEvent
+	local remote = resolveFolder():WaitForChild(name, 10)
+	assert(remote and remote:IsA("UnreliableRemoteEvent"), "Missing UnreliableRemoteEvent: " .. name)
 	return remote
 end
 

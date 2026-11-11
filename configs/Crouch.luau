@@ -3,7 +3,7 @@
 	Config: Crouch
 	Ducking down, to fit a low passage and to be quiet.
 
-	WHAT IT DOES. The player holds C (a button on a phone) and the body gets shorter, the walk gets slower, and the
+	WHAT IT DOES. The player presses Ctrl, or C (a button on a phone) and the body gets shorter, the walk gets slower, and the
 	feet make no noise (`Crouching` is published on the Player for the hunters and the dead to read, when they do).
 	Stand up again and everything comes back. You can only stand where there is room: under a low ceiling the
 	server keeps you down.
@@ -40,11 +40,11 @@ local Crouch = {
 	StandHeight = 5.2,
 
 	-- The key that toggles (an Enum.KeyCode name). A phone has a button instead.
-	Key = "C",
+	Key = "LeftControl", -- (2026-11-10: Ctrl, the developer asked; C still works, see AltKey)
+	AltKey = "C" :: string?,
 
-	-- The key that is HELD: down while it is pressed, up when it is let go. It was Shift (2026-10-31); since 2026-11-05
-	-- Shift RUNS (configs/Movement), so there is no held key and C alone ducks and stands. A key name here brings it back.
-	HoldKey = nil :: string?,
+	-- HOLD or TOGGLE is the player's own choice now (Settings, HOLD TO CROUCH): held, the body is down while Ctrl is
+	-- pressed and up when it is let go; not held (the start), a press goes down and the next comes up.
 }
 
 return table.freeze(Crouch)

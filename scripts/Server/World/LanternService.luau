@@ -17,6 +17,11 @@
 	its light drops to `configs/Forest.Cover` (a glimmer at the feet), the glass goes dark, and the player carries the
 	attribute `LanternCovered`, which the Huntsman reads (he sees an open lantern far, a covered one only close).
 
+	THE BELT (2026-11-10, docs/systems/Gear.md). A player may hang the lantern on the belt, at the left hip
+	(`RequestLanternBelt`; the client offers it while the mouse is free), so that both hands are free; it burns there
+	just the same. Taking a weapon that needs both hands (a spear, a bow) hangs it up by itself. The model says where
+	it is with its attribute `OnBelt`, which the clients read to know whether the left arm holds it up.
+
 	Place: Forgotten Lands ONLY (Server/World).
 ]]
 
@@ -25,7 +30,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Server = script.Parent.Parent
 local GameService = require(Server.Services.GameService)
+local GearModels = require(Server.Domain.GearModels)
 local BackpackService = require(script.Parent.BackpackService)
+local WeaponVisualService = require(script.Parent.WeaponVisualService)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
@@ -226,6 +233,13 @@ local function shutter(player: Player, held: Instance)
 	end
 end
 
+local function clearHook(character: Model)
+	local hook = character:FindFirstChild("BeltHook")
+	if hook then
+		hook:Destroy()
+	end
+end
+
 local function refresh(player: Player)
 	local character = player.Character
 	if not character then
@@ -235,17 +249,44 @@ local function refresh(player: Player)
 	local held = character:FindFirstChild(MODEL)
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local wants = hasLantern(player) and humanoid ~= nil and humanoid.Health > 0
+	local onBelt = player:GetAttribute("LanternBelt") == true
+	-- hung in the wrong place (the player moved it): made again where it belongs
+	if held and wants and (held:GetAttribute("OnBelt") == true) ~= onBelt then
+		held:Destroy()
+		held = nil
+		clearHook(character)
+	end
 	if wants and not held then
-		local hand = handOf(character)
-		if hand then
-			held = build(hand)
-			held.Parent = character
-			shutter(player, held)
+		local anchor: BasePart? = nil
+		if onBelt then
+			clearHook(character)
+			anchor = GearModels.beltHook(character, Config.get("Gear").LanternBelt)
+		else
+			anchor = handOf(character)
+		end
+		if anchor then
+			local made = build(anchor)
+			made:SetAttribute("OnBelt", if onBelt then true else nil)
+			made.Parent = character
+			shutter(player, made)
 		end
 	elseif held and not wants then
 		held:Destroy()
+		clearHook(character)
 		player:SetAttribute("LanternCovered", nil)
 	end
+end
+
+--[[
+	Hangs `player`'s lantern on the belt (`on` true) or puts it back in the left hand. It is remembered for the next
+	lantern too (a player with none yet).
+]]
+function LanternService.setBelt(player: Player, on: boolean)
+	if (player:GetAttribute("LanternBelt") == true) == on then
+		return
+	end
+	player:SetAttribute("LanternBelt", if on then true else nil)
+	refresh(player)
 end
 
 --[[
@@ -299,6 +340,24 @@ function LanternService.Start()
 	Net.getEvent("RequestLanternCover").OnServerEvent:Connect(function(player: Player, on: any)
 		if type(on) == "boolean" then
 			LanternService.setCovered(player, on)
+		end
+	end)
+	Net.getEvent("RequestLanternBelt").OnServerEvent:Connect(function(player: Player, on: any)
+		if type(on) ~= "boolean" then
+			return
+		end
+		-- both hands on a spear or a bow: the lantern stays on the belt
+		local inHand = WeaponVisualService.inHand(player)
+		local def = inHand and Config.get("Gear").Weapons[inHand]
+		if not on and def and def.TwoHanded then
+			return
+		end
+		LanternService.setBelt(player, on)
+	end)
+	WeaponVisualService.onChanged(function(player: Player, weaponId: string?)
+		local def = weaponId and Config.get("Gear").Weapons[weaponId]
+		if def and def.TwoHanded and hasLantern(player) then
+			LanternService.setBelt(player, true)
 		end
 	end)
 	task.spawn(function()

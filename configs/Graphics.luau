@@ -18,7 +18,7 @@
 	Quality is changeable in the Hub and in the castle alike; it is only the player's own picture.
 
 	Schema (per tier):
-		Label, Blurb          shown in the panel
+		Label                 shown in the panel (a name and nothing else: the developer asked for no small print)
 		Shadows               what the shadows switch starts at when this tier is chosen
 		ParticleScale         share of each emitter's rate that is drawn (never to zero: cues stay)
 		LodScale              how far lights and fires stay lit, as a share of the authored distance
@@ -27,6 +27,17 @@
 		LightShadows          lights cast shadows (only while shadows are on)
 		SoftShadows           ShadowSoftness is multiplied by this (smaller = sharper)
 		QualityLevel          the engine's own level (1-21), set if the client is allowed to
+		Surfaces              "full": everything as it was made. "plain": the fine surface pictures (SurfaceAppearance)
+		                      are taken off, the materials stay. "flat": that, and every material becomes smooth plastic
+		                      and the tiled pictures on walls are hidden: the world in plain colours. Shapes, colours,
+		                      light and dark are the same on all three (the rule above), only the surface is cheaper.
+
+	LOW MUST LOOK LOW (the developer, 2026-11-10): a player who chooses Low on a weak machine should SEE that the game
+	became lighter, so Low is "flat" with a fifth of the particles and half the far lights, and Medium is "plain".
+
+	ONLY DOWN INSIDE A RUN (`Lock`). In the places named there a quality can be lowered and never raised again until the
+	player is back in the lobby: raising it in the middle of a fight was a way to freeze the game, and "flat" and "plain"
+	are cheap to put on and dear to take off. The panel asks first ("Are you sure?"), and crosses out what is above.
 ]]
 
 local Graphics = {
@@ -37,24 +48,30 @@ local Graphics = {
 	-- Parts whose largest side is under this many studs are "small": they stop casting under SIMPLE shadows.
 	SmallPartStuds = 5,
 
+	-- Where the quality may only go down (Shared/PlayerSettings keeps the ceiling, Services/SettingsService holds it).
+	Lock = {
+		Places = { "ForgottenLands" },
+		Ask = "ARE YOU SURE?",
+		Warning = "If you press YES, remember: you cannot raise the graphics again during this game. They can only be raised in the lobby.",
+	},
+
 	Tiers = {
 		Low = {
 			Label = "Low",
-			Blurb = "For phones and older machines. Fewer glows, sparks and far-off fires.",
 			Shadows = false,
-			ParticleScale = 0.35,
-			LodScale = 0.6,
+			ParticleScale = 0.2,
+			LodScale = 0.5,
 			Bloom = false,
 			SunRays = false,
 			DepthOfField = false,
 			Decoration = false,
 			LightShadows = false,
 			SoftShadows = 1,
-			QualityLevel = 3,
+			QualityLevel = 1,
+			Surfaces = "flat",
 		},
 		Medium = {
 			Label = "Medium",
-			Blurb = "Balanced. The picture most phones and laptops hold steady.",
 			Shadows = true,
 			ParticleScale = 0.65,
 			LodScale = 0.85,
@@ -64,11 +81,11 @@ local Graphics = {
 			Decoration = false,
 			LightShadows = false,
 			SoftShadows = 1,
-			QualityLevel = 8,
+			QualityLevel = 7,
+			Surfaces = "plain",
 		},
 		High = {
 			Label = "High",
-			Blurb = "The picture the castle was made for.",
 			Shadows = true,
 			ParticleScale = 1,
 			LodScale = 1,
@@ -79,10 +96,10 @@ local Graphics = {
 			LightShadows = false,
 			SoftShadows = 1,
 			QualityLevel = 14,
+			Surfaces = "full",
 		},
 		Ultra = {
 			Label = "Ultra",
-			Blurb = "The best light: sharper shadows, torches that shadow the room, fires lit from far away.",
 			Shadows = true,
 			ParticleScale = 1,
 			LodScale = 1.5,
@@ -93,6 +110,7 @@ local Graphics = {
 			LightShadows = true,
 			SoftShadows = 0.4,
 			QualityLevel = 21,
+			Surfaces = "full",
 		},
 	},
 }

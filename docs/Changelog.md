@@ -1,3 +1,74 @@
+## Version 0.46.0 — First person, the weapon bar, the spear and the bow, armour on F, Settings in three pages
+
+What the developer asked for (2026-11-10): the animation of the whole game (the bow, the spear, the sword, the armour);
+square bodies for everybody; the armour on F; ONE thing on the back, the armour or a small quiver; the weapons on a bar
+of our own at the bottom, chosen with the mouse wheel; the whole game "full screen" as DOORS is (through the eyes, the
+mouse always held, L lets it go, friends see your head turn) with an opening that puts the player in the mood; the
+lantern hung at the left hip from a small line shown while the mouse is free; Settings in pages (performance with no
+small print, a page of keys), two or three new settings, a LOW that looks low, and a quality that can only be lowered
+inside a run, with "Are you sure?" and crosses; Ctrl crouches; and the Q roll must stop catching.
+Designs: `docs/systems/FirstPerson.md`, `docs/systems/Gear.md`; `docs/systems/Movement.md` and `Settings.md` updated.
+
+- **First person** (`configs/View`, `Client/Controllers/ViewController`, both places): `LockFirstPerson`; your own body
+  drawn below the neck; the eyes' step with the feet, a landing's dip, a dash's dip and wider view; the field of view
+  from Settings; a 4-pixel dot. **L** frees and takes the mouse; any screen that shows a button frees it by itself.
+  While L has it free, small lines of things to do stand above the weapon bar (`ViewController.chip`). The look is sent
+  12 times a second on an unreliable event (`LookSync`) and every client turns that player's chest and head; the head
+  also runs ahead of a turning body. The eyes open on the place after the arrival scene (castle) or the title (lobby).
+  The old mouse lock switch is gone (`CameraController` holds the zoom at the eyes).
+- **Why the roll caught, and the fix.** Measured on the old build: the body rose 1.5 studs in every roll. It turned over
+  INSIDE its own collision box (head and chest hit the ground half way round) and its facing was set by hand each time.
+  Now your own body is only carried (`MovementController`); the tumble is drawn on the other players' screens, the way
+  the body really goes (`PlayerMoveAnims.rollHips`); the eyes dip. Measured after: 0.57 s, 19.6 studs, never under 21
+  studs a second, rise 0.01.
+- **The bodies** (`Client/Controllers/BodyAnimController`, new; `MovementController` keeps only the run, the dash and the
+  bar): the walk and the run EVERY WAY (forward, back, both sidesteps, blended by where the feet really go: the body
+  faces where the eyes look), ducked versions, a shuffle when turning on the spot; then the hands (a hold, the one move
+  being done), the look, two hands put exactly ON a weapon, and an ease from whatever was showing.
+  `Shared/Anim/PlayerMoveAnims` (+ back, side, ducked clips), `Shared/Anim/PlayerActionAnims` (new: the sword's guard
+  and two cuts kept number for number, the armour on and off, the lantern held up; and TRACKS for the spear and the bow:
+  where the weapon is, key by key), `Shared/Anim/WeaponPose` (new: works both arms out from a track),
+  `Shared/Anim/ClipPlayer` (+ a pose worked out with no body touched, `reach` = a hand put on a point, `level`, bones
+  written "+Bone" are added to the walk, an ease is the one a pose is ARRIVED at).
+  `WeaponAnimController` and `SwordAnims` are retired (kept as reference in `assets/Animations/`): their clips needed a
+  registered KeyframeSequence, which the Roblox reference says does not work outside Studio.
+- **Square bodies** (`Server/Services/AvatarService`, both places): everybody's torso, arms and legs are the plain
+  blocks at one size; head, hair, clothes and colours stay theirs. The castle spawns with it (`DeathService`); a body
+  spawned any other way is squared once it stands. `AvatarService.waitReady` (a body is announced before it is in the
+  world: checking at once said "gone", and nobody had weapons).
+- **The weapon bar** (`UI/WeaponBar`, `CombatController`, `World/WeaponVisualService` rewritten, `configs/Gear`,
+  `Domain/GearModels`): sword, spear and bow are all ON the body (hip, back, back) and one is in the hand; the wheel
+  or 1 2 3 chooses, the same number puts it away. Models are put together at spawn from the sculpted kit the dead use.
+  Who holds what is two attributes on the character (`Weapon`, `WeaponDrawn`).
+- **The bow** (`World/RangedCombatService`, `configs/Weapons.hunting_bow`): hold to draw, let go to loose where the dot
+  is; a real travelling arrow through `ProjectileService`; the longer the draw (to 0.8 s) the harder; the string and
+  the nocked arrow follow the draw. Kept off the forge (`Forge = false`) and out of the Might rating.
+- **The back** (`World/GearService`, `GearController`): the armour or the quiver. F puts the armour on, piece by piece
+  with a clip, and takes it off: worn, a quarter of every ordinary blow is turned aside and the bar fills a tenth
+  slower. The quiver holds 16 arrows (24 at most; an empty one takes a bundle of 8 from the pack). The change between
+  the two is a line shown while the mouse is free.
+- **The lantern** (`LanternService`, `LanternController`): "Hang the lantern on your belt" / "Take the lantern in your
+  hand" while the mouse is free; a spear or a bow hangs it up by itself. The shutter moved from F to **G**.
+- **Settings** (`UI/SettingsUI` rewritten, `Shared/PlayerSettings`, `SettingsService`, `GraphicsController`,
+  `configs/Graphics`): pages GAME (FIELD OF VIEW 60 to 100, HEAD BOB, HOLD TO CROUCH), PERFORMANCE (GRAPHICS, SHADOWS,
+  no small print), KEYS. In the castle a quality can only be lowered: the ones above are crossed out and lowering asks
+  "ARE YOU SURE?" (YES / NO); in the lobby it is free. LOW now looks low: plain colours (every material smooth
+  plastic, no surface pictures), a fifth of the particles, half the far lights; MEDIUM loses the fine surface pictures.
+- Crouch is **Ctrl** (C still works), toggle or hold by the new switch.
+- Tools: `tools/PreviewPose` (one moment of any clip on a body in a booth, seen from outside or from its eyes),
+  `tools/SyncFromBundle` (scripts into a place from one model file: the Studio assistant can no longer read 127.0.0.1).
+- Measured in play (castle): the dash above; walking 16 with the eyes stepping 0.03, running 24 with the view 4 degrees
+  wider; F put 16 pieces on and took them off; the bar chose each weapon; "The quiver is not on your back." with the
+  armour carried; with the quiver two arrows loosed (16 -> 14), each a projectile; the mouse freed by L, the line
+  pressed, the Settings pages and the question seen. 339 specs pass (new: `Gear.spec`, 8; `PlayerSettings.spec` +1).
+  The lobby boots the same code with no error.
+- NOT seen or not done: a spear thrust and a sword cut in motion from outside; two players at once (a friend's head
+  turning, a friend's roll); a phone (it has buttons for the blow, run, dash, crouch; the lines of the free mouse have
+  no touch way in yet); Low and Medium on a weak machine; a true bent-knee crouch (the body is still made shorter);
+  sounds. The lobby was only booted, not walked, after the change (the screen was locked).
+- During testing a play session was left running while the work was interrupted: the dead killed the test body, the
+  run was lost and the session went to the lobby. The developer's profile may show one lost run from it.
+
 ## Version 0.45.0 — One walk for everybody, running with stamina, the roll on Q, the mouse lock
 
 What the developer asked for (2026-11-05): everybody walks the same, like "Command An Army"; Shift runs with stamina (6 s,

@@ -1,8 +1,13 @@
 --!strict
 --[[
 	CrouchController
-	The key (C) and, on a phone, the button that ask the server to duck down or stand up (Server/World/CrouchService,
-	configs/Crouch). It only asks: the body, the speed and the room to stand are the server's.
+	The key (Ctrl, or C) and, on a phone, the button that ask the server to duck down or stand up
+	(Server/World/CrouchService, configs/Crouch). It only asks: the body, the speed and the room to stand are the server's.
+
+	TWO WAYS OF USING THE KEY, the player's own choice in Settings (HOLD TO CROUCH, kept as the player attribute
+	`CrouchHold` by Services/SettingsService):
+	  off (the start)  a press ducks, the next press stands
+	  on               ducked while the key is held, up when it is let go
 
 	The button is a picture and no word (the developer's rule for buttons on the edge of the screen): a small figure
 	ducking, on the right above the jump button, shown on touch screens only; it lights while you are crouched. The
@@ -43,34 +48,52 @@ function CrouchController.Start()
 	local player = Players.LocalPlayer
 	local request = Net.getEvent("RequestCrouch")
 
+	local function crouched(): boolean
+		return player:GetAttribute("Crouching") == true
+	end
+
 	local function toggle()
-		request:FireServer(player:GetAttribute("Crouching") ~= true)
+		request:FireServer(not crouched())
+	end
+
+	local keys: { Enum.KeyCode } = { Enum.KeyCode[cfg.Key] }
+	if cfg.AltKey then
+		table.insert(keys, Enum.KeyCode[cfg.AltKey])
+	end
+
+	local function anyHeld(): boolean
+		for _, key in keys do
+			if UserInputService:IsKeyDown(key) then
+				return true
+			end
+		end
+		return false
 	end
 
 	ContextActionService:BindAction(ACTION, function(_, state: Enum.UserInputState)
+		local hold = player:GetAttribute("CrouchHold") == true
 		if state == Enum.UserInputState.Begin then
-			toggle()
+			if hold then
+				if not crouched() then
+					request:FireServer(true)
+				end
+			else
+				toggle()
+			end
+		elseif hold and (state == Enum.UserInputState.End or state == Enum.UserInputState.Cancel) then
+			if crouched() then
+				request:FireServer(false)
+			end
+			-- a very short tap is inside the server's gap between two presses (and a low ceiling can refuse the rise):
+			-- ask once more when the gap is over, if the key is still up
+			task.delay(cfg.ToggleGap + 0.05, function()
+				if crouched() and not anyHeld() and player:GetAttribute("CrouchHold") == true then
+					request:FireServer(false)
+				end
+			end)
 		end
 		return Enum.ContextActionResult.Pass
-	end, false, Enum.KeyCode[cfg.Key])
-
-	-- Shift: down while it is held, up when it is let go (and a press that is already answered is not asked twice)
-	if cfg.HoldKey then
-		ContextActionService:BindAction(ACTION .. "Hold", function(_, state: Enum.UserInputState)
-			if state == Enum.UserInputState.Begin and player:GetAttribute("Crouching") ~= true then
-				request:FireServer(true)
-			elseif state == Enum.UserInputState.End and player:GetAttribute("Crouching") == true then
-				request:FireServer(false)
-				-- a very short tap is inside the server's gap between two presses: ask once more when the gap is over
-				task.delay(cfg.ToggleGap + 0.05, function()
-					if player:GetAttribute("Crouching") == true and not UserInputService:IsKeyDown(Enum.KeyCode[cfg.HoldKey]) then
-						request:FireServer(false)
-					end
-				end)
-			end
-			return Enum.ContextActionResult.Pass
-		end, false, Enum.KeyCode[cfg.HoldKey])
-	end
+	end, false, table.unpack(keys))
 
 	if UserInputService.TouchEnabled then
 		local gui = Instance.new("ScreenGui")
@@ -92,7 +115,7 @@ function CrouchController.Start()
 		})
 		-- a gold edge while crouched
 		local function lit()
-			handle.setActive(player:GetAttribute("Crouching") == true)
+			handle.setActive(crouched())
 		end
 		player:GetAttributeChangedSignal("Crouching"):Connect(lit)
 		lit()

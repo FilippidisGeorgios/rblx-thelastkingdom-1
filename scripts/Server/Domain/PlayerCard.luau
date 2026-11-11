@@ -162,6 +162,9 @@ function PlayerCard.build(profile: any, ctx: Context): Card
 	local arms: { Arm } = {}
 	local levels: { number } = {}
 	for id, weapon in ctx.weapons do
+		if weapon.Forge == false then
+			continue -- never forged, so it is not one of the arms the rating is made of (the bow)
+		end
 		local lvl = levelOf(profile, id, curveTop)
 		local required = (weapon.Requirements and weapon.Requirements.level) or 0
 		table.insert(levels, lvl)

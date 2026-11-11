@@ -18,7 +18,14 @@
 	                    body; the run pounds; the jump throws both arms up.
 
 	Each set: Idle (breathing, the weight shifting), Walk (authored for 16 studs a second), Run (24, Shift), Jump, Fall.
-	Shared by all three: the ROLL (Q), a forward tumble, head under, that comes up in a crouch, and Sit and Climb.
+	Shared by all three: the ROLL (Q), a tumble, head under, that comes up in a crouch, and Sit and Climb.
+
+	EVERY WAY, NOT ONLY FORWARD (2026-11-10). The game is first person: the body faces where the eyes look while the feet
+	go back or sideways, and a forward walk slid backward is a moonwalk. So a walk and a run each have four clips with the
+	SAME stride time (forward, back, right, left), which the controller blends by the way the feet are really going; a
+	diagonal is two of them at the same step. A sidestep reaches out with the leading leg and closes with the other (the
+	legs never cross); a backward step is shorter and the chest sits back.
+	And DUCKED (Ctrl): a low idle and a low walk every way, the knees deep and the chest forward.
 
 	--------------------------------------------------------------------------
 	ANGLES (a joint's rotation away from the standard R15 rest, degrees)
@@ -215,6 +222,7 @@ local STYLES: { Style } = {
 -- The speeds the clips are authored for (studs a second): the controller plays them faster or slower to match.
 PlayerMoveAnims.WALK_PACE = 16
 PlayerMoveAnims.RUN_PACE = 24
+PlayerMoveAnims.DUCK_PACE = 8
 
 --==========================================================================
 -- GAIT (walk and run)
@@ -245,19 +253,32 @@ local function leg(p: number, g: Gait): (number, number, number)
 	return thigh, knee, ankle
 end
 
-local function gaitFrames(g: Gait): { Frame }
+-- What changes a gait without being a new one: played `back`ward (the feet go the other way), and `squat` degrees
+-- of extra thigh so that a deep knee bend keeps the feet under the hips (the ducked walk), with the hips `sink` lower.
+type GaitOptions = { back: boolean?, squat: number?, sink: number? }
+
+local function gaitFrames(g: Gait, options: GaitOptions?): { Frame }
 	local frames: { Frame } = {}
+	local back = options ~= nil and options.back == true
+	local squat = (options and options.squat) or 0
+	local sink = (options and options.sink) or 0
 	for i = 0, SAMPLES do
 		local t = i / SAMPLES
-		local rThigh, rKnee, rAnkle = leg(t, g)
-		local lThigh, lKnee, lAnkle = leg(t + 0.5, g)
-		local c = math.cos(TAU * t)
-		local fall = math.max(bump(t - 0.05, 0.07), bump(t - 0.55, 0.07))
-		local late = math.max(bump(t - 0.12, 0.08), bump(t - 0.62, 0.08))
+		-- backward: the same step, run the other way round (the heel leaves first, the toe lands)
+		local at = if back then 1 - t else t
+		local rThigh, rKnee, rAnkle = leg(at, g)
+		local lThigh, lKnee, lAnkle = leg(at + 0.5, g)
+		rThigh += squat
+		lThigh += squat
+		rAnkle -= squat * 0.45
+		lAnkle -= squat * 0.45
+		local c = math.cos(TAU * at)
+		local fall = math.max(bump(at - 0.05, 0.07), bump(at - 0.55, 0.07))
+		local late = math.max(bump(at - 0.12, 0.08), bump(at - 0.62, 0.08))
 		-- the body is lowest just after each heel lands and highest as it passes over the planted foot
-		local drop = -g.bob * (0.5 + 0.5 * math.cos(2 * TAU * (t - 0.07)))
+		local drop = -sink - g.bob * (0.5 + 0.5 * math.cos(2 * TAU * (at - 0.07)))
 		-- arms: opposite to the legs, a beat behind; the forearm bends more on the forward swing
-		local swing = math.cos(TAU * (t - 0.06))
+		local swing = math.cos(TAU * (at - 0.06))
 		local rArm, lArm = -g.arms * swing, g.arms * swing
 		frames[i + 1] = {
 			time = t * g.D,
@@ -283,6 +304,80 @@ local function gaitFrames(g: Gait): { Frame }
 	end
 	return frames
 end
+
+--[[
+	THE SIDESTEP. `dir` +1 goes to the body's right, -1 to its left. The same leg cycle as the walk (plant, pass over,
+	lift, swing), but the thigh swings OUT instead of forward: the leading leg plants far out and the body passes over
+	it; the other plants close in and is left far out behind. The legs never cross (`CLOSE` is how far a leg comes past
+	the middle). A lifted foot comes straight up (the thigh rises by half of what the knee bends), and each ankle keeps
+	its sole flat.
+]]
+local CLOSE = 5
+
+local function sideFrames(g: Gait, dir: number, options: GaitOptions?): { Frame }
+	local frames: { Frame } = {}
+	local squat = (options and options.squat) or 0
+	local sink = (options and options.sink) or 0
+	local reach = math.min(g.S * 0.8, 30)
+	local half = (reach + CLOSE) / 2
+	local lead = (reach - CLOSE) / 2
+	-- the middle of each leg's sweep: the leading leg works out to its own side, the trailing one in under the body
+	local rMid = if dir > 0 then lead else -lead
+	local lMid = -rMid
+	for i = 0, SAMPLES do
+		local t = i / SAMPLES
+		local rSwing, rKnee0 = leg(t, g)
+		local lSwing, lKnee0 = leg(t + 0.5, g)
+		local rOut = dir * (rMid + half * rSwing / g.S)
+		local lOut = dir * (lMid + half * lSwing / g.S)
+		-- the knee only does about half of a walking knee: a sidestep lifts the foot, it does not kick it back
+		local rKnee = -g.bend - (-rKnee0 - g.bend) * 0.55
+		local lKnee = -g.bend - (-lKnee0 - g.bend) * 0.55
+		local rLift = -rKnee * 0.5 + squat
+		local lLift = -lKnee * 0.5 + squat
+		local c = math.cos(TAU * t)
+		local fall = math.max(bump(t - 0.05, 0.07), bump(t - 0.55, 0.07))
+		local drop = -sink - g.bob * 0.8 * (0.5 + 0.5 * math.cos(2 * TAU * (t - 0.07)))
+		local swing = math.cos(TAU * (t - 0.06))
+		frames[i + 1] = {
+			time = t * g.D,
+			ease = "flat",
+			pose = {
+				LowerTorso = move(0, drop, 0, 0, 0, -dir * 1.5 + g.roll * 0.8 * c),
+				UpperTorso = deg(-g.lean * 0.5 - g.impact * 0.6 * fall, -dir * 3, -dir * 2 - g.roll * 0.4 * c),
+				Head = deg(g.lean * 0.35, dir * 3, dir * 1.5),
+				-- the arms a little out for balance, swinging small
+				RightUpperArm = deg(g.arms * 0.25 * swing, 0, g.armOut + 4 + (if dir > 0 then 3 else 0)),
+				LeftUpperArm = deg(-g.arms * 0.25 * swing, 0, -g.armOut - 4 - (if dir < 0 then 3 else 0)),
+				RightLowerArm = deg(g.elbow + 8, 0, 0),
+				LeftLowerArm = deg(g.elbow + 8, 0, 0),
+				RightUpperLeg = deg(rLift, 0, rOut),
+				LeftUpperLeg = deg(lLift, 0, lOut),
+				RightLowerLeg = deg(rKnee, 0, 0),
+				LeftLowerLeg = deg(lKnee, 0, 0),
+				RightFoot = deg(-(rLift + rKnee) * 0.8, 0, -rOut),
+				LeftFoot = deg(-(lLift + lKnee) * 0.8, 0, -lOut),
+			},
+		}
+	end
+	return frames
+end
+
+-- A walk or a run going BACKWARD: a shorter step, the chest sat back, the arms quieter.
+local function backGait(g: Gait): Gait
+	local b = table.clone(g)
+	b.S = g.S * 0.74
+	b.K = g.K * 0.7
+	b.arms = g.arms * 0.55
+	b.lean = -g.lean * 0.35
+	b.yaw = g.yaw * 0.6
+	b.bob = g.bob * 0.8
+	return b
+end
+
+-- The DUCKED walk (Ctrl): knees deep, chest forward, arms tucked, a short quiet step.
+local DUCK: Gait = { D = 0.92, S = 22, K = 26, stance = 0.62, bend = 58, arms = 7, elbow = 62, elbowSwing = 6, armOut = 8, legOut = 4, yaw = 4, roll = 2, bob = 0.04, lean = 26, head = 0.9, nod = 0.8, impact = 0.5, ankle = 9 }
+local DUCK_OPTIONS: GaitOptions = { squat = 30, sink = 0.12 }
 
 --==========================================================================
 -- IDLE: the stance, breathing, the weight going from foot to foot, a look round now and then
@@ -316,6 +411,38 @@ local function idleFrames(s: Style): { Frame }
 				LeftLowerLeg = deg(-(i.bend - 1.2 * shift), 0, 0),
 				RightFoot = deg(bend * 0.4, 0, -i.stance),
 				LeftFoot = deg((i.bend - 1.2 * shift) * 0.4, 0, i.stance),
+			},
+		}
+	end
+	return frames
+end
+
+-- Ducked and still: down on the haunches, the chest forward, the arms in, breathing.
+local function duckIdleFrames(): { Frame }
+	local frames: { Frame } = {}
+	local LENGTH = 5
+	local N = 16
+	for k = 0, N do
+		local t = k / N
+		local breath = math.sin(TAU * t * 2)
+		local shift = math.sin(TAU * t)
+		frames[k + 1] = {
+			time = t * LENGTH,
+			ease = "flat",
+			pose = {
+				LowerTorso = move(0.02 * shift, -0.12 - 0.01 * breath, 0, 0, 0, -1.2 * shift),
+				UpperTorso = deg(-DUCK.lean - 1.2 * breath, 0, 0.6 * shift),
+				Head = deg(DUCK.lean * 0.8 + 0.5 * breath, 0, 0),
+				RightUpperArm = deg(18 + breath, 0, 8),
+				LeftUpperArm = deg(18 + breath, 0, -8),
+				RightLowerArm = deg(64, 0, 0),
+				LeftLowerArm = deg(64, 0, 0),
+				RightUpperLeg = deg(40 + shift, 0, 6),
+				LeftUpperLeg = deg(34 - shift, 0, -6),
+				RightLowerLeg = deg(-64 - shift, 0, 0),
+				LeftLowerLeg = deg(-58 + shift, 0, 0),
+				RightFoot = deg(22, 0, -6),
+				LeftFoot = deg(22, 0, 6),
 			},
 		}
 	end
@@ -434,7 +561,7 @@ end
 ]]
 local ROLL_LENGTH = 0.6
 
-local function rollFrames(): { Frame }
+local function rollFrames(): ({ Frame }, { { any } })
 	local tuck: Pose = {
 		UpperTorso = deg(-38, 0, 0),
 		Head = deg(-42, 0, 0),
@@ -495,13 +622,41 @@ local function rollFrames(): { Frame }
 				pose[bone] = CFrame.new()
 			end
 		end
-		pose.LowerTorso = CFrame.new(0, k[3], k[4]) * CFrame.Angles(rad(k[2]), 0, 0)
 		frames[#frames + 1] = { time = k[1] * ROLL_LENGTH / 0.6, ease = "flat", pose = pose }
 	end
-	return frames
+	return frames, turn
 end
 
 PlayerMoveAnims.ROLL_LENGTH = ROLL_LENGTH
+
+local ROLL_TURN: { { any } } = select(2, rollFrames())
+
+--[[
+	The hips of the roll at `t` seconds of its clip, for a body going `way` (a flat direction in the BODY's own space:
+	-Z is ahead of it, +X its right). The clip itself carries only the tucked limbs; the body turns over the way it is
+	really going, so a dash to the side is a roll to the side and not a forward tumble sliding sideways.
+	Returns the root joint's pose (LowerTorso).
+]]
+function PlayerMoveAnims.rollHips(t: number, way: Vector3): CFrame
+	local n = #ROLL_TURN
+	local scaled = math.clamp(t, 0, ROLL_LENGTH) * 0.6 / ROLL_LENGTH
+	local i = 1
+	while i < n and ROLL_TURN[i + 1][1] <= scaled do
+		i += 1
+	end
+	local a, b = ROLL_TURN[i], ROLL_TURN[math.min(i + 1, n)]
+	local span = b[1] - a[1]
+	local alpha = if span > 0 then math.clamp((scaled - a[1]) / span, 0, 1) else 0
+	local angle = a[2] + (b[2] - a[2]) * alpha
+	local drop = a[3] + (b[3] - a[3]) * alpha
+	local push = a[4] + (b[4] - a[4]) * alpha
+	local flat = Vector3.new(way.X, 0, way.Z)
+	flat = if flat.Magnitude > 1e-3 then flat.Unit else Vector3.new(0, 0, -1)
+	-- the axis the body turns round lies across the way it goes (going ahead: its own X; the angle is negative, so
+	-- the head goes the way of the roll and under)
+	local axis = Vector3.new(-flat.Z, 0, flat.X)
+	return CFrame.new(flat * -push + Vector3.new(0, drop, 0)) * CFrame.fromAxisAngle(axis, rad(angle))
+end
 
 --==========================================================================
 -- SIT and CLIMB (shared)
@@ -550,13 +705,25 @@ export type ClipDef = { frames: { Frame }, looped: boolean }
 ]]
 function PlayerMoveAnims.clips(set: number): { [string]: ClipDef }
 	local s = STYLES[set] or STYLES[1]
+	local walkBack, runBack = backGait(s.walk), backGait(s.run)
 	return {
 		idle = { frames = idleFrames(s), looped = true },
 		walk = { frames = gaitFrames(s.walk), looped = true },
+		walkBack = { frames = gaitFrames(walkBack, { back = true }), looped = true },
+		walkRight = { frames = sideFrames(s.walk, 1), looped = true },
+		walkLeft = { frames = sideFrames(s.walk, -1), looped = true },
 		run = { frames = gaitFrames(s.run), looped = true },
+		runBack = { frames = gaitFrames(runBack, { back = true }), looped = true },
+		runRight = { frames = sideFrames(s.run, 1), looped = true },
+		runLeft = { frames = sideFrames(s.run, -1), looped = true },
+		duckIdle = { frames = duckIdleFrames(), looped = true },
+		duck = { frames = gaitFrames(DUCK, DUCK_OPTIONS), looped = true },
+		duckBack = { frames = gaitFrames(backGait(DUCK), { back = true, squat = 30, sink = 0.12 }), looped = true },
+		duckRight = { frames = sideFrames(DUCK, 1, DUCK_OPTIONS), looped = true },
+		duckLeft = { frames = sideFrames(DUCK, -1, DUCK_OPTIONS), looped = true },
 		jump = { frames = jumpFrames(s), looped = false },
 		fall = { frames = fallFrames(s), looped = true },
-		roll = { frames = rollFrames(), looped = false },
+		roll = { frames = (rollFrames()), looped = false },
 		sit = { frames = sitFrames(), looped = true },
 		climb = { frames = climbFrames(), looped = true },
 	}

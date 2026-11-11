@@ -12,7 +12,12 @@
 	  - how many particles each emitter draws (a share of its rate, never to zero, so every cue stays);
 	  - how far lights and fires stay lit (DetailLodController), and, on Ultra, shadows from the lights near you;
 	  - the terrain's grass;
-	  - how sharp the shadows are, and the engine's own quality level where it lets a script set it.
+	  - how sharp the shadows are, and the engine's own quality level where it lets a script set it;
+	  - the SURFACES (`Surfaces` in configs/Graphics): on Medium the fine surface pictures (SurfaceAppearance) are taken
+	    off; on Low every material also becomes smooth plastic and the tiled pictures on walls are hidden, so the world
+	    is plain colours and a player on a weak machine SEES that Low is low (the developer, 2026-11-10). Shapes, colours,
+	    light and dark stay as they are. In the lobby this is put back when a better quality is chosen; in the castle a
+	    quality can only be lowered (the server holds that), so nothing is kept to put back and the memory is saved.
 
 	THE SHADOWS SWITCH does not turn the world's shadows off: that would let the sun through every roof and light the
 	dark rooms, which is an advantage and the end of the mood. Off means SIMPLE shadows: walls, roofs and floors keep
@@ -33,6 +38,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local Net = require(ReplicatedStorage.Shared.Net)
 local PlayerSettings = require(ReplicatedStorage.Shared.PlayerSettings)
+local Constants = require(ReplicatedStorage.Shared.Constants)
 local DetailLodController = require(script.Parent.DetailLodController)
 local Logger = require(ReplicatedStorage.Shared.Util.Logger)
 
@@ -60,6 +66,20 @@ local emitterRate: { [ParticleEmitter]: number } = {} -- as authored
 local smallParts: { [BasePart]: boolean } = {} -- small parts that cast a shadow as authored
 local softness: number? = nil
 local muted = false
+
+-- the surfaces: what is on now, and what was taken off (kept only where it can ever be put back)
+local surfaces = "full"
+local canRestore = true
+local savedMaterial: { [BasePart]: Enum.Material } = {}
+local savedAppearance: { [Instance]: Instance } = {}
+local savedTexture: { [Instance]: number } = {}
+-- materials that MEAN something (a glow, a window, a ward): never flattened
+local KEEP_MATERIAL: { [Enum.Material]: boolean } = {
+	[Enum.Material.Neon] = true,
+	[Enum.Material.Glass] = true,
+	[Enum.Material.ForceField] = true,
+	[Enum.Material.SmoothPlastic] = true,
+}
 local onChanged: { (string, boolean) -> () } = {}
 
 local function isPhone(): boolean
@@ -116,12 +136,100 @@ local function registerPart(part: BasePart)
 	end
 end
 
+-- One thing's surface as the quality says ("plain": no fine surface picture; "flat": that, smooth plastic, no tiled picture).
+local function surfaceOf(instance: Instance)
+	if surfaces == "full" then
+		return
+	end
+	if instance:IsA("SurfaceAppearance") then
+		local parent = instance.Parent
+		if parent then
+			if canRestore then
+				savedAppearance[instance] = parent
+			end
+			-- (not in the same breath as it arrives: a thing may not be moved while it is still being put in)
+			task.defer(function()
+				if surfaces ~= "full" and instance.Parent == parent then
+					instance.Parent = nil
+				end
+			end)
+		end
+	elseif surfaces == "flat" then
+		if instance:IsA("Texture") then
+			if canRestore and savedTexture[instance] == nil then
+				savedTexture[instance] = instance.Transparency
+			end
+			instance.Transparency = 1
+		elseif instance:IsA("BasePart") and not instance:IsA("Terrain") and not KEEP_MATERIAL[instance.Material] then
+			if canRestore and savedMaterial[instance] == nil then
+				savedMaterial[instance] = instance.Material
+			end
+			instance.Material = Enum.Material.SmoothPlastic
+		end
+	end
+end
+
 local function register(instance: Instance)
 	if instance:IsA("ParticleEmitter") then
 		applyEmitter(instance)
 	elseif instance:IsA("BasePart") then
 		registerPart(instance)
 	end
+	surfaceOf(instance)
+end
+
+-- The whole world's surfaces, when the quality's `Surfaces` changes. Going up puts back what was kept (the lobby only).
+local surfaceToken = 0
+local function setSurfaces(mode: string)
+	if mode == surfaces then
+		return
+	end
+	local was = surfaces
+	surfaces = mode
+	surfaceToken += 1
+	local token = surfaceToken
+	local rank = { full = 3, plain = 2, flat = 1 }
+	if (rank[mode] or 3) > (rank[was] or 3) then
+		-- richer than before: materials and tiled pictures come back; the fine pictures only at "full"
+		local n = 0
+		for part, material in savedMaterial do
+			if part.Parent then
+				part.Material = material
+			end
+			savedMaterial[part] = nil
+			n += 1
+			if n % 2000 == 0 then
+				task.wait()
+			end
+		end
+		for texture, transparency in savedTexture do
+			if texture.Parent then
+				(texture :: any).Transparency = transparency
+			end
+			savedTexture[texture] = nil
+		end
+		if mode == "full" then
+			for appearance, parent in savedAppearance do
+				if parent.Parent then
+					appearance.Parent = parent
+				end
+				savedAppearance[appearance] = nil
+			end
+		end
+		return
+	end
+	local n = 0
+	for _, instance in Workspace:GetDescendants() do
+		if token ~= surfaceToken then
+			return
+		end
+		surfaceOf(instance)
+		n += 1
+		if n % 2500 == 0 then
+			task.wait()
+		end
+	end
+	log:info(("surfaces %s: %d things looked at"):format(mode, n))
 end
 
 -- SIMPLE shadows (shadows switch off): the small casters stop; the structures keep casting.
@@ -163,6 +271,21 @@ local function prune()
 	for effect in effectEnabled do
 		if not effect.Parent then
 			effectEnabled[effect] = nil
+		end
+	end
+	for part in savedMaterial do
+		if not part.Parent then
+			savedMaterial[part] = nil
+		end
+	end
+	for texture in savedTexture do
+		if not texture.Parent then
+			savedTexture[texture] = nil
+		end
+	end
+	for appearance, parent in savedAppearance do
+		if not parent.Parent then
+			savedAppearance[appearance] = nil
 		end
 	end
 end
@@ -208,6 +331,7 @@ local function applyAll()
 	end
 
 	task.spawn(setMuted, not shadows)
+	task.spawn(setSurfaces, t.Surfaces or "full")
 end
 
 local function readState()
@@ -242,7 +366,7 @@ end
 
 -- Asks the server to keep a choice ({ graphics = "Ultra" } and/or { shadows = false }). The picture follows
 -- when the server has accepted it and the attributes arrive.
-function GraphicsController.request(change: { graphics: string?, shadows: boolean? })
+function GraphicsController.request(change: { [string]: any })
 	if requestEvent then
 		requestEvent:FireServer(change)
 	end
@@ -264,6 +388,12 @@ function GraphicsController.Start()
 	cfg = Config.get("Graphics")
 	requestEvent = Net.getEvent("RequestSettings")
 	readState()
+	-- where the quality may only go down, nothing that is taken off is kept to be put back
+	for _, place in cfg.Lock.Places do
+		if Constants.PlaceIds[place] == game.PlaceId then
+			canRestore = false
+		end
+	end
 
 	-- scan the world once, then follow whatever streams in
 	task.spawn(function()

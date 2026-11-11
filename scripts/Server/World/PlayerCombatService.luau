@@ -50,12 +50,16 @@ local function ensureStarterWeapon(player: Player)
 	if EquipmentService.getEquipped(player, InvEnums.EquipmentSlot.MainHand) then
 		return
 	end
-	local starterId = settings.Combat.StarterWeaponItemId
-	local instance = InventoryService.addItem(player, starterId)
-	if instance then
-		EquipmentService.equip(player, instance.uid)
-		log:info(("granted starter weapon '%s' to %s"):format(tostring(starterId), player.Name))
+	-- every weapon of the bar (configs/Gear.Starter), the first one in the hand
+	local first = true
+	for _, itemId in Config.get("Gear").Starter.Weapons do
+		local instance = InventoryService.addItem(player, itemId)
+		if instance and first then
+			first = false
+			EquipmentService.equip(player, instance.uid)
+		end
 	end
+	log:info(("granted the starter weapons to %s"):format(player.Name))
 end
 
 local function unbind(player: Player)

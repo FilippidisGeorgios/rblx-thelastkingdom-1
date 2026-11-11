@@ -50,6 +50,11 @@ local Items = {
 		Slot = "MainHand",
 		WeaponId = "starter_sword",
 	},
+	-- The rest of the weapon bar (configs/Gear.Starter hands them out until the lobby's armoury does).
+	woodsman_axe = { DisplayName = "Woodsman's Axe", Category = "Weapon", Stackable = false, Slot = "MainHand", WeaponId = "woodsman_axe" },
+	footman_spear = { DisplayName = "Footman's Spear", Category = "Weapon", Stackable = false, Slot = "MainHand", WeaponId = "footman_spear" },
+	flanged_mace = { DisplayName = "Flanged Mace", Category = "Weapon", Stackable = false, Slot = "MainHand", WeaponId = "flanged_mace" },
+	hunting_bow = { DisplayName = "Hunting Bow", Category = "Weapon", Stackable = false, Slot = "MainHand", WeaponId = "hunting_bow" },
 
 	--======================================================================
 	-- MATERIALS — the stuff of the dead. Stack to 99, one backpack slot per kind.

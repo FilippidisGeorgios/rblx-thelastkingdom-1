@@ -18,8 +18,13 @@
 	Published: on the Player `Stamina` (seconds left, to the hundredth) and `StaminaMax`; on the Humanoid `Running` (the
 	body is running now: every client draws the run) and `RollSeq` / `RollYaw`.
 
-	Also: Roblox's own Shift lock is switched off for every player (`DevEnableMouseLock`): Shift runs. The mouse lock is
-	ours (a switch in Settings, Client/Controllers/MovementController).
+	Also: Roblox's own Shift lock is switched off for every player (`DevEnableMouseLock`): Shift runs. The game is first
+	person and the mouse is always held (configs/View, Client/Controllers/ViewController).
+
+	THE LOOK. Each client sends where its player looks, up and down, a few times a second (`LookSync`, an event that may
+	lose one: only the newest matters); this passes it on to everybody else, who turn that player's head and chest.
+
+	THE REFILL can be slowed for one player (`setRefillScale`: worn armour, World/GearService).
 
 	Place: shared (both places: the lobby walks the same).
 	Location: ServerScriptService.Server.Services.MovementService
@@ -49,6 +54,8 @@ type State = {
 	humanoid: Humanoid?,
 	rollUntil: number,
 	rollSeq: number,
+	refill: number, -- share of the usual refill speed (1; less in armour)
+	lookAt: number, -- when this player's look was last passed on
 	shown: number, -- the last Stamina value published
 	shownAt: number,
 }
@@ -71,6 +78,8 @@ local function stateOf(player: Player): State
 			humanoid = nil,
 			rollUntil = 0,
 			rollSeq = 0,
+			refill = 1,
+			lookAt = 0,
 			shown = -1,
 			shownAt = 0,
 		}
@@ -129,6 +138,13 @@ local function publish(player: Player, state: State, now: number, force: boolean
 		state.shownAt = now
 		player:SetAttribute("Stamina", value)
 	end
+end
+
+--[[
+	Slows (or restores) how fast one player's bar fills: `scale` 1 is the usual speed, 0.9 a tenth slower.
+]]
+function MovementService.setRefillScale(player: Player, scale: number)
+	stateOf(player).refill = math.clamp(scale, 0.1, 3)
 end
 
 -- Stops a run at once and gives the speed back (the crouch calls this before it takes its own share of the speed).
@@ -225,7 +241,11 @@ local function step(dt: number)
 		-- the speed is on whenever the run is allowed (so the first steps are already fast); the bar drains only on the move
 		setRunning(state, humanoid, allowed)
 		local draining = allowed and moving and not rolling
-		local still = Stamina.step(state.bar, c.Stamina, dt, now, draining)
+		local rules = c.Stamina
+		if state.refill ~= 1 then
+			rules = { Max = rules.Max, RefillSeconds = rules.RefillSeconds / state.refill, RefillDelay = rules.RefillDelay }
+		end
+		local still = Stamina.step(state.bar, rules, dt, now, draining)
 		if draining and not still then
 			setRunning(state, humanoid, false) -- the bar is empty
 		end
@@ -243,6 +263,26 @@ function MovementService.Start()
 	local c = cfg()
 	Net.getEvent("RequestRun").OnServerEvent:Connect(onRun)
 	Net.getEvent("RequestRoll").OnServerEvent:Connect(onRoll)
+
+	-- where a player looks: passed on to the others, at most fifteen a second each, a plain number of degrees
+	local lookSync = Net.getUnreliable("LookSync")
+	lookSync.OnServerEvent:Connect(function(player: Player, pitch: any)
+		if typeof(pitch) ~= "number" or pitch ~= pitch then
+			return
+		end
+		local state = stateOf(player)
+		local now = os.clock()
+		if now - state.lookAt < 1 / 15 then
+			return
+		end
+		state.lookAt = now
+		local clamped = math.clamp(pitch, -85, 85)
+		for _, other in Players:GetPlayers() do
+			if other ~= player then
+				lookSync:FireClient(other, player.UserId, clamped)
+			end
+		end
+	end)
 
 	local function watch(player: Player)
 		-- Shift runs: Roblox's own Shift lock is off (our mouse lock is a switch in Settings)

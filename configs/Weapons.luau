@@ -20,18 +20,19 @@
 			Knockback    = number,
 			ComboSteps   = number,   -- melee combo length (1 = single swing)
 			Requirements = { [stat: string]: number },  -- e.g. level/strength gates
+			Forge        = boolean?, -- false: not on the blacksmith's bench (default true)
 		}
 ]]
 
 --[[
-	The roster is deliberately melee-only for now.
-
-	RANGED IS NOT IMPLEMENTED. "Ranged" exists in the schema above but no code
-	reads it — there is no projectile service. A Hunting Bow and a Hand Cannon
-	are both designed and both period-correct (Europe had hand cannons from the
-	mid-1300s and matchlocks by ~1450), but listing them here would put weapons
-	in the blacksmith that cannot be fired. They arrive with the ranged combat
-	system, in the Forgotten Lands phase.
+	THE HUNTING BOW IS HERE (2026-11-10): `World/RangedCombatService` looses a real, travelling arrow through the same
+	`ProjectileService` the dead's archers use. A ranged entry carries, on top of the schema above:
+		DrawSeconds  = number,   -- how long a full draw takes
+		MinDraw      = number,   -- let go sooner than this and the arrow is not loosed
+		Speed        = number,   -- studs a second at a full draw
+		WeakDraw     = number,   -- share of the damage and the speed an arrow has at the least draw
+	The Hand Cannon and the crossbow are still only designed (docs/systems/Arsenal.md).
+	The blacksmith lists melee weapons only (`Forge = false` keeps an entry off his bench).
 
 	The four below sit on one axis — SPEED against WEIGHT — so choosing between
 	them is a real decision rather than a strictly-better ladder:
@@ -101,6 +102,26 @@ local Weapons = {
 		Knockback = 12,
 		ComboSteps = 1,
 		Requirements = { level = 8 },
+	},
+
+	-- A hunter's bow of yew. Sixteen arrows in the quiver; a bundle from the pack is eight more.
+	hunting_bow = {
+		DisplayName = "Hunting Bow",
+		Class = "Ranged",
+		DamageType = "Physical",
+		Damage = 34,
+		Cooldown = 0.45, -- from one arrow leaving to the next draw beginning
+		Range = 220,
+		Arc = 0,
+		StaminaCost = 0,
+		Knockback = 2,
+		ComboSteps = 1,
+		Requirements = {},
+		Forge = false,
+		DrawSeconds = 0.8,
+		MinDraw = 0.3,
+		Speed = 185,
+		WeakDraw = 0.45,
 	},
 }
 

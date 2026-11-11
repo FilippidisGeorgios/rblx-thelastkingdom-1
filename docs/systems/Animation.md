@@ -6,6 +6,17 @@ the only finished motion in the game, and they set the standard this document ex
 **Reads with:** `Bestiary.md` (who moves), `Arsenal.md` (what the player does), `EnemyAI.md`.
 **Tags:** **[BUILT]** · **[PROPOSED]** · **[LOCKED]**.
 
+**2026-11-10 (0.46.0): how the PLAYER's motion is produced has changed.** Section 2 below describes clips registered
+with `KeyframeSequenceProvider`; the Roblox reference says such ids do not work outside Studio, and players' joints
+are AnimationConstraints that only take a pose written before the physics step. So every player clip is now played by
+our own code: `Shared/Anim/ClipPlayer` (frames in code, written at PreSimulation), `Client/Controllers/
+BodyAnimController` (every body, every frame: feet, hands, look, two-handed weapons, roll). The sword's cuts live on,
+number for number, in `Shared/Anim/PlayerActionAnims`; `SwordAnims` and `WeaponAnimController` are kept only as
+reference in `assets/Animations/`. The house rules of section 1 stand. Built from section 4: idle, walk, sprint
+(every way), the two light attacks of the sword, the roll, the bow, the spear's two thrusts, the armour on and off.
+See `Gear.md` and `Movement.md`. **The dead still use registered clips** (`ZombieAnims`): if they stand stiff in the
+published game they need the same treatment.
+
 ---
 
 ## 1. The house rules (taken from the sword work, now for everything)

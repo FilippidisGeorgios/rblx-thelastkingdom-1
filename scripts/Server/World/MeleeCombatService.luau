@@ -53,8 +53,8 @@ local combatEvent: RemoteEvent? = nil
 local function resolveWeaponStats(weaponId: string): WeaponStats?
 	local weapons = Config.get("Weapons")
 	local def = weapons[weaponId]
-	if not def then
-		return nil
+	if not def or (def.Class ~= nil and def.Class ~= "Melee") then
+		return nil -- a bow is not swung: World/RangedCombatService looses it
 	end
 	return {
 		Damage = def.Damage,
@@ -144,10 +144,14 @@ local function onAttack(player: Player, aim: any)
 		return
 	end
 	lastSwing[player] = now
+	-- the client draws its own arm at once: it has to know when the weapon is ready again (the forge can change it)
+	if player:GetAttribute("SwingCooldown") ~= weapon.Cooldown then
+		player:SetAttribute("SwingCooldown", weapon.Cooldown)
+	end
 
 	--[[
 		The arm is swung by the CLIENT, off the CombatEvent broadcast at the end
-		of this function — see Client/Controllers/WeaponAnimController for why
+		of this function — see Client/Controllers/BodyAnimController for why
 		the server cannot win that fight with the animator.
 
 		Which means the animation plays on exactly the swings the server

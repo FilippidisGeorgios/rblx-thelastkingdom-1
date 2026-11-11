@@ -1,8 +1,7 @@
 --!strict
 --[[
 	Config: Movement
-	How every player moves (docs/systems/Movement.md): one walk for everybody, running on Shift with stamina, the roll on Q,
-	and the mouse lock with its dot in the Settings. The developer's numbers (2026-11-05), modelled on the Roblox game
+	How every player moves (docs/systems/Movement.md): one walk for everybody, running on Shift with stamina, and the dash on Q. The developer's numbers (2026-11-05), modelled on the Roblox game
 	"Command An Army":
 
 	  STAMINA  is counted in SECONDS OF RUNNING. A full bar is 6 seconds of Shift held down while moving. A roll costs 1.5
@@ -13,8 +12,7 @@
 	  ROLL     Q: a forward tumble (the head goes under) toward the keys held (W, A, S, D, as the camera sees them;
 	           none held = straight ahead). About half a second, and it covers about twice the ground that walking does
 	           in the same time.
-	  MOUSE LOCK a switch in Settings (not Roblox's own Shift lock, which is switched off: Shift runs). On: the mouse stays in
-	           the middle, a very small dot marks it, and the body turns with the camera.
+	  THE VIEW  is first person and the mouse is always held (configs/View): the old mouse lock switch is gone.
 
 	Read via: Config.get("Movement")
 ]]
@@ -44,13 +42,6 @@ local Movement = {
 		Distance = 20, -- studs covered: 2.15 times what walking covers in the same time (9.3), more than running (13.9)
 		Gap = 0.12, -- seconds after a roll ends before the next one may start
 		Ease = 0.55, -- how the speed falls off: 0 = even, 1 = all at the start (a push that dies away)
-	},
-
-	MouseLock = {
-		DotSize = 4, -- pixels across
-		DotColor = Color3.fromRGB(245, 238, 222),
-		DotTransparency = 0.12,
-		ShoulderOffset = 1.6, -- studs the camera sits to the right of the head, as Roblox's own lock does
 	},
 
 	-- The stamina bar: right under the health bar (configs/Hud.HealthBar), as wide, thinner, blue.

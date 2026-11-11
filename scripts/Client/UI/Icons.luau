@@ -10,6 +10,8 @@
 	  gear       a cog with eight teeth and a hole (Settings)
 	  person     a head and shoulders (the Muster Roll)
 	  laurel     a pair of leaves round a dot (the first place on the roll of honour)
+	  sword, axe, mace, spear, bow   the weapons on the weapon bar
+	  armour, quiver                 the one thing on the back
 
 	Every icon is a Frame of the size asked for that holds its parts at SCALE positions, so it can be any size.
 	They have no click of their own: put one inside a button.
@@ -330,6 +332,136 @@ function Icons.lantern(props: Props): Frame
 	round(flame)
 	local foot = frame(r, 0.5, 0.84, 0.58, 0.1, iron:Lerp(Color3.new(1, 1, 1), 0.2))
 	round(foot, 0.4)
+	return r
+end
+
+--============================================================================
+-- Weapons and gear (the weapon bar, UI/WeaponBar): each is drawn point up and to the right, as it lies on a rack
+--============================================================================
+local STEEL = Color3.fromRGB(196, 202, 210)
+local STEEL_DARK = Color3.fromRGB(104, 110, 122)
+local WOOD = Color3.fromRGB(150, 112, 70)
+local WOOD_DARK = Color3.fromRGB(84, 58, 34)
+local LEATHER = Color3.fromRGB(96, 66, 42)
+local LEATHER_DARK = Color3.fromRGB(46, 30, 20)
+local BLACK_EDGE = Color3.fromRGB(14, 12, 12)
+
+local function bar(r: Frame, x: number, y: number, w: number, h: number, rot: number, top: Color3, bottom: Color3, px: number, roundness: number?): Frame
+	local f = frame(r, x, y, w, h)
+	f.Rotation = rot
+	round(f, roundness or 0.3)
+	shade(f, top, bottom)
+	stroke(f, BLACK_EDGE, px)
+	return f
+end
+
+-- Sword: blade, crossguard, grip, pommel
+function Icons.sword(props: Props): Frame
+	local r = root(props)
+	r.Name = "Sword"
+	local px = math.max(1, (props.Size or 24) / 22)
+	bar(r, 0.57, 0.41, 0.12, 0.68, 45, STEEL, STEEL_DARK, px, 0.5)
+	bar(r, 0.33, 0.65, 0.36, 0.09, 45, Theme.Color.Gold, Theme.Color.GoldDim, px)
+	bar(r, 0.25, 0.73, 0.1, 0.2, 45, LEATHER, LEATHER_DARK, px)
+	local pommel = frame(r, 0.17, 0.81, 0.14, 0.14)
+	round(pommel)
+	shade(pommel, Theme.Color.Gold, Theme.Color.GoldDim)
+	stroke(pommel, BLACK_EDGE, px)
+	return r
+end
+
+-- Axe: a haft and a bearded head
+function Icons.axe(props: Props): Frame
+	local r = root(props)
+	r.Name = "Axe"
+	local px = math.max(1, (props.Size or 24) / 22)
+	bar(r, 0.48, 0.54, 0.1, 0.84, 35, WOOD, WOOD_DARK, px)
+	bar(r, 0.7, 0.3, 0.34, 0.3, 35, STEEL, STEEL_DARK, px, 0.3)
+	bar(r, 0.8, 0.42, 0.14, 0.22, 35, STEEL, STEEL_DARK, px, 0.4)
+	return r
+end
+
+-- Mace: a haft and a flanged head
+function Icons.mace(props: Props): Frame
+	local r = root(props)
+	r.Name = "Mace"
+	local px = math.max(1, (props.Size or 24) / 22)
+	bar(r, 0.44, 0.58, 0.1, 0.76, 40, WOOD, WOOD_DARK, px)
+	bar(r, 0.72, 0.26, 0.34, 0.12, 40, STEEL, STEEL_DARK, px)
+	bar(r, 0.72, 0.26, 0.12, 0.34, 40, STEEL, STEEL_DARK, px)
+	local head = frame(r, 0.72, 0.26, 0.24, 0.24)
+	round(head)
+	shade(head, STEEL, STEEL_DARK)
+	stroke(head, BLACK_EDGE, px)
+	return r
+end
+
+-- Spear: a long shaft and a leaf head
+function Icons.spear(props: Props): Frame
+	local r = root(props)
+	r.Name = "Spear"
+	local px = math.max(1, (props.Size or 24) / 22)
+	bar(r, 0.46, 0.58, 0.07, 0.9, 42, WOOD, WOOD_DARK, px)
+	bar(r, 0.79, 0.21, 0.13, 0.3, 42, STEEL, STEEL_DARK, px, 0.5)
+	bar(r, 0.68, 0.33, 0.12, 0.06, 42, LEATHER, LEATHER_DARK, px)
+	return r
+end
+
+-- Bow: the stave's curve, the string, an arrow across it
+function Icons.bow(props: Props): Frame
+	local r = root(props)
+	r.Name = "Bow"
+	local px = math.max(1, (props.Size or 24) / 22)
+	-- the curve: the left half of a tall ring
+	local clip = frame(r, 0.3, 0.5, 0.46, 1)
+	clip.BackgroundTransparency = 1
+	clip.ClipsDescendants = true
+	local ring = frame(clip, 1.04, 0.5, 1.24, 0.9)
+	ring.BackgroundTransparency = 1
+	round(ring)
+	stroke(ring, WOOD, px * 2.6)
+	local grip = frame(r, 0.255, 0.5, 0.08, 0.2, LEATHER_DARK)
+	round(grip, 0.4)
+	-- the string
+	frame(r, 0.53, 0.5, math.max(0.03, 0.02), 0.84, Color3.fromRGB(226, 216, 190))
+	-- the arrow
+	bar(r, 0.5, 0.5, 0.7, 0.045, 0, WOOD, WOOD_DARK, px * 0.6)
+	bar(r, 0.13, 0.5, 0.12, 0.12, 45, STEEL, STEEL_DARK, px * 0.8, 0.1)
+	bar(r, 0.82, 0.5, 0.14, 0.14, 0, Theme.Color.Parchment, Theme.Color.Muted, px * 0.6, 0.2)
+	return r
+end
+
+-- Armour: a breastplate with its shoulder plates and two rows of rivets
+function Icons.armour(props: Props): Frame
+	local r = root(props)
+	r.Name = "Armour"
+	local px = math.max(1, (props.Size or 24) / 22)
+	for _, x in { 0.2, 0.8 } do
+		local shoulder = frame(r, x, 0.3, 0.3, 0.26)
+		round(shoulder)
+		shade(shoulder, STEEL, STEEL_DARK)
+		stroke(shoulder, BLACK_EDGE, px)
+	end
+	bar(r, 0.5, 0.54, 0.6, 0.7, 0, Color3.fromRGB(70, 82, 100), Color3.fromRGB(34, 40, 52), px, 0.22)
+	local neck = frame(r, 0.5, 0.18, 0.26, 0.2, Color3.fromRGB(10, 9, 9))
+	round(neck)
+	for _, y in { 0.44, 0.62 } do
+		frame(r, 0.5, y, 0.5, 0.05, Theme.Color.Gold).BackgroundTransparency = 0.15
+	end
+	return r
+end
+
+-- Quiver: a leather tube and the flights of three arrows
+function Icons.quiver(props: Props): Frame
+	local r = root(props)
+	r.Name = "Quiver"
+	local px = math.max(1, (props.Size or 24) / 22)
+	for i, x in { 0.5, 0.6, 0.7 } do
+		bar(r, x, 0.22 + i * 0.02, 0.04, 0.3, 14, WOOD, WOOD_DARK, px * 0.5)
+		bar(r, x + 0.02, 0.14 + i * 0.02, 0.1, 0.14, 14, Theme.Color.Parchment, Theme.Color.Muted, px * 0.5, 0.3)
+	end
+	bar(r, 0.5, 0.62, 0.32, 0.64, 14, LEATHER, LEATHER_DARK, px, 0.25)
+	bar(r, 0.57, 0.36, 0.36, 0.08, 14, Theme.Color.Gold, Theme.Color.GoldDim, px * 0.7)
 	return r
 end
 

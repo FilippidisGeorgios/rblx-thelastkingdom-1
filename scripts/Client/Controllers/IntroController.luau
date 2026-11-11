@@ -30,6 +30,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Constants = require(ReplicatedStorage.Shared.Constants)
 local IntroUI = require(script.Parent.Parent.UI.IntroUI)
 local IntroCinema = require(script.Parent.Parent.UI.IntroCinema)
+local ViewController = require(script.Parent.ViewController)
 
 local IntroController = {}
 
@@ -68,7 +69,8 @@ local function hideOtherScreens()
 	if playerGui then
 		for _, gui in playerGui:GetChildren() do
 			-- (the loading screen is not put away: it leaves by itself, when the bar is full)
-			if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "IntroUI" and gui.Name ~= "TitleScreen" then
+			-- (nor the unseen button that lets the mouse go: the SKIP button needs it)
+			if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "IntroUI" and gui.Name ~= "TitleScreen" and gui.Name ~= "MouseFree" then
 				gui.Enabled = false
 				table.insert(hiddenGuis, gui)
 			end
@@ -184,6 +186,7 @@ local function play(speakers: { [number]: string }, speakerIds: { [number]: numb
 	end)
 
 	hideOtherScreens()
+	ViewController.sceneBegan()
 
 	local camera = Workspace.CurrentCamera
 	camera.CameraType = Enum.CameraType.Scriptable
@@ -271,6 +274,8 @@ local function arrived()
 		end)
 	end
 	restoreScreens()
+	-- the scene is over: the eyes open inside the gate
+	ViewController.sceneEnded(true)
 end
 
 --==========================================================================

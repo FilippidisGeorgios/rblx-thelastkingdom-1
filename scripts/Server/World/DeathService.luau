@@ -23,6 +23,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Server = script.Parent.Parent
 local GameService = require(Server.Services.GameService)
+local AvatarService = require(Server.Services.AvatarService)
 local CombatService = require(script.Parent.CombatService)
 local DataService = require(Server.Services.DataService)
 local DeathGroup = require(Server.Domain.DeathGroup)
@@ -85,7 +86,7 @@ end
 local function loadCharacter(player: Player)
 	downedPosition[player] = nil
 	reviveProgress[player] = nil
-	player:LoadCharacter()
+	AvatarService.loadCharacter(player)
 	local point = respawnAt
 	if point then
 		local character = player.Character
@@ -335,7 +336,7 @@ local function onPlayerAdded(player: Player)
 		-- before the character exists, or it would never become a CombatEntity.
 		task.defer(function()
 			if player.Parent and not player.Character then
-				player:LoadCharacter()
+				AvatarService.loadCharacter(player)
 			end
 		end)
 	end

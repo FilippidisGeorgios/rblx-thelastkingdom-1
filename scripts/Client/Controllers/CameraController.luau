@@ -1,12 +1,15 @@
 --!strict
 --[[
 	CameraController
-	Client-side camera rules for play.
+	How far the camera may be from the player.
 
-	Today it does one thing: it limits how far the player can zoom OUT (`configs/Camera`). Roblox's own limit is 128
-	studs, far enough to turn the castle into a map; here the camera may come back only as far as the config says.
-	Zooming IN is untouched. The cinematic death camera and the arrival scene take the camera over themselves
-	(they set it to Scriptable), so this limit never gets in their way.
+	Since 2026-11-10 the game is FIRST PERSON (configs/View): the camera is held at the eyes and cannot be pulled back at
+	all (Controllers/ViewController does everything else about the view). The limit on zooming out that this controller
+	was made for (configs/Camera: 23 studs, so the castle never became a map) is kept for the day the developer switches
+	`View.FirstPerson` off.
+
+	The cinematic death camera and the arrival scene take the camera over themselves (they set it to Scriptable), so
+	neither limit gets in their way.
 
 	Place: client (boots in both places).
 ]]
@@ -24,9 +27,15 @@ function CameraController.Init() end
 
 function CameraController.Start()
 	local cfg = Config.get("Camera")
+	local view = Config.get("View")
 	local player = Players.LocalPlayer
-	-- A property of the Player, so it holds across respawns. The min is set first: the engine refuses a max that is
+	-- Properties of the Player, so they hold across respawns. The min is set first: the engine refuses a max that is
 	-- below the current min.
+	if view.FirstPerson then
+		player.CameraMinZoomDistance = 0.5
+		player.CameraMaxZoomDistance = 0.5
+		return
+	end
 	player.CameraMinZoomDistance = cfg.MinZoom
 	player.CameraMaxZoomDistance = math.max(cfg.MaxZoomOut, cfg.MinZoom + 1)
 end

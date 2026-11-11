@@ -27,6 +27,8 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
+local ViewController = require(script.Parent.ViewController)
+
 local WorkPoseController = {}
 
 WorkPoseController.Name = "WorkPoseController"
@@ -317,13 +319,8 @@ local function step(dt: number)
 				if typeof(at) == "Vector3" then
 					grit(at)
 					if character == Players.LocalPlayer.Character and state.humanoid then
-						local humanoid = state.humanoid
-						humanoid.CameraOffset = Vector3.new(0, -0.14, 0)
-						task.delay(0.07, function()
-							if humanoid.Parent then
-								humanoid.CameraOffset = Vector3.zero
-							end
-						end)
+						-- (the eyes' place belongs to the ViewController since the game is first person)
+						ViewController.kick(Vector3.new(0, -0.14, 0), 0.07)
 					end
 				end
 			end
