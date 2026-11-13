@@ -94,6 +94,27 @@ Things that cost time and are worth knowing:
   switcher at the top left, "Ancient..."), The Last Kingdom > Forgotten Lands. The `roblox-studio:` link does not open on this PC.
 - Blender 5.x does not list the legacy add-on in Preferences and shows no MCP panel; start it from a script (above).
 
+## Same day, later: permissions, and the plugins that were looked at and NOT installed
+
+The developer said all the Studio MCP Permissions are on "allow" and that Claude may do everything. Checked, not assumed:
+Open Cloud probes with `universe:read` + `universe:write`, `asset:read` + `asset:write` + `asset-permissions:write`,
+`universe.place:read/write` + `universe-places:write`, `creator-store-product:read` + `creator-store-save:read` +
+`universe.place.instance:read` all came back 200. An approved UPLOAD FOLDER cannot be probed; it is found out by the first
+real upload (which makes a permanent asset), so none was made just to test.
+
+| Looked at | Verdict |
+|---|---|
+| **Blender rig exporter / animation importer** (`@Den_S`, 83% of 2K votes, FREE) | **Not installed.** Last updated 2022-02-17: older than the AnimationConstraint rigs and Blender 5. Animation from Blender goes the code/`generate_animation` way, or an FBX through Studio's own importer, until a maintained one exists |
+| **Figma Importer Assistant** (store listing `@iGottic`, 75% of 20+ votes) | **Not installed.** The maintained one is `MiaGobble/Figma-Import-Assistant` on GitHub (v2.0.2, 2026-07); the store listing is by a different name with 20 votes, so it cannot be told to be the same code. The Figma MCP gives the design to Claude directly, which then writes the Luau: no importer plugin is needed |
+| **Moon Animator 2** | $19.99: a purchase, so the developer's decision. The "[CRACKED]" free copies in the store are pirated: never |
+| **Hugging Face** connector | Offered as a Connect card (open models and Gradio apps: text-to-3D, speech, sound). Needs the developer's click |
+| **ElevenLabs** connector | Already connected (219 tools: sound effects, music, voices): the answer to the "sounds" item of `Gear.md` |
+| **Poly Pizza** and **Sketchfab** in the Blender MCP | Need an API key each (a free account at poly.pizza and sketchfab.com); not set. Poly Haven needs none and is on |
+
+Rules that bit: the Blender MCP's safe mode rejects `getattr(obj, name)` with a computed name (write the attribute out);
+the "Allow" boxes of a plugin (Plugins > Manage Plugins) are a Studio security setting, so Claude only ever UNTICKS them:
+the two `raw.githubusercontent.com` boxes of VFX Studio are for the developer to tick if the plugin needs them.
+
 ## A mistake of mine, corrected here
 
 I wrote that no plugin called VFX Studio existed, from a web search. The Creator Store itself shows it. A search engine is
