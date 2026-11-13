@@ -75,6 +75,25 @@ game.
 - Approve an upload folder in Studio (Assistant Settings > MCP Permissions) when the first real upload is wanted.
 - (Later, not now: the sword, bow and arrows. The developer, 2026-11-13: "not now, we will see them in the future".)
 
+## State after the restart (checked 2026-11-13, the developer had done the sign-ins and saves)
+
+| What | Result |
+|---|---|
+| Claude's connectors | `context7` (2 tools) and `blender` (15 tools) connected; the **Figma** connector connected (44 tools, `whoami` answers); Studio MCP connected; the desktop extension "Blender" (26 tools) connected but clashes with ours on port 9876 |
+| Context7 | Resolves Roblox (`/websites/create_roblox_reference_engine`, 21k snippets) and answers: its text on `Humanoid.AutoRotate` / `RotationType.CameraRelative` is exactly the mechanism of the arrival-scene fix (the body follows the camera; `AutoRotate = false` holds it) |
+| Blender MCP | Works once Blender is started with `tools/blender/StartBlenderMcp.ps1`: add-on 2.0, protocol 16, Blender 5.3.0, `get_scene_info` answers. Poly Haven switched on and searched: 673 hits for "weathered grey castle stone wall", real CC0 PBR textures with previews (Rock Wall 08, Stone Block Wall, Defense Wall...) |
+| VFX Studio | **"Get Plugin" on the web only puts it in the inventory; it is NOT installed.** Installed in Studio: Toolbox > Inventory > My Plugins > VFX Studio > Install. Its panel opens (VFX, Mesh, Properties, Scripts, Sounds, Textures, Settings). It asked for `raw.githubusercontent.com`; **denied** (both boxes unticked in Plugins > Manage Plugins), because its code could not be read. Tick them there if an effect library fails to load |
+| Skills | 14 from `scenario-labs/skills` (commit 94cab3f) and 4 from `gamedev-skills/awesome-gamedev-agent-skills` (commit c6ca6c4, 2026-11-12, license in the repo): `roblox-characters`, `roblox-luau`, `roblox-physics`, `roblox-studio-workflow`. Read first: markdown only, no scripts, no risky patterns. The other four Roblox skills of that repo (datastores, networking, ui, simulator-economy) overlap the `roblox-dev` plugin and were left out |
+| Both places | The Last Kingdom saved to Roblox (version 309); both checked from inside Studio: `ViewController` has `pinBody`, no `GearController`, `GearService` is the quiver-only one, no `RequestArmour`, the new spec is there, no `TLK_Tools` left |
+
+Things that cost time and are worth knowing:
+- Studio updates itself (a new `versions\version-...` folder): the computer-use permission names the OLD exe, so a window may
+  refuse clicks; the first click in a window only focuses it; a taskbar icon that moves (a new Terminal icon appeared)
+  sends the click to another program (and an elevated one is blocked: "UIPI").
+- File > Open from Roblox turns the window into the start screen. The places of this game are under the GROUP (the account
+  switcher at the top left, "Ancient..."), The Last Kingdom > Forgotten Lands. The `roblox-studio:` link does not open on this PC.
+- Blender 5.x does not list the legacy add-on in Preferences and shows no MCP panel; start it from a script (above).
+
 ## A mistake of mine, corrected here
 
 I wrote that no plugin called VFX Studio existed, from a web search. The Creator Store itself shows it. A search engine is

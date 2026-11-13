@@ -21,6 +21,9 @@ and the camera work could not be watched); a better toolchain for real 3D, anima
   warnings, strict-mode noise; none a real bug in the new code). Blender MCP verified (starts, lists 10 tools); Context7
   added; Figma offered as a Connect card. The VFX Studio plugin DOES exist on the Creator Store (free, 95%): not installed
   yet, Chrome is not signed in to Roblox. An earlier note in `docs/Tooling.md` said it did not exist; corrected there.
+- **After the restart** (`docs/Tooling.md`, "State after the restart"): Context7, the Blender MCP (`tools/blender/StartBlenderMcp.ps1`)
+  and Figma are connected; Poly Haven answers; VFX Studio installed in Studio (its web access denied); four more Roblox skills;
+  both places saved and checked from inside Studio.
 - 340 specs pass (one new). Both places build and the castle boots with no errors of ours.
 
 ## Version 0.46.0 — First person, the weapon bar, the spear and the bow, armour on F, Settings in three pages
