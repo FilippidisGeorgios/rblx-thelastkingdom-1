@@ -10,11 +10,22 @@ Weapons, not blocks: the whole point is that a weapon is a modelled mesh from Bl
 | Asked for | What it really is | State |
 |---|---|---|
 | **Roblox Studio as an MCP server** | Real and official, built into Studio (Assistant Settings > MCP). Docs: create.roblox.com/docs/studio/mcp | **Already connected** (both places). `asset:read` + `asset:write` Open Cloud scopes are granted (probe returned 200). Whether an upload FOLDER is approved is not known (cannot be probed). |
-| **Blender MCP** | Real: `ahujasid/blender-mcp`, now renamed **`mcp-for-blender`** (MIT, third party, "not made by Blender"). A Blender add-on opens a local socket; the MCP server relays to it. | **Installed**: Blender 5.3.0 (winget, installer hash verified), uv 0.13.8, the add-on `blender_mcp.py` enabled in Blender's preferences. MCP registered for THIS project only (`claude mcp` local scope) with `DISABLE_TELEMETRY=true` and `BLENDER_MCP_SAFE_MODE=1`. Its tools appear after the session is restarted; Blender must be open with the server started. |
-| **Best UI tool** | There is no single "best". The fit with Studio is **Figma**: the Studio tool `upload_image` is written to take Figma MCP asset links. Community Figma-to-Roblox plugins exist (UILint v2, Figma Importer Assistant, others) but are unvetted third-party code. | **Not installed**: Figma's connector needs the developer to sign in (`/mcp`, plugin `design:figma`); Claude cannot do that. |
+| **Blender MCP** | Real: `ahujasid/blender-mcp`, now renamed **`mcp-for-blender`** (MIT, third party, "not made by Blender"). A Blender add-on opens a local socket; the MCP server relays to it. | **Installed**: Blender 5.3.0 (winget, installer hash verified), uv 0.13.8, the add-on `blender_mcp.py` enabled in Blender's preferences. MCP registered for THIS project only (`claude mcp` local scope) with `DISABLE_TELEMETRY=true` and `BLENDER_MCP_SAFE_MODE=1`. Checked by starting the server by hand: it answers and lists 10 tools (`execute_blender_code`, `get_scene_info`, `look`, `generate_3d`, `search_assets`, `import_asset`...). Its tools appear in Claude after the session is restarted; Blender must be open with the server started. |
+| **Best UI tool** | There is no single "best". The fit with Studio is **Figma**: the Studio tool `upload_image` is written to take Figma MCP asset links, and Figma's own MCP (`mcp.figma.com`, tools `get_design_context`, `get_screenshot`, `get_variable_defs`...) is in Claude's registry. Community Figma-to-Roblox plugins exist (Figma Importer Assistant v2.0.2, 2026-07; UILint v2) but are unvetted third-party code and were not installed. | **Offered, not connected**: a Connect card was shown; Figma needs the developer to sign in (card, or `/mcp`, plugin `design:figma`). Claude cannot do that. There is also no Blender connector in the registry: Blender goes by the config above. |
 | **"Roblox Agent Skills", the `scenario...-labs/skills` repo** | The name was heard as "script labs": it is **`scenario-labs/skills`** (MIT, an OpenSSF scorecard, 62 releases). 14 Roblox and 15 Blender "expert" skill families, written from ~200 expert videos and run live in Studio 0.743. Also `gamedev-skills/awesome-gamedev-agent-skills` (Apache-2.0, about 375 stars; a `roblox-luau` skill). | **Installed** 14 skills from commit `94cab3f` (2026-11-11) into `~/.claude/skills`: roblox expert, animation, assets, vfx-audio, environment, gameplay, ui; blender expert, hard-surface, export, texturing-shading, uv-baking, rigging, animation. Read first: no network calls, no instructions aimed at the reader; their Python helpers only call local programs and are written for macOS (they were never run on Windows), so the value is in the written procedures. The second repo was not installed (overlaps). |
 | **Context7 MCP** | Real (Upstash, `upstash/context7`). It is NOT "faultless code for movement and combat": it is a **documentation lookup**. It does index Roblox: `/roblox/creator-docs`, `/websites/create_roblox_reference_engine` (engine API), `/websites/create_roblox`. | **Added** (remote, no key, this project only). Studio's own `http_get` also reads the official docs, so it is a second way, not a new power. |
-| **VFX Studio (Creator Store plugin)** | **No plugin by that name was found.** Real ones: VFX Editor (open source, `VirtualButFake/vfx-editor`), Sine VFX (paid), VFX Forge (sold on itch.io, obfuscated code), Beziers. | **Not installed.** A plugin runs with Studio's permissions; most are paid or obfuscated. Effects are written in code (as the rest of the game) with the `scenario-roblox-vfx-audio` skill. If a hand-tuned particle editor is wanted: VFX Editor, because its source can be read. |
+| **VFX Studio (Creator Store plugin)** | **It EXISTS** (a web search said it did not; the Creator Store itself, opened in Chrome, shows it): free, by `@XxOmqxXNerd`, 95% of 800+ votes, 112 reviews, updated 2026-09-07, asset 135581141962270, described only as "AIO (soon to be) vfx tool". Same name, other makers or prices: VFX Studio Pro and Pro+ ($4.99 each), PRISM VFX Studio ($8.99), VFX Atlas Studio ($34.99), Studio To JJS VFX (free). Others: VFX Editor (open source, but last updated 2024-11), Sine VFX (paid), VFX Forge (obfuscated). | **Not installed yet: Chrome is not signed in to Roblox**, and Claude must not type a password. Studio also refuses `LoadAsset` of it ("Asset is not trusted for this place"), so its code could not be read first. To finish: sign in on the Creator Store tab, then "Get Plugin" (free); it appears in Studio's Plugins tab after a restart. |
+
+## Extras the developer asked for ("2 to 4 more")
+
+| Tool | What it is | State |
+|---|---|---|
+| **luau-lsp** (`JohnnyMorganz/luau-lsp`, MIT, 565 stars, release 1.70.1 of 2026-09-27) | The Luau type checker and linter from the command line: `luau-lsp analyze` reads the Rojo sourcemap and finds type errors without Studio. `CLAUDE.md` already says to run it when available. | **Installed** in `%USERPROFILE%\.luau-lsp` (downloaded from the GitHub release, 5.1 MB, sha256 `64225B97...8159F`). Run `tools\TypeCheck.ps1`. Baseline today: **932 warnings, none a real bug in the five distinct places checked in the 0.46 code**; use the number as a tripwire. It cannot open a path with Greek letters, so the script links the project under an ASCII path first. (The aftman route asked for "trust" first; not used.) |
+| **Poly Haven** through the Blender MCP | About 2,400 CC0 HDRIs, PBR textures and models, importable from Blender with `search_assets` / `import_asset`. The way to get real surfaces instead of photographs on a block (the developer's wall complaint). | Comes with the Blender MCP (after the restart). |
+| **Studio's own generators** (`generate_material`, `generate_mesh`, `generate_animation`, `generate_scene`) | In the Studio MCP already connected. | Available now; used in earlier passes for materials and meshes. |
+| **Figma** | See the UI row above. | Needs the developer. |
+| **Blender rig exporter / animation importer** (Creator Store plugin, FREE, with a Blender add-on) | Animate in Blender, bring the clip into Studio as an animation. Reports of a broken importer update in August 2026 (unconfirmed). Matters because our player clips are code-made: a real animation asset is the other road. | Seen in the store; not installed (needs the sign-in). Not tried. |
+| **Moon Animator 2** | The usual keyframe tool of Roblox animators: **$19.99** at the official listing (seen 2026-11-13). The store also lists free copies tagged "[CRACKED]": pirated, never install them (a classic way to get a plugin that steals the account). | Not installed (paid, and the developer's choice). |
 
 ## Found while looking, worth more than some of the above
 
@@ -55,9 +66,16 @@ game.
   link was removed and the MCP is given the interpreter by full path (`UV_PYTHON`).
 - Blender's first run creates its add-ons folder; `mcp-for-blender install-addon` finds none before that.
 
-## Still to do (ask the developer)
+## Still to do (needs the developer)
 
+- **Sign in to Roblox in the Chrome tab** (Creator Store, "VFX Studio") so the free plugin can be fetched; then restart Studio.
+- **Connect Figma** (the card, or `/mcp`) if the UI is to be redesigned from Figma.
+- **Restart the Claude session once** so the Blender and Context7 tools show up (they are registered; MCP tools load at the start).
+- Open Blender and click Start MCP Server in its side panel when the live window is wanted (the headless route needs nothing).
 - Approve an upload folder in Studio (Assistant Settings > MCP Permissions) when the first real upload is wanted.
-- Sign in to Figma (`/mcp`) if the UI is to be redesigned from Figma.
-- Restart the session once so the Blender and Context7 tools show up.
-- Decide: upload the sword and wire it in as `starter_sword`? (It would replace the developer's own model there.)
+- (Later, not now: the sword, bow and arrows. The developer, 2026-11-13: "not now, we will see them in the future".)
+
+## A mistake of mine, corrected here
+
+I wrote that no plugin called VFX Studio existed, from a web search. The Creator Store itself shows it. A search engine is
+not the store: check the store.

@@ -17,6 +17,10 @@ and the camera work could not be watched); a better toolchain for real 3D, anima
 - **The 3D toolchain** (`docs/Tooling.md`): Blender 5.3 and its MCP, Context7, 14 Roblox and Blender expert skills (from
   `scenario-labs/skills`), what is true of each tool the developer named, and a first sword made by script
   (`tools/blender/make_sword.py`: 4 parts, 6,252 triangles, 5.06 studs long, a wound grip and a fullered blade; not uploaded).
+- **luau-lsp 1.70.1** installed and `tools/TypeCheck.ps1` added: the project's type check without Studio (baseline 932
+  warnings, strict-mode noise; none a real bug in the new code). Blender MCP verified (starts, lists 10 tools); Context7
+  added; Figma offered as a Connect card. The VFX Studio plugin DOES exist on the Creator Store (free, 95%): not installed
+  yet, Chrome is not signed in to Roblox. An earlier note in `docs/Tooling.md` said it did not exist; corrected there.
 - 340 specs pass (one new). Both places build and the castle boots with no errors of ours.
 
 ## Version 0.46.0 — First person, the weapon bar, the spear and the bow, armour on F, Settings in three pages
