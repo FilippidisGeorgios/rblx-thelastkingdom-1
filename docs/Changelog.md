@@ -16,7 +16,7 @@ and the camera work could not be watched); a better toolchain for real 3D, anima
   the scene (the camera made a 164-degree cut); 3 degrees once when the eyes came back.
 - **The 3D toolchain** (`docs/Tooling.md`): Blender 5.3 and its MCP, Context7, 14 Roblox and Blender expert skills (from
   `scenario-labs/skills`), what is true of each tool the developer named, and a first sword made by script
-  (`tools/blender/make_sword.py`: 1,560 triangles; not uploaded).
+  (`tools/blender/make_sword.py`: 4 parts, 6,252 triangles, 5.06 studs long, a wound grip and a fullered blade; not uploaded).
 - 340 specs pass (one new). Both places build and the castle boots with no errors of ours.
 
 ## Version 0.46.0 — First person, the weapon bar, the spear and the bow, armour on F, Settings in three pages

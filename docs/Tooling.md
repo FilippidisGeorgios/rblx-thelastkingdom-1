@@ -39,8 +39,14 @@ Weapons, not blocks: the whole point is that a weapon is a modelled mesh from Bl
 4. Roblox limits: a mesh over 20,000 triangles is refused, so is a bad texture; colours often arrive grey and need
    setting on the MeshPart.
 
-The first sword: 4 parts, **1,560 triangles**, 4.88 x 1.57 x 0.34 studs. A programmed first draft, not a sculpted piece:
-good shape, no wear, no texture yet. It has NOT been uploaded or put in the game.
+The first sword (`tools/blender/make_sword.py`, version 2 after the developer said "improve it first"): 4 parts (Blade
+2,366 triangles, Guard 740, Grip 2,236, Brass 910) = **6,252 triangles**, 5.06 x 1.52 x 0.44 studs. A lens-section blade
+with a ricasso and a fuller that dies out before an ogival point; a guard with a central boss, arms that sweep toward the
+point and domed ends; a grip wound with a real helical cord; two brass ferrules; a wheel pommel with a peen. Version 1
+(1,560 triangles) read as "a sword-shaped thing": flat-cut guard ends, a kink before the point, a grip with no wrap, and
+steel that rendered black because nothing round it could be reflected (the render set now has soft boxes and a horizon).
+It is a PROGRAMMED draft, not a sculpted piece: right shape, no wear, no scratches, no texture. NOT uploaded, NOT in the
+game.
 
 ## Things that went wrong, and the fixes
 
