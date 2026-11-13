@@ -2,7 +2,7 @@
 --[[
 	GearModels
 	Makes the things a player wears and carries (configs/Gear): the spear, the bow with its string and its nocked arrow,
-	the quiver, the armour in a bundle and the armour worn. Construction only: it is handed a body or nothing and gives
+	the quiver and the lantern's belt hook. Construction only: it is handed a body or nothing and gives
 	back models; who has what, and when, is World/WeaponVisualService and World/GearService.
 
 	WHERE THE SHAPES COME FROM. The sculpted pieces the dead already use (`ServerStorage.Assets.UndeadKitField`, made by
@@ -270,7 +270,7 @@ function GearModels.gripSeat(part: BasePart): CFrame
 end
 
 --==========================================================================
--- Things worn (armour, quiver)
+-- Things worn (the quiver)
 --==========================================================================
 
 --[[

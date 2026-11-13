@@ -109,10 +109,9 @@ function CombatController.Start()
 
 	local function drawArrows()
 		local count = player:GetAttribute("Arrows")
-		bar.setArrows(if typeof(count) == "number" then count else nil, player:GetAttribute("Back") == "quiver")
+		bar.setArrows(if typeof(count) == "number" then count else nil, true)
 	end
 	player:GetAttributeChangedSignal("Arrows"):Connect(drawArrows)
-	player:GetAttributeChangedSignal("Back"):Connect(drawArrows)
 
 	Net.getEvent("WeaponBar").OnClientEvent:Connect(function(payload: any)
 		if typeof(payload) ~= "table" or typeof(payload.weapons) ~= "table" then
@@ -166,7 +165,7 @@ function CombatController.Start()
 		end
 		if weapon.kind == "bow" then
 			local count = player:GetAttribute("Arrows")
-			if player:GetAttribute("Back") ~= "quiver" or (typeof(count) == "number" and count <= 0) then
+			if typeof(count) == "number" and count <= 0 then
 				requestBow:FireServer({ kind = "draw" }) -- the server says why not (a line at the top)
 				return
 			end

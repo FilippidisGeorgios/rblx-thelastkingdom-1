@@ -4,7 +4,7 @@
 	The player's lantern (Server/World/LanternService, docs/systems/Forest.md, docs/systems/Gear.md). It only asks: the
 	light is the server's.
 
-	  THE SHUTTER  G (it was F until 2026-11-10: F now puts the armour on), and on a phone a button: closes and opens
+	  THE SHUTTER  G (it was F until 2026-11-10; F is kept free for the shield), and on a phone a button: closes and opens
 	               the lantern's shutter. Covered, the lantern is a glimmer at the feet and the Huntsman of the King's Wood
 	               sees it only close; open, it lights the way and he sees it from far off.
 

@@ -1,14 +1,26 @@
 # Gear: the weapon bar, the bow, the back (armour or quiver), the lantern's belt (2026-11-10)
 
-**Status:** BUILT (0.46.0). Numbers in `configs/Gear.luau` and `configs/Weapons.luau`. Reads with `Arsenal.md` (the
-design of the weapons), `Animation.md` (the house rules of a move), `FirstPerson.md`.
+**Status:** BUILT (0.46.0); the body armour was TAKEN OUT in 0.46.1 (see the correction below). Numbers in
+`configs/Gear.luau` and `configs/Weapons.luau`. Reads with `Arsenal.md` (the design of the weapons), `Animation.md` (the
+house rules of a move), `FirstPerson.md`.
+
+## CORRECTION, 2026-11-13: "armour" meant a SHIELD
+
+The developer, after trying 0.46.0: "when I said armour I meant a shield, the thing held in the LEFT hand. I do not want
+a full armour worn by the player. Take out any armour that goes on the head, arms or legs and do not put anything in its
+place until I say." So 0.46.1 removed all of it: the F key, putting plate on and off piece by piece, the bundle on the
+back, the swap between armour and quiver (`RequestArmour`, `RequestBack`, `GearController`), the plate clips
+(`armour_don`, `armour_doff`), the armour icon, and the 25% turned aside / 10% slower breath. The back now carries the
+spear, the bow and the quiver. **The shield is not built.** When it is: a weapon-like entry in `Weapons` with `Hand =
+"Left"`, a model of its own (not made of parts), its own raise / block clip, and F or the right mouse button for it.
+`MovementService.setRefillScale` is kept for it (a heavy shield may slow the breath).
 
 ## What the developer asked for
 
 - The weapons a player has are shown along the bottom, on a bar of our own (not Roblox's), and the mouse wheel chooses.
 - Animation for the sword, the spear and the bow.
-- Armour that appears on **F**; on the back a player carries ONE thing, the armour or the arrows; with the arrows, a
-  very small quiver.
+- ~~Armour that appears on F; ONE thing on the back, the armour or the arrows~~ (see the correction above). What stays:
+  a very small quiver on the back for the arrows.
 - The lantern hung at the left hip from a small line shown while the mouse is free, so the hand is empty.
 
 ## The weapon bar
@@ -51,25 +63,25 @@ bow); the arrow flies at up to 185 studs a second through `ProjectileService` (a
 after. It needs the quiver on the back with an arrow in it; if not, a line at the top says why. The string and the
 nocked arrow are the server's parts; each client moves them with the draw.
 
-## The back (`World/GearService`, `Controllers/GearController`)
+## The back (`World/GearService`)
 
-One thing: **armour** or **quiver** (`Back` on the player). The change is a line shown while the mouse is free
-("Carry the quiver on your back"); armour being worn must come off first.
-
-| | Carried | Used |
-|---|---|---|
-| Armour | a bundle of plate strapped on the back | **F** puts it on: chest, shoulders, arms, legs appear in turn over 1.5 s while the arms pull it on; F again takes it off (1 s). Worn: 25% of every ordinary blow turned aside, the stamina bar fills 10% slower (Arsenal 6, the Medium class). |
-| Quiver | a small leather quiver, the flights of up to six arrows showing | 16 arrows to start, 24 at most; an empty quiver takes a bundle of 8 from the pack by itself |
+The spear and the bow lean across it (`Weapons.*.Sheath`), and a small **quiver** sits on the right: a small leather
+quiver, the flights of up to six arrows showing. 16 arrows to start, 24 at most; an empty quiver takes a bundle of 8 from
+the pack by itself. Published on the player: `Arrows`. (Before 0.46.1 the back held ONE thing, the quiver or a body
+armour, with a swap line and F; see the correction at the top. A quiver is shown whether or not the player carries a bow:
+to be decided with the armoury.)
 
 ## The lantern's belt (`World/LanternService`, `Controllers/LanternController`)
 
 With the mouse free: "Hang the lantern on your belt" (it hangs at the left hip and burns the same) and "Take the
 lantern in your hand". Taking a spear or a bow in hand hangs it up by itself (both hands are needed). In the hand, the
-left arm holds it up and the hand is kept level so it hangs straight. The shutter is **G** now (F is the armour).
+left arm holds it up and the hand is kept level so it hangs straight. The shutter is **G** (it was F until 0.46.0; F is kept free for the shield).
 
 ## Still to do
 
-- The developer's choices: where the back may be changed (anywhere, now), what the armoury hands out.
+- The developer's choice: what the armoury hands out (and whether a player with no bow carries a quiver).
+- **The shield** (left hand, a real model, a raise and a block clip) and the guard and parry that go with it (Arsenal 3).
+- **Real 3D weapons** from Blender instead of the kit's sculpted cubes: see `docs/Tooling.md`.
 - Axe and mace are in the data and use the sword's cuts (slower) until they have models and moves of their own.
-- A shield, a heavy attack, a guard and a parry (Arsenal 3); hit-stop and sounds (Animation 6).
+- A heavy attack; hit-stop and sounds (Animation 6).
 - See a thrust, a cut and a loose from OUTSIDE with a second player.

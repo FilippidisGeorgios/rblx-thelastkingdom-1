@@ -2,13 +2,12 @@
 --[[
 	PlayerActionAnims
 	Everything a player's ARMS do that is not walking (docs/systems/Animation.md, docs/systems/Gear.md): holding a sword,
-	a spear or a bow, cutting, thrusting, drawing and loosing, putting the armour on and taking it off, carrying the
-	lantern. Authored here in code, played on every client by Client/Controllers/BodyAnimController on top of the
+	a spear or a bow, cutting, thrusting, drawing and loosing, carrying the lantern. Authored here in code, played on every client by Client/Controllers/BodyAnimController on top of the
 	movement loops (Shared/Anim/PlayerMoveAnims), so the legs go on walking under a cut.
 
 	TWO WAYS OF WRITING A MOVE, and why there are two:
 
-	  CLIPS (the sword, the armour, the lantern). Frames of joint angles, as the developer's sword cuts were written
+	  CLIPS (the sword, the lantern). Frames of joint angles, as the developer's sword cuts were written
 	  (anticipation, a hold, follow-through, two settles, an ease per pose: docs/systems/Animation.md section 1). Good
 	  for one arm doing something by itself. A bone written "+UpperTorso" is added to the walk's own chest, not put in
 	  its place (Shared/Anim/ClipPlayer).
@@ -92,56 +91,6 @@ local SWORD_CUT_B: { Frame } = {
 }
 
 --==========================================================================
--- THE ARMOUR (F): on over the head and buckled, off and slung back. Both arms; the chest and head only lean with it.
---==========================================================================
-local function both(time: number, ease: Ease?, rUp: CFrame, rLow: CFrame, lUp: CFrame, lLow: CFrame, chest: CFrame?, head: CFrame?): Frame
-	return {
-		time = time,
-		ease = ease or "smooth",
-		pose = {
-			RightUpperArm = rUp,
-			RightLowerArm = rLow,
-			LeftUpperArm = lUp,
-			LeftLowerArm = lLow,
-			RightHand = CFrame.new(),
-			LeftHand = CFrame.new(),
-			["+UpperTorso"] = chest or CFrame.new(),
-			["+Head"] = head or CFrame.new(),
-		},
-	}
-end
-
-local ARMOUR_DON: { Frame } = {
-	both(0, "smooth", deg(20, 0, 10), deg(30, 0, 0), deg(20, 0, -10), deg(30, 0, 0)),
-	-- both hands over the shoulders to the bundle on the back, the head bowed
-	both(0.28, "out", deg(165, 0, 25), deg(120, 0, 0), deg(165, 0, -25), deg(120, 0, 0), deg(-10, 0, 0), deg(-18, 0, 0)),
-	both(0.34, "flat", deg(165, 0, 25), deg(120, 0, 0), deg(165, 0, -25), deg(120, 0, 0), deg(-10, 0, 0), deg(-18, 0, 0)),
-	-- over the head and down the front
-	both(0.52, "in", deg(95, 0, 12), deg(100, 0, 0), deg(95, 0, -12), deg(100, 0, 0), deg(6, 0, 0), deg(8, 0, 0)),
-	-- tugged down at the sides
-	both(0.7, "out", deg(35, 0, 18), deg(85, 0, 0), deg(35, 0, -18), deg(85, 0, 0), deg(-4, 0, 0)),
-	-- the right hand settles the left shoulder plate, then the left the right
-	both(0.86, "smooth", deg(70, 0, -55), deg(110, 0, 0), deg(20, 0, -22), deg(40, 0, 0), deg(0, 10, 0), deg(0, 14, 0)),
-	both(1.02, "smooth", deg(20, 0, 22), deg(40, 0, 0), deg(70, 0, 55), deg(110, 0, 0), deg(0, -10, 0), deg(0, -14, 0)),
-	-- both fists knock the chest: it sits
-	both(1.2, "in", deg(48, 0, -30), deg(105, 0, 0), deg(48, 0, 30), deg(105, 0, 0), deg(-3, 0, 0)),
-	both(1.3, "flat", deg(48, 0, -30), deg(105, 0, 0), deg(48, 0, 30), deg(105, 0, 0), deg(-3, 0, 0)),
-	both(1.5, "out", deg(8, 0, 6), deg(14, 0, 0), deg(8, 0, -6), deg(14, 0, 0)),
-}
-
-local ARMOUR_DOFF: { Frame } = {
-	both(0, "smooth", deg(20, 0, 10), deg(30, 0, 0), deg(20, 0, -10), deg(30, 0, 0)),
-	-- thumbs under the sides
-	both(0.18, "out", deg(35, 0, 18), deg(92, 0, 0), deg(35, 0, -18), deg(92, 0, 0), deg(-6, 0, 0)),
-	-- up and over the head
-	both(0.42, "in", deg(120, 0, 14), deg(96, 0, 0), deg(120, 0, -14), deg(96, 0, 0), deg(4, 0, 0), deg(-12, 0, 0)),
-	-- swung back onto the shoulders
-	both(0.66, "out", deg(160, 0, 26), deg(118, 0, 0), deg(160, 0, -26), deg(118, 0, 0), deg(-8, 0, 0), deg(-14, 0, 0)),
-	both(0.74, "flat", deg(160, 0, 26), deg(118, 0, 0), deg(160, 0, -26), deg(118, 0, 0), deg(-8, 0, 0), deg(-14, 0, 0)),
-	both(1.0, "out", deg(8, 0, 6), deg(14, 0, 0), deg(8, 0, -6), deg(14, 0, 0)),
-}
-
---==========================================================================
 -- THE LANTERN in the left hand: held up and forward to light the way (the hand itself is kept level by the
 -- controller, so the lantern hangs straight down from it whatever the arm does).
 --==========================================================================
@@ -167,14 +116,12 @@ local FRAMES: { [string]: { frames: { Frame }, looped: boolean } } = {
 	sword_hold = { frames = SWORD_HOLD, looped = true },
 	sword_cut_a = { frames = SWORD_CUT_A, looped = false },
 	sword_cut_b = { frames = SWORD_CUT_B, looped = false },
-	armour_don = { frames = ARMOUR_DON, looped = false },
-	armour_doff = { frames = ARMOUR_DOFF, looped = false },
 	lantern_hold = { frames = LANTERN_HOLD, looped = true },
 }
 
 local built: { [string]: ClipPlayer.Clip } = {}
 
--- A clip by name ("sword_hold", "sword_cut_a", "sword_cut_b", "armour_don", "armour_doff", "lantern_hold").
+-- A clip by name ("sword_hold", "sword_cut_a", "sword_cut_b", "lantern_hold").
 function PlayerActionAnims.clip(name: string): ClipPlayer.Clip?
 	local have = built[name]
 	if have then

@@ -68,9 +68,7 @@ local EVENT_NAMES: { string } = {
 	"RequestSelectWeapon", -- client -> server: a number, the place on the weapon bar to take in hand (0 = put it away)
 	"WeaponBar", -- server -> client: { weapons = { { id, name, kind } }, selected = number, drawn = boolean } (your own bar)
 	"RequestBow", -- client -> server: { kind = "draw" | "loose" | "cancel", aim = Vector3? } (World/RangedCombatService decides)
-	"RequestArmour", -- client -> server: a boolean, put the armour on (true) or take it off (false) (World/GearService)
 	"RequestLanternBelt", -- client -> server: a boolean, hang the lantern on the belt (true) or take it in the hand (false)
-	"RequestBack", -- client -> server: "armour" | "quiver", the one thing to carry on the back (World/GearService)
 }
 
 -- Things sent many times a second where only the newest matters (a lost one is not sent again).

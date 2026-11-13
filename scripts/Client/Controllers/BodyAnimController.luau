@@ -11,8 +11,7 @@
 	                going, because the body faces where the eyes look), ducked versions of them, jump, fall, sit, climb,
 	                each fading into the next over a fifth of a second (Shared/Anim/PlayerMoveAnims).
 	  2. THE HANDS  the weapon held (a sword's guard; a spear in two hands; a bow), the lantern held up, then the one
-	                thing being DONE: a cut, a thrust, the draw and the loose, the armour going on
-	                (Shared/Anim/PlayerActionAnims).
+	                thing being DONE: a cut, a thrust, the draw and the loose (Shared/Anim/PlayerActionAnims).
 	  3. THE LOOK   the chest and the head follow where that player looks, up and down, and the head runs a little ahead
 	                of a turning body (what you see of a friend looking round).
 	  4. TWO HANDS  a spear's second hand and a bow's drawing hand are put exactly ON the weapon (Shared/Anim/WeaponPose).
@@ -22,8 +21,8 @@
 
 	WHERE IT GETS ITS NEWS. Nothing is sent per frame. The server writes a few attributes and every client reads them:
 	on the character `Weapon` and `WeaponDrawn` (World/WeaponVisualService); on its Humanoid `RollSeq`, `Crouching`,
-	`BowSeq` + `BowState`, `GearSeq` + `GearAct` (Services/MovementService, World/CrouchService,
-	World/RangedCombatService, World/GearService); a swing is the `CombatEvent` "MeleeSwing"; a look is `LookSync`.
+	`BowSeq` + `BowState` (Services/MovementService, World/CrouchService,
+	World/RangedCombatService); a swing is the `CombatEvent` "MeleeSwing"; a look is `LookSync`.
 	Your OWN swing, draw and roll are drawn the moment you press (`playLocal...` below, called by the input controllers);
 	the server's echo of them is then ignored.
 
@@ -147,7 +146,6 @@ type Body = {
 	lantern: number,
 	action: Action?,
 	attack: number,
-	gearSeq: number?,
 	bowSeq: number?,
 	ownAt: number, -- when this client last drew its own move on this body (the server's echo is ignored for a moment)
 	pull: number, -- how far the string is back, studs
@@ -477,15 +475,6 @@ local function stepHands(body: Body, dt: number, now: number, pose: { [string]: 
 	local humanoid = body.humanoid
 
 	-- what the server says was done (your own was drawn when you pressed)
-	local gearSeq = humanoid:GetAttribute("GearSeq")
-	if typeof(gearSeq) == "number" and gearSeq ~= body.gearSeq then
-		local first = body.gearSeq == nil
-		body.gearSeq = gearSeq
-		local act = humanoid:GetAttribute("GearAct")
-		if not first and (act == "don" or act == "doff") then
-			play(body, "armour_" .. act, 1, false, nil)
-		end
-	end
 	local bowSeq = humanoid:GetAttribute("BowSeq")
 	if typeof(bowSeq) == "number" and bowSeq ~= body.bowSeq then
 		local first = body.bowSeq == nil
@@ -534,15 +523,9 @@ local function stepHands(body: Body, dt: number, now: number, pose: { [string]: 
 		if hold then
 			ClipPlayer.sample(hold, now, pose, body.holdOn)
 		end
-		if action and action.clip and string.sub(action.name, 1, 6) ~= "armour" then
+		if action and action.clip then
 			ClipPlayer.sample(action.clip, t, pose, body.holdOn)
 		end
-	end
-	-- the armour going on or coming off (whatever is held)
-	if action and action.clip and string.sub(action.name, 1, 6) == "armour" then
-		local length = action.clip.length
-		local w = math.clamp(math.min(t / 0.12, (length - t) / 0.16), 0, 1)
-		ClipPlayer.sample(action.clip, t, pose, smooth(w))
 	end
 	if body.lantern > 0 then
 		local clip = PlayerActionAnims.clip("lantern_hold")
@@ -812,7 +795,6 @@ local function adopt(target: Player, character: Model)
 			lantern = 0,
 			action = nil,
 			attack = 0,
-			gearSeq = nil,
 			bowSeq = nil,
 			ownAt = -math.huge,
 			pull = 0,

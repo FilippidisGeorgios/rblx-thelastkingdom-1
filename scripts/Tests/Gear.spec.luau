@@ -57,7 +57,12 @@ return function(t: any)
 			assert(Items[id] ~= nil and Items[id].Category == "Weapon" and Items[id].WeaponId == id, id .. " is a weapon item")
 			assert(Gear.Weapons[id] ~= nil, id .. " has a look in configs/Gear")
 		end
-		assert(Gear.Back.Labels[Gear.Starter.Back] ~= nil, "the starter back is one of the two")
+		assert(Gear.Starter.Arrows > 0 and Gear.Starter.Arrows <= Gear.Back.Quiver.Capacity, "a quiver starts with arrows and never more than it holds")
+	end)
+
+	t.test("no body armour is left anywhere in the data (the developer, 2026-11-13: the shield is a thing of its own)", function()
+		assert(Gear.Back.Armour == nil and Gear.Back.Order == nil and Gear.Starter.Back == nil, "armour is not on the back any more")
+		assert(PlayerActionAnims.clip("armour_don") == nil and PlayerActionAnims.clip("armour_doff") == nil, "no clips for putting plate on")
 	end)
 
 	t.test("every weapon's kind has its moves, and every move it names exists", function()

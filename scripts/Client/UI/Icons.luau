@@ -431,26 +431,6 @@ function Icons.bow(props: Props): Frame
 	return r
 end
 
--- Armour: a breastplate with its shoulder plates and two rows of rivets
-function Icons.armour(props: Props): Frame
-	local r = root(props)
-	r.Name = "Armour"
-	local px = math.max(1, (props.Size or 24) / 22)
-	for _, x in { 0.2, 0.8 } do
-		local shoulder = frame(r, x, 0.3, 0.3, 0.26)
-		round(shoulder)
-		shade(shoulder, STEEL, STEEL_DARK)
-		stroke(shoulder, BLACK_EDGE, px)
-	end
-	bar(r, 0.5, 0.54, 0.6, 0.7, 0, Color3.fromRGB(70, 82, 100), Color3.fromRGB(34, 40, 52), px, 0.22)
-	local neck = frame(r, 0.5, 0.18, 0.26, 0.2, Color3.fromRGB(10, 9, 9))
-	round(neck)
-	for _, y in { 0.44, 0.62 } do
-		frame(r, 0.5, y, 0.5, 0.05, Theme.Color.Gold).BackgroundTransparency = 0.15
-	end
-	return r
-end
-
 -- Quiver: a leather tube and the flights of three arrows
 function Icons.quiver(props: Props): Frame
 	local r = root(props)

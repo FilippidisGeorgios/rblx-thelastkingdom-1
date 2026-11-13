@@ -24,7 +24,7 @@
 	THE LOOK. Each client sends where its player looks, up and down, a few times a second (`LookSync`, an event that may
 	lose one: only the newest matters); this passes it on to everybody else, who turn that player's head and chest.
 
-	THE REFILL can be slowed for one player (`setRefillScale`: worn armour, World/GearService).
+	THE REFILL can be slowed for one player (`setRefillScale`; nothing uses it now that body armour is gone: a heavy shield may).
 
 	Place: shared (both places: the lobby walks the same).
 	Location: ServerScriptService.Server.Services.MovementService
@@ -54,7 +54,7 @@ type State = {
 	humanoid: Humanoid?,
 	rollUntil: number,
 	rollSeq: number,
-	refill: number, -- share of the usual refill speed (1; less in armour)
+	refill: number, -- share of the usual refill speed (1; less where something slows the breath)
 	lookAt: number, -- when this player's look was last passed on
 	shown: number, -- the last Stamina value published
 	shownAt: number,

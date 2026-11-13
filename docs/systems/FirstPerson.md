@@ -54,6 +54,16 @@ only works while the camera is Roblox's own.
 - With the screen locked, Studio draws nothing: RenderStepped never fires, the loading screen never finishes, and a
   capture times out. The simulation still runs.
 
+## The body in a scene (2026-11-13)
+
+Found by the developer: in the arrival scene the player's face "kept turning", so the camera work could not be watched.
+Measured: first person (`LockFirstPerson`) makes the engine turn the body to face wherever the camera looks, a Scriptable
+camera too. Through the scene the body followed every pan and every cut (up to ~100 degrees a second). Fix:
+`ViewController.pinBody` sets `Humanoid.AutoRotate = false` for as long as the camera is not `Custom`, and puts it back
+afterwards, first turning the eyes to where the body already faces (otherwise the body swings to the old camera's way).
+It covers every scene (the arrival, a death, the train), not only the arrival. Measured after: 0 degrees of body turn
+through the scene, 3 degrees once at the end.
+
 ## Still to do
 
 - Two players: see a friend's head follow their look, and a friend's roll, with eyes.

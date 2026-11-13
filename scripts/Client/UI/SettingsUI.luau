@@ -73,7 +73,6 @@ local KEYS = {
 	{ "L", "Unlock your mouse" },
 	{ "Left click", "Strike  (hold to draw the bow)" },
 	{ "Wheel  /  1 2 3", "Choose a weapon" },
-	{ "F", "Armour on, armour off" },
 	{ "G", "Cover the lantern" },
 	{ "E", "Use what is in front of you" },
 	{ "B", "The pack" },

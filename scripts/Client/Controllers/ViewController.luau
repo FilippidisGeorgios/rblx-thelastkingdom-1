@@ -25,7 +25,8 @@
 	                 lobby.
 
 	Scenes that take the camera (the arrival scene, a death, the train) set it to Scriptable: everything here stands
-	back while the camera is not Roblox's own.
+	back while the camera is not Roblox's own, and the body is held still (`pinBody`: otherwise Roblox swings it round
+	after every pan of the scene's camera).
 
 	Place: client (boots in both places).
 ]]
@@ -331,12 +332,49 @@ end
 -- The eyes, every frame
 --==========================================================================
 
+--[[
+	A scene that takes the camera (the arrival, a death, the train) must not turn the body. Roblox turns a first person
+	body to face wherever the camera looks, a scripted camera included, so through the arrival scene the body followed
+	every pan and every cut and spun round (measured 2026-11-13: up to 100 degrees a second): the speakers seemed to be
+	turning their heads all the time, and none of what they did could be watched. While the camera is not Roblox's own
+	the body is pinned (`AutoRotate` off); when the camera comes back the eyes are first turned to where the body
+	already faces, so nothing swings.
+]]
+local pinned: Humanoid? = nil
+local pinnedWas = true
+
+local function pinBody(humanoid: Humanoid?, camera: Camera?)
+	local scripted = cfg.FirstPerson and camera ~= nil and camera.CameraType ~= Enum.CameraType.Custom
+	if pinned and (not scripted or pinned ~= humanoid) then
+		local old = pinned
+		pinned = nil
+		if old.Parent then
+			old.AutoRotate = pinnedWas
+			local root = old.RootPart
+			if not scripted and old == humanoid and root and camera then
+				local ahead = root.CFrame.LookVector
+				local flat = Vector3.new(ahead.X, 0, ahead.Z)
+				if flat.Magnitude > 0.01 then
+					local at = camera.CFrame.Position
+					camera.CFrame = CFrame.lookAt(at, at + flat.Unit)
+				end
+			end
+		end
+	end
+	if scripted and humanoid and not pinned then
+		pinned = humanoid
+		pinnedWas = humanoid.AutoRotate
+		humanoid.AutoRotate = false
+	end
+end
+
 -- before Roblox's camera reads them: where the eyes are, how wide they see
 local function stepBefore(dt: number)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local camera = Workspace.CurrentCamera
+	pinBody(humanoid, camera)
 	if not (humanoid and root and root:IsA("BasePart") and camera) then
 		return
 	end

@@ -1,3 +1,24 @@
+## Version 0.46.1 — No body armour, the arrival scene stands still, the 3D toolchain
+
+What the developer asked for (2026-11-13): "when I said armour I meant a SHIELD in the left hand; take out all the armour
+the player wears and put nothing in its place until I say"; the arrival scene must show the player (the face kept turning
+and the camera work could not be watched); a better toolchain for real 3D, animation, UI and effects.
+
+- **Body armour removed** (`World/GearService`, `configs/Gear`, `Shared/Net`, `Client/UI/Icons`, `SettingsUI`,
+  `BodyAnimController`, `Shared/Anim/PlayerActionAnims`, `Tests/Gear.spec`; `Client/Controllers/GearController` deleted):
+  no F key, no putting plate on and off, no bundle on the back, no swap line, no armour clips, no armour icon, and the
+  25% turned aside / slower breath are gone. The back carries the spear, the bow and the quiver (always). The shield is
+  not built (`docs/systems/Gear.md`). F is free. The Studio places had `GearController` deleted by hand.
+- **The arrival scene no longer spins the body.** Measured in play: while the scene's camera (Scriptable) panned and cut,
+  Roblox's first person turned the body to face wherever the camera looked: up to ~100 degrees a second, a whole turn in
+  a few seconds. `ViewController.pinBody` holds the body (`AutoRotate` off) while the camera is not Roblox's own, and
+  turns the eyes to where the body already faces when it comes back. Measured after: the body moved 0 degrees through
+  the scene (the camera made a 164-degree cut); 3 degrees once when the eyes came back.
+- **The 3D toolchain** (`docs/Tooling.md`): Blender 5.3 and its MCP, Context7, 14 Roblox and Blender expert skills (from
+  `scenario-labs/skills`), what is true of each tool the developer named, and a first sword made by script
+  (`tools/blender/make_sword.py`: 1,560 triangles; not uploaded).
+- 340 specs pass (one new). Both places build and the castle boots with no errors of ours.
+
 ## Version 0.46.0 — First person, the weapon bar, the spear and the bow, armour on F, Settings in three pages
 
 What the developer asked for (2026-11-10): the animation of the whole game (the bow, the spear, the sword, the armour);

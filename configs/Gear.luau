@@ -9,11 +9,11 @@
 	Every weapon a player carries is ON the body all the time: the sword at the hip, the spear and the bow on the back;
 	the one in use is in the hand.
 
-	THE BACK holds ONE thing:
-	  armour   a bundle of plate strapped on the back. F puts it on (it appears piece by piece: chest, shoulders, arms,
-	           legs) and F takes it off again. Worn, it turns part of every blow aside and the breath comes back slower.
-	  quiver   a small leather quiver. Without it a bow has no arrows.
-	A player changes between the two with the mouse unlocked (L): a small line on the screen, "Carry the quiver".
+	THE BACK carries the spear and the bow (above) and a small leather QUIVER: without it a bow has no arrows.
+
+	NO BODY ARMOUR (the developer, 2026-11-13): "when I said armour I meant a SHIELD held in the left hand". Plate worn
+	on the head, arms and legs is not wanted anywhere, so nothing of it is kept here. The shield will be added with its own
+	model and its own entry (Hand = "Left"), and the F key is free for it.
 
 	THE MODELS. Nothing here is an uploaded asset. Each is put together when a character spawns from the sculpted pieces
 	the dead already use (`ServerStorage.Assets.UndeadKitField`, made by tools/BuildUndeadKit: pieces sculpted from small
@@ -43,7 +43,6 @@ local Gear = {
 	-- What every player has when a run begins, until the lobby's armoury decides it (docs/systems/Arsenal.md 7.2).
 	Starter = {
 		Weapons = { "starter_sword", "footman_spear", "hunting_bow" },
-		Back = "armour",
 		Arrows = 16,
 	},
 
@@ -91,12 +90,8 @@ local Gear = {
 		},
 	},
 
-	-- The one thing on the back.
+	-- What hangs on the back besides the weapons.
 	Back = {
-		Order = { "armour", "quiver" },
-		Labels = { armour = "Armour", quiver = "Quiver" },
-		SwapSeconds = 1.2, -- the least time between two changes
-
 		Quiver = {
 			-- on the right of the back, leaning, its mouth by the right shoulder
 			Kit = { { Piece = "quiver", Part = "UpperTorso", At = CFrame.new(0.42, -0.12, 0.7) * CFrame.Angles(0, 0, math.rad(-14)), Scale = 1.15 } },
@@ -105,30 +100,6 @@ local Gear = {
 			Capacity = 24,
 			BundleItem = "arrow_bundle", -- a bundle from the pack fills an empty quiver
 			BundleArrows = 8,
-		},
-
-		Armour = {
-			-- strapped on the back while it is carried: the chest piece, small and flat, and the two shoulder plates on it
-			Bundle = {
-				{ Piece = "torso_brigandine", Part = "UpperTorso", At = CFrame.new(0, -0.05, 0.86) * CFrame.Angles(0, math.rad(180), 0), Scale = 0.78 },
-				{ Piece = "pauldron_r", Part = "UpperTorso", At = CFrame.new(0.42, 0.55, 1.2), Scale = 0.9 },
-				{ Piece = "pauldron_l", Part = "UpperTorso", At = CFrame.new(-0.42, 0.55, 1.2), Scale = 0.9 },
-			},
-			-- worn: each piece on its own part of the body. `After` is when it appears, in seconds from the key.
-			Worn = {
-				{ Piece = "torso_brigandine", Part = "UpperTorso", At = CFrame.new(0, -0.02, 0), Scale = 1.06, After = 0.55 },
-				{ Piece = "pauldron_r", Part = "RightUpperArm", At = CFrame.new(0.06, 0.34, 0), Scale = 1.3, After = 0.8 },
-				{ Piece = "pauldron_l", Part = "LeftUpperArm", At = CFrame.new(-0.06, 0.34, 0), Scale = 1.3, After = 0.8 },
-				{ Piece = "vambrace", Part = "RightLowerArm", At = CFrame.new(0, -0.05, 0), Scale = 1.9, After = 1.0 },
-				{ Piece = "vambrace", Part = "LeftLowerArm", At = CFrame.new(0, -0.05, 0), Scale = 1.9, After = 1.0 },
-				{ Piece = "greave", Part = "RightLowerLeg", At = CFrame.new(0, -0.05, 0), Scale = 1.65, After = 1.2 },
-				{ Piece = "greave", Part = "LeftLowerLeg", At = CFrame.new(0, -0.05, 0), Scale = 1.65, After = 1.2 },
-			},
-			DonSeconds = 1.5, -- the whole putting on (the clip's length)
-			DoffSeconds = 1.0,
-			-- what wearing it does (docs/systems/Arsenal.md 6, the Medium class: a brigandine)
-			DamageTaken = 0.75, -- share of every ordinary blow that still lands
-			StaminaRefill = 0.9, -- the bar fills this much slower
 		},
 	},
 
