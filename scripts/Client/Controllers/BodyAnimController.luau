@@ -654,16 +654,22 @@ local function stepBody(body: Body, dt: number, now: number, clips: { [string]: 
 	if body.character:GetAttribute("WorkPose") ~= nil then
 		return
 	end
-	-- a body whose parts were changed (a new avatar description) has new joints
+	-- a body whose parts were changed (a new avatar description) has new joints; a body that was taken on before all of its
+	-- joints had streamed in (a friend's, found in a two-player test 2026-11-13: the head never turned, the neck had not
+	-- arrived) is looked at again until it is whole
 	if now - body.checked > 0.5 then
 		body.checked = now
-		if not ClipPlayer.alive(body.rig) then
+		local alive = ClipPlayer.alive(body.rig)
+		if not alive or not body.rig.complete then
 			local rig = ClipPlayer.rig(body.character)
 			if not rig then
-				return
+				if not alive then
+					return
+				end
+			elseif not alive or rig.count > body.rig.count then
+				body.rig = rig
+				body.hold = nil
 			end
-			body.rig = rig
-			body.hold = nil
 		end
 	end
 
@@ -746,10 +752,10 @@ local function adopt(target: Player, character: Model)
 		-- the joints arrive with the body; a body that streams in late may need a moment
 		local rig = ClipPlayer.rig(character)
 		local tries = 0
-		while not rig and tries < 40 and character.Parent do
+		while (not rig or (not rig.complete and tries < 20)) and tries < 40 and character.Parent do
 			task.wait(0.25)
 			tries += 1
-			rig = ClipPlayer.rig(character)
+			rig = ClipPlayer.rig(character) or rig
 		end
 		if not rig or not character.Parent then
 			return

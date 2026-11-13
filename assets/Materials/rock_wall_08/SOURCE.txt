@@ -1,0 +1,7 @@
+Rock Wall 08 (rock_wall_08)
+Source:   https://polyhaven.com/a/rock_wall_08
+Author:   Amal Kumar
+Licence:  CC0 1.0 (public domain; no credit needed)
+Size:     1799.9999523162842 x 1799.9999523162842 (mm?)
+Fetched:  2026-11-13 with tools/textures/polyhaven.js, resolution 1k
+Maps:     assets/Materials/rock_wall_08/Diffuse_1k.jpg (751 KB); assets/Materials/rock_wall_08/nor_gl_1k.jpg (1207 KB); assets/Materials/rock_wall_08/Rough_1k.jpg (425 KB)

@@ -65,6 +65,39 @@ return function(t: any)
 		assert(PlayerActionAnims.clip("armour_don") == nil and PlayerActionAnims.clip("armour_doff") == nil, "no clips for putting plate on")
 	end)
 
+	t.test("a body whose neck has not streamed in yet is not a whole rig, and becomes one when it has (the friend's head that never turned)", function()
+		local body = Instance.new("Model")
+		local parts: { [string]: Part } = {}
+		for name in ClipPlayer.JOINTS do
+			local part = Instance.new("Part")
+			part.Name = name
+			part.Parent = body
+			parts[name] = part
+		end
+		-- every joint but the neck is complete; the neck is an AnimationConstraint with no attachments yet
+		for name, jointName in ClipPlayer.JOINTS do
+			local joint = Instance.new("AnimationConstraint")
+			joint.Name = jointName
+			joint.Parent = parts[name]
+			if name ~= "Head" then
+				local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+				a0.Parent, a1.Parent = parts.LowerTorso, parts[name]
+				joint.Attachment0, joint.Attachment1 = a0, a1
+			end
+		end
+		local early = ClipPlayer.rig(body)
+		assert(early ~= nil, "a body with its torso and hips can be taken on")
+		assert(not early.complete and early.joints.Head == nil and early.count == 14, "but it is not whole: the neck is missing")
+		-- the neck arrives
+		local neck = (parts.Head :: Part):FindFirstChild("Neck") :: AnimationConstraint
+		local n0, n1 = Instance.new("Attachment"), Instance.new("Attachment")
+		n0.Parent, n1.Parent = parts.UpperTorso, parts.Head
+		neck.Attachment0, neck.Attachment1 = n0, n1
+		local later = ClipPlayer.rig(body)
+		assert(later ~= nil and later.complete and later.joints.Head ~= nil and later.count == 15, "and the next look finds all 15 joints")
+		body:Destroy()
+	end)
+
 	t.test("every weapon's kind has its moves, and every move it names exists", function()
 		for id, def in Gear.Weapons do
 			local kind = (PlayerActionAnims.KINDS :: any)[def.Kind]

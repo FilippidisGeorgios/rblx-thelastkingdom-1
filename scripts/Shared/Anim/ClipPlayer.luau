@@ -182,6 +182,8 @@ export type Rig = {
 	a0: { [string]: CFrame },
 	a1: { [string]: CFrame },
 	character: Model,
+	count: number, -- how many of the 15 joints were found
+	complete: boolean, -- all of them (a friend's body streams in piece by piece: a rig with the neck missing never turns the head)
 }
 
 local function seats(joint: any): (CFrame?, CFrame?)
@@ -201,7 +203,9 @@ function ClipPlayer.rig(character: Model): Rig?
 	local joints: { [string]: any } = {}
 	local a0: { [string]: CFrame } = {}
 	local a1: { [string]: CFrame } = {}
+	local count, total = 0, 0
 	for part, jointName in ClipPlayer.JOINTS do
+		total += 1
 		local limb = character:FindFirstChild(part)
 		local joint = limb and limb:FindFirstChild(jointName)
 		if joint and (joint:IsA("Motor6D") or joint:IsA("AnimationConstraint")) then
@@ -210,13 +214,14 @@ function ClipPlayer.rig(character: Model): Rig?
 				joints[part] = joint
 				a0[part] = first
 				a1[part] = second
+				count += 1
 			end
 		end
 	end
 	if not (joints.LowerTorso and joints.UpperTorso and joints.RightUpperLeg and joints.LeftUpperLeg) then
 		return nil
 	end
-	return { joints = joints, a0 = a0, a1 = a1, character = character }
+	return { joints = joints, a0 = a0, a1 = a1, character = character, count = count, complete = count == total }
 end
 
 -- Is every joint of this rig still in the body? (A body whose parts were swapped, by a new avatar description, is not.)

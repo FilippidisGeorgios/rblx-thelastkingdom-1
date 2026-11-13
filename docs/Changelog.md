@@ -1,3 +1,20 @@
+## Version 0.46.2 — A friend's head turns (found with two players), the structure for building
+
+- **Fix: a friend's head never turned.** First two-player test (Studio local server, two clients): while one player looked 55 degrees
+  up, the other's screen showed the waist at 17.8 degrees and the neck at 0.0. `ClipPlayer.rig` took a body on as soon as the torso
+  and hips had arrived, and a neck joint whose attachments had not streamed in yet was left out for ever. Now the rig counts its
+  joints (`count`, `complete`), `BodyAnimController` waits up to 5 s for a whole body and looks again every 0.5 s until it is whole.
+  Measured after: neck 29.1, waist 17.8 degrees; a picture of one player seen by the other. New spec (341 pass). Recipe for the
+  two-player test: `docs/Pipelines.md` (9).
+- **The structure** (`docs/Pipelines.md`, new): the rules for every pipeline, where files live, nine pipelines with what is VERIFIED
+  and what is not, the capability matrix, the order of building (phases 0 and A to F) and a definition of done. `assets/manifest.json`
+  + `tools/assets.js` (the register of everything on Roblox, with source and licence; the 40 item assets backfilled),
+  `tools/textures/polyhaven.js` (CC0 PBR maps into `assets/Materials/`), folders `assets/Models|Materials|UI|Concept`.
+- **Tools checked** (`docs/Tooling.md`): Figma file "The Last Kingdom - UI" made and the 28 colours of `Theme.luau` written into it as
+  variables; Hugging Face connected (`invoke` is off: Gradio setting); ElevenLabs covers voice only; Poly Haven fetch works; the
+  upload of a texture is blocked until the developer adds the project folder to Studio's approved upload directories.
+- Both places saved to Roblox (Forgotten Lands 218, lobby 310); nothing published.
+
 ## Version 0.46.1 — No body armour, the arrival scene stands still, the 3D toolchain
 
 What the developer asked for (2026-11-13): "when I said armour I meant a SHIELD in the left hand; take out all the armour

@@ -1,0 +1,606 @@
+{
+  "schema": 1,
+  "about": "Every asset put on Roblox or taken from outside, with where it came from and under what licence. Edit with tools/assets.js. See docs/Pipelines.md.",
+  "assets": [
+    {
+      "name": "item_bone_dust_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://139672385940052",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_bone_dust_texture",
+      "class": "image",
+      "id": "rbxassetid://124288464646992",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_grave_cloth_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://102098918362470",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_grave_cloth_texture",
+      "class": "image",
+      "id": "rbxassetid://75530439075732",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_rusted_iron_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://88312305338421",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_rusted_iron_texture",
+      "class": "image",
+      "id": "rbxassetid://76617923425683",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_wild_feather_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://136988444118005",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_wild_feather_texture",
+      "class": "image",
+      "id": "rbxassetid://135607675567935",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_tallow_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://119512339284795",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_tallow_texture",
+      "class": "image",
+      "id": "rbxassetid://127775093857976",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_grave_silver_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://116814435661246",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_grave_silver_texture",
+      "class": "image",
+      "id": "rbxassetid://78570010594846",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hollow_ember_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://76944998813420",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hollow_ember_texture",
+      "class": "image",
+      "id": "rbxassetid://85103318633386",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_bandage_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://132181896354465",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_bandage_texture",
+      "class": "image",
+      "id": "rbxassetid://135205083566192",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_arrow_bundle_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://94998704505412",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_arrow_bundle_texture",
+      "class": "image",
+      "id": "rbxassetid://100206401558367",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_oil_pot_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://120229237092053",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_oil_pot_texture",
+      "class": "image",
+      "id": "rbxassetid://74776813804689",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hearty_dish_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://130906248920859",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hearty_dish_texture",
+      "class": "image",
+      "id": "rbxassetid://111701230028915",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_saints_medal_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://114804233345729",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_saints_medal_texture",
+      "class": "image",
+      "id": "rbxassetid://97089396140587",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_company_signet_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://82118950664453",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_company_signet_texture",
+      "class": "image",
+      "id": "rbxassetid://99871759204227",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_brass_stirrup_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://106444852379517",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_brass_stirrup_texture",
+      "class": "image",
+      "id": "rbxassetid://116320841330029",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_mourners_veil_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://122713070836876",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_mourners_veil_texture",
+      "class": "image",
+      "id": "rbxassetid://106110914587994",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hollow_lantern_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://100100455866724",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_hollow_lantern_texture",
+      "class": "image",
+      "id": "rbxassetid://126290320026581",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_sextons_key_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://89149520650534",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_sextons_key_texture",
+      "class": "image",
+      "id": "rbxassetid://99428722649844",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_kings_seal_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://81199509955208",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_kings_seal_texture",
+      "class": "image",
+      "id": "rbxassetid://80672018354905",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_star_shard_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://91836898437677",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_star_shard_texture",
+      "class": "image",
+      "id": "rbxassetid://87628324742653",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_page_mesh",
+      "class": "mesh",
+      "id": "rbxassetid://88449846831863",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    },
+    {
+      "name": "item_page_texture",
+      "class": "image",
+      "id": "rbxassetid://100598647091501",
+      "source": {
+        "tool": "Roblox Studio generate_mesh",
+        "url": "docs/systems/ItemArt.md"
+      },
+      "licence": "generated",
+      "uploadedAt": "2026-10-25",
+      "owner": "group:32361153",
+      "usedBy": [
+        "configs/ItemArt.luau"
+      ]
+    }
+  ]
+}
