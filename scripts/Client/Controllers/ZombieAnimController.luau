@@ -87,6 +87,8 @@ type Layer = {
 	hold: boolean, -- a one-shot that stays on its last frame (a death, a block)
 }
 
+type Cloth = { joint: Motor6D, kind: string, front: number, index: number, angle: number, vel: number, side: number, sideVel: number }
+
 type Agent = {
 	model: Model,
 	rig: ClipPlayer.Rig?,
@@ -117,6 +119,10 @@ type Agent = {
 	blockGrips: boolean,
 	restFist: { [string]: CFrame },
 	fists: { [string]: Attachment },
+	-- cloth that sways (the King's skirt and cape: Motor6Ds named Cloth*), and how the body moved last frame
+	cloth: { Cloth },
+	lastPos: Vector3?,
+	lastLook: Vector3?,
 	-- smooth steps
 	snaps: { Snapshot },
 	gap: number,
@@ -124,6 +130,7 @@ type Agent = {
 }
 
 local set: ZombieAnims.Set? = nil
+local sway: (Agent, number) -> ()
 local agents: { [Model]: Agent } = {}
 local frame = 0
 
@@ -333,6 +340,61 @@ end
 --==========================================================================
 -- Posing
 --==========================================================================
+--[[
+	THE CLOTH (2026-11-14, the developer: "when he moves, it moves"). Each cloth joint is a damped spring toward an angle
+	that comes from how the body is moving: the cape streams back as he walks and runs and swings out on a turn, its lower
+	half later and further; the skirt's front panels are kicked forward by the stride and its back panels trail. The body's
+	motion is read from its own root, frame to frame (what this client draws), so nothing is sent.
+]]
+local CLOTH_K = 55 -- stiffness
+local CLOTH_C = 8.5 -- damping
+
+function sway(agent: Agent, dt: number)
+	local root = agent.model.PrimaryPart
+	if not root then
+		return
+	end
+	dt = math.clamp(dt, 1 / 240, 1 / 20)
+	local cf = root.CFrame
+	local pos, look = cf.Position, cf.LookVector
+	local fwd, side, yawRate = 0, 0, 0
+	if agent.lastPos and agent.lastLook then
+		local v = (pos - agent.lastPos :: Vector3) / dt
+		if v.Magnitude < 60 then -- not a teleport
+			fwd = v:Dot(look)
+			side = v:Dot(cf.RightVector)
+		end
+		local a = agent.lastLook :: Vector3
+		yawRate = math.atan2(a:Cross(look).Y, a:Dot(look)) / dt
+	end
+	agent.lastPos, agent.lastLook = pos, look
+	local walking = math.clamp(math.abs(fwd) / 8, 0, 1)
+	local phase = os.clock() * (2 + 0.35 * math.abs(fwd))
+	for _, c in agent.cloth do
+		local target, sideTarget = 0, 0
+		if c.kind == "capeA" then
+			target = -math.clamp(fwd * 2.4, -6, 38) - 3 * walking * math.sin(phase + c.index * 0.7)
+			sideTarget = math.clamp(-side * 1.8 - yawRate * 9, -20, 20)
+		elseif c.kind == "capeB" then
+			target = -math.clamp(fwd * 1.6, -4, 26) - 5 * walking * math.sin(phase + 1.1 + c.index * 0.9)
+			sideTarget = math.clamp(-side * 1.2 - yawRate * 6, -16, 16)
+		elseif c.kind == "skirt" then
+			local stride = 7 * walking * math.sin(phase * 1.6 + (c.index % 2) * math.pi)
+			if c.front > 0 then
+				target = c.front * (math.clamp(fwd * 1.1, -4, 12) + math.max(0, stride))
+			else
+				target = c.front * (math.clamp(fwd * 1.4, -4, 16) + 2 * walking)
+			end
+			sideTarget = math.clamp(-yawRate * 4, -8, 8)
+		end
+		c.vel += (CLOTH_K * (target - c.angle) - CLOTH_C * c.vel) * dt
+		c.angle += c.vel * dt
+		c.sideVel += (CLOTH_K * (sideTarget - c.side) - CLOTH_C * c.sideVel) * dt
+		c.side += c.sideVel * dt
+		c.joint.Transform = CFrame.Angles(math.rad(c.angle), 0, math.rad(c.side))
+	end
+end
+
 local function compose(agent: Agent, dt: number)
 	local rig = agent.rig
 	if not rig then
@@ -420,6 +482,9 @@ local function compose(agent: Agent, dt: number)
 		secondHand(agent, style.twoHands)
 	end
 	ClipPlayer.write(rig, pose)
+	if #agent.cloth > 0 then
+		sway(agent, dt)
+	end
 end
 
 --==========================================================================
@@ -487,6 +552,24 @@ local function findRig(agent: Agent): ClipPlayer.Rig?
 		return agent.rig
 	end
 	agent.rig = ClipPlayer.rig(agent.model, agent.crawler == 1)
+	-- cloth joints (tools/zombie/Garb): the skirt's panels and the cape's strips
+	table.clear(agent.cloth)
+	for _, d in agent.model:GetDescendants() do
+		if d:IsA("Motor6D") and string.sub(d.Name, 1, 5) == "Cloth" then
+			local skirt = string.match(d.Name, "^ClothSkirt(%d+)$")
+			local cape, part = string.match(d.Name, "^ClothCape(%d+)([AB])$")
+			local kind = if skirt then "skirt" elseif part == "A" then "capeA" elseif part == "B" then "capeB" else "other"
+			local index = tonumber(skirt or cape) or 0
+			-- a skirt panel's front-ness: 1 at the front of the body, -1 at the back (from where its hinge sits)
+			local front = 0
+			if skirt then
+				local p = d.C0.Position
+				local flat = Vector3.new(p.X, 0, p.Z)
+				front = if flat.Magnitude > 1e-3 then -flat.Unit.Z else 0
+			end
+			table.insert(agent.cloth, { joint = d, kind = kind, front = front, index = index, angle = 0, vel = 0, side = 0, sideVel = 0 })
+		end
+	end
 	-- each fist's rest frame, in the chest's space (the hold baked into the joints: tools/zombie/Hold)
 	table.clear(agent.restFist)
 	table.clear(agent.fists)
@@ -576,6 +659,9 @@ local function setup(instance: Instance)
 		blockGrips = false,
 		restFist = {},
 		fists = {},
+		cloth = {},
+		lastPos = nil,
+		lastLook = nil,
 		snaps = {},
 		gap = 0.05,
 		written = nil,

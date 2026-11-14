@@ -104,11 +104,8 @@ local function firstPerson(): boolean
 	return cfg.FirstPerson and camera ~= nil and camera.CameraType == Enum.CameraType.Custom
 end
 
+-- One field of view for everyone (2026-11-14: the developer took the choice out of Settings and locked it to a standard).
 local function fovChosen(): number
-	local chosen = player:GetAttribute("ViewFov")
-	if typeof(chosen) == "number" then
-		return math.clamp(chosen, cfg.Fov.Min, cfg.Fov.Max)
-	end
 	return cfg.Fov.Default
 end
 
@@ -369,11 +366,30 @@ local function pinBody(humanoid: Humanoid?, camera: Camera?)
 end
 
 -- before Roblox's camera reads them: where the eyes are, how wide they see
+-- THE MOUSE STAYS HELD (2026-11-14, the developer: "in full screen with the mouse locked, the camera sticks"). After
+-- Roblox's own menu, an alt-tab or a click on the window's edge in full screen, the engine can leave the mouse loose until
+-- the next click: the picture then stops following the hand. While nothing asks for it free and the window has the
+-- focus, the mouse is put back in the middle every frame.
+local windowFocused = true
+
+local function keepHeld()
+	if not windowFocused or anyReason() or sceneOn or not firstPerson() then
+		return
+	end
+	if GuiService.MenuIsOpen or UserInputService:GetFocusedTextBox() ~= nil then
+		return
+	end
+	if UserInputService.MouseBehavior ~= Enum.MouseBehavior.LockCenter then
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+	end
+end
+
 local function stepBefore(dt: number)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local camera = Workspace.CurrentCamera
+	keepHeld()
 	pinBody(humanoid, camera)
 	if not (humanoid and root and root:IsA("BasePart") and camera) then
 		return
@@ -692,6 +708,12 @@ function ViewController.Start()
 		return Enum.ContextActionResult.Pass
 	end, false, Enum.KeyCode[cfg.UnlockKey])
 
+	UserInputService.WindowFocused:Connect(function()
+		windowFocused = true
+	end)
+	UserInputService.WindowFocusReleased:Connect(function()
+		windowFocused = false
+	end)
 	RunService:BindToRenderStep("TLK_ViewEyes", Enum.RenderPriority.Camera.Value - 1, stepBefore)
 	RunService:BindToRenderStep("TLK_ViewBody", Enum.RenderPriority.Camera.Value + 1, stepAfter)
 
@@ -703,7 +725,7 @@ function ViewController.Start()
 			applyMouse()
 			drawChips()
 			drawHint()
-			task.wait(0.2)
+			task.wait(0.1) -- (0.2 until 2026-11-14: a panel that closed left the mouse loose for up to a fifth of a second)
 		end
 	end)
 
@@ -754,12 +776,13 @@ function ViewController.Start()
 			end
 		end)
 	end
-	if ReplicatedFirst:GetAttribute("TLKLoaded") then
+	-- (TLKLoaded now comes BEFORE the screen goes, while a party waits at the gate: the screen going is TLKScreenGone)
+	if ReplicatedFirst:GetAttribute("TLKScreenGone") then
 		loaded()
 	else
 		local once = false
-		ReplicatedFirst:GetAttributeChangedSignal("TLKLoaded"):Connect(function()
-			if not once and ReplicatedFirst:GetAttribute("TLKLoaded") then
+		ReplicatedFirst:GetAttributeChangedSignal("TLKScreenGone"):Connect(function()
+			if not once and ReplicatedFirst:GetAttribute("TLKScreenGone") then
 				once = true
 				loaded()
 			end

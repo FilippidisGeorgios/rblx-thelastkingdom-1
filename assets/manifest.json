@@ -680,6 +680,20 @@
       "owner": "group:32361153",
       "usedBy": [],
       "note": "spear, boar spear, knight sword, king sword, heater shield, crown, antler; markers M0/MX/MY per item; 2026-11-14"
+    },
+    {
+      "name": "garb_v1",
+      "class": "model",
+      "id": "rbxassetid://140652163236115",
+      "source": {
+        "tool": "Blender (tools/blender/make_garb.py)"
+      },
+      "licence": "own",
+      "file": "assets/Models/garb/garb.glb",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "the King's coat, skirt (8 swinging panels) and cape (6 strips x 2); the Hollow Knight's plate and hound-skull helm; one frame marker set Garb_M0/MX/MY; 2026-11-14"
     }
   ]
 }

@@ -57,6 +57,7 @@ local gearCfg: any = nil
 local weaponsCfg: any = nil
 
 local IDENTITY = CFrame.new()
+local viewOffset: (any, { [string]: CFrame }, number) -> { [string]: CFrame }
 local FADE = 0.18 -- seconds one state of the feet takes to become the next
 local RUN_ABOVE = 19.5 -- studs a second along the ground: faster than any walk
 local IDLE_BELOW = 0.8
@@ -164,6 +165,60 @@ local function moveToward(x: number, target: number, step: number): number
 		return math.min(target, x + step)
 	end
 	return math.max(target, x - step)
+end
+
+--[[
+	WHAT YOU SEE OF YOUR OWN ARMS (2026-11-14, the developer: "the weapons must not get in the player's way; with the bow
+	you cannot see well. Let the hands do the real pose, but on his own screen the bow should sit a little to the right
+	and the target be clear."). Every client poses every body itself, so YOUR OWN client may draw your arms differently
+	from what your friends' clients draw: in first person, with a weapon out, both arms are swung together about a point
+	between the shoulders, down and to the right (VIEW_OFFSET, by weapon kind). The hold between the two hands is kept (they
+	turn as one), the aim, the draw and every cut still play; only where they sit in your picture changes. Friends see the
+	true pose. Faded in and out over VIEW_FADE.
+]]
+local VIEW_OFFSET: { [string]: { yaw: number, pitch: number } } = {
+	bow = { yaw = -13, pitch = -7 },
+	sword = { yaw = -11, pitch = -15 },
+	spear = { yaw = -9, pitch = -11 },
+}
+local VIEW_FADE = 0.18
+local VIEW_PIVOT = Vector3.new(0, 0.55, 0) -- the chest's space: between the shoulders
+local viewWeight = 0
+
+function viewOffset(body: any, pose: { [string]: CFrame }, dt: number): { [string]: CFrame }
+	if not body.mine then
+		return pose
+	end
+	local character = body.character
+	local camera = Workspace.CurrentCamera
+	local head = character:FindFirstChild("Head")
+	local kind: string? = nil
+	if camera and head and head:IsA("BasePart") and (camera.CFrame.Position - head.Position).Magnitude < 1.6 and character:GetAttribute("WeaponDrawn") == true then
+		local id = character:GetAttribute("Weapon")
+		local def = if typeof(id) == "string" then Config.get("Gear").Weapons[id] else nil
+		kind = def and def.Kind or nil
+	end
+	local o = kind and VIEW_OFFSET[kind]
+	viewWeight = math.clamp(viewWeight + (if o then 1 else -1) * dt / VIEW_FADE, 0, 1)
+	if viewWeight <= 0 then
+		return pose
+	end
+	o = o or body.viewLast or VIEW_OFFSET.sword
+	body.viewLast = o
+	local w = viewWeight * viewWeight * (3 - 2 * viewWeight)
+	local q = CFrame.new(VIEW_PIVOT)
+		* CFrame.fromAxisAngle(Vector3.yAxis, math.rad(o.yaw * w))
+		* CFrame.fromAxisAngle(Vector3.xAxis, math.rad(o.pitch * w))
+		* CFrame.new(-VIEW_PIVOT)
+	local shown = table.clone(pose)
+	for _, side in { "Right", "Left" } do
+		local part = side .. "UpperArm"
+		local a0 = body.rig.a0[part]
+		if a0 then
+			shown[part] = a0:Inverse() * q * a0 * (pose[part] or IDENTITY)
+		end
+	end
+	return shown
 end
 
 local function smooth(a: number): number
@@ -719,7 +774,7 @@ local function stepBody(body: Body, dt: number, now: number, clips: { [string]: 
 		end
 	end
 
-	ClipPlayer.write(body.rig, pose, nil)
+	ClipPlayer.write(body.rig, viewOffset(body, pose, dt), nil)
 	body.last = pose
 	stepString(body)
 end

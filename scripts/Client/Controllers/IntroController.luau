@@ -164,7 +164,7 @@ local function stopCamera()
 end
 
 --==========================================================================
-local function play(speakers: { [number]: string }, speakerIds: { [number]: number }, needed: number)
+local function play(speakers: { [number]: string }, speakerIds: { [number]: number }, needed: number, skip: number?)
 	local cfg = Config.get("Intro")
 	sceneToken += 1
 	local token = sceneToken
@@ -198,8 +198,15 @@ local function play(speakers: { [number]: string }, speakerIds: { [number]: numb
 	end
 
 	handle.letterbox(true, 0.01)
-	handle.title(cfg.Title, cfg.Subtitle, cfg.TitleSeconds)
-	task.wait(cfg.TitleSeconds)
+	-- a player who came late joins the scene where the others are: what has passed is skipped
+	local behind = math.max(0, skip or 0)
+	if behind < cfg.TitleSeconds then
+		handle.title(cfg.Title, cfg.Subtitle, cfg.TitleSeconds - behind)
+		task.wait(cfg.TitleSeconds - behind)
+		behind = 0
+	else
+		behind -= cfg.TitleSeconds
+	end
 	if token ~= sceneToken then
 		return
 	end
@@ -212,6 +219,10 @@ local function play(speakers: { [number]: string }, speakerIds: { [number]: numb
 	for i, beat in cfg.Beats do
 		if token ~= sceneToken then
 			return
+		end
+		if behind >= beat.Seconds then
+			behind -= beat.Seconds
+			continue
 		end
 		local speakerId = speakerIds[i] or 0
 		local speakerName = speakers[i]
@@ -235,7 +246,8 @@ local function play(speakers: { [number]: string }, speakerIds: { [number]: numb
 				end
 			end)
 		end
-		task.wait(beat.Seconds)
+		task.wait(beat.Seconds - behind)
+		behind = 0
 	end
 	if token == sceneToken then
 		handle.clearLine()
@@ -293,7 +305,9 @@ function IntroController.Start()
 			return
 		end
 		if payload.kind == "start" then
-			task.spawn(play, payload.speakers or {}, payload.speakerIds or {}, tonumber(payload.needed) or 1)
+			local at = tonumber(payload.at)
+			local skip = if at then math.max(0, Workspace:GetServerTimeNow() - at - 0.25) else 0
+			task.spawn(play, payload.speakers or {}, payload.speakerIds or {}, tonumber(payload.needed) or 1, skip)
 		elseif payload.kind == "votes" then
 			if ui then
 				ui.setVotes(tonumber(payload.votes) or 0, tonumber(payload.needed) or 1, votedSkip)

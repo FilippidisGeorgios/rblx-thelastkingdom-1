@@ -45,6 +45,9 @@ local cast: { Player } = {}
 local skipVotes: { [Player]: boolean } = {}
 local ready: { [Player]: boolean } = {} -- whose loading screen has gone (the client says so with ClientReady)
 local endToken = 0
+local sceneAt = 0 -- server time the scene began (a late player joins it at the same moment)
+local runAt = 0 -- os.clock() when the scene ended and the first area began (for the late-join limit)
+local lastStart: { speakers: { string }, speakerIds: { number } }? = nil
 
 --==========================================================================
 local function introFolder(): Instance?
@@ -66,6 +69,8 @@ local function finish()
 		return
 	end
 	state = "finished"
+	runAt = os.clock()
+	ReplicatedStorage:SetAttribute("TLK_GateState", "open")
 	local callbacks = finishedCallbacks
 	finishedCallbacks = {}
 	for _, fn in callbacks do
@@ -235,6 +240,9 @@ local function playScene()
 	end
 
 	local event = Net.getEvent("IntroEvent")
+	sceneAt = Workspace:GetServerTimeNow()
+	lastStart = { speakers = speakers, speakerIds = speakerIds }
+	ReplicatedStorage:SetAttribute("TLK_GateState", "open")
 	for _, player in cast do
 		event:FireClient(player, {
 			kind = "start",
@@ -242,6 +250,7 @@ local function playScene()
 			speakerIds = speakerIds,
 			votes = 0,
 			needed = IntroService.votesNeeded(),
+			at = sceneAt,
 		})
 	end
 	log:info(("scene started for %d player(s)"):format(#cast))
@@ -356,40 +365,104 @@ function IntroService.Start()
 	end
 	Players.PlayerAdded:Connect(hold)
 
-	-- Start once the first player is in and the rest of a teleported party has
-	-- had a fair chance to load.
+	--[[
+		LATE PLAYERS (2026-11-14). One who arrives while the scene plays is put into it at the moment the others are
+		at (the scene's start time goes with it: IntroController skips what has passed). One who arrives after the
+		first area began is let in for LateJoinSeconds; later than that, they are sent back to the lobby: a run in its
+		third room is no place to land alone.
+	]]
+	Players.PlayerAdded:Connect(function(player)
+		local cfg = Config.get("Intro")
+		local start = lastStart
+		if state == "playing" and start then
+			task.spawn(function()
+				-- their own loading screen first; the scene's clock keeps running meanwhile
+				local deadline = os.clock() + 25
+				while not ready[player] and os.clock() < deadline and player.Parent do
+					task.wait(0.2)
+				end
+				if state ~= "playing" or not player.Parent or not waitForCharacter(player, 5) then
+					return
+				end
+				table.insert(cast, player)
+				standOnHill(player, #cast)
+				Net.getEvent("IntroEvent"):FireClient(player, {
+					kind = "start",
+					speakers = start.speakers,
+					speakerIds = start.speakerIds,
+					votes = 0,
+					needed = IntroService.votesNeeded(),
+					at = sceneAt,
+				})
+			end)
+		elseif state == "finished" and runAt > 0 and os.clock() - runAt > cfg.LateJoinSeconds then
+			log:info(player.Name .. " came too late to the run: back to the lobby")
+			local ok, Teleport = pcall(function(): any
+				return require(script.Parent.Parent.Services.TeleportService)
+			end)
+			local sent = ok and Teleport.returnToHub({ player }, { reason = "late" })
+			if not sent then
+				player:Kick("The party has already gone too far into the castle. Join the next run from the lobby.")
+			end
+		end
+	end)
+
+	--[[
+		THE GATE (2026-11-14, the developer). The loading screens show how many of the party have loaded, out of how
+		many, and a count down: everyone waits at most WaitForPlayersSeconds for the whole party; once all of them are
+		in the server, the assets get at most AssetsAfterAllInSeconds more; if every one of them has finished loading
+		sooner, it opens at once. Then the scene. Shown through attributes on ReplicatedStorage (TLK_Gate*).
+	]]
 	task.spawn(function()
 		while #Players:GetPlayers() == 0 do
 			Players.PlayerAdded:Wait()
 		end
 		local cfg = Config.get("Intro")
-		local deadline = os.clock() + cfg.WaitForPartySeconds
-		-- A party arrives together; once nobody new has joined for 3 seconds,
-		-- the party is here.
-		local lastJoin = os.clock()
-		local conn = Players.PlayerAdded:Connect(function()
-			lastJoin = os.clock()
-		end)
-		while os.clock() < deadline and os.clock() - lastJoin < 3 do
-			task.wait(0.25)
-		end
-		conn:Disconnect()
-
-		-- Then until each of them has finished loading (their loading screen is gone), so nobody's first
-		-- seconds of the scene play behind a loading bar. A time limit keeps one slow connection from holding
-		-- the whole party at the gate.
-		local readyDeadline = os.clock() + cfg.WaitForLoadingSeconds
-		local function everyoneReady(): boolean
+		local function expected(): number
+			local most = #Players:GetPlayers()
 			for _, player in Players:GetPlayers() do
-				if not ready[player] then
-					return false
+				local ok, data = pcall(function()
+					return player:GetJoinData().TeleportData
+				end)
+				local members = if ok and typeof(data) == "table" then data.memberUserIds else nil
+				if typeof(members) == "table" then
+					most = math.max(most, #members)
 				end
 			end
-			return true
+			return most
 		end
-		while os.clock() < readyDeadline and not everyoneReady() do
-			task.wait(0.25)
+		local function readyCount(): number
+			local n = 0
+			for _, player in Players:GetPlayers() do
+				if ready[player] then
+					n += 1
+				end
+			end
+			return n
 		end
+		local now = Workspace:GetServerTimeNow()
+		local endsAt = now + cfg.WaitForPlayersSeconds
+		local allIn = false
+		ReplicatedStorage:SetAttribute("TLK_GateState", "waiting")
+		while true do
+			now = Workspace:GetServerTimeNow()
+			local want = expected()
+			local inCount = #Players:GetPlayers()
+			local loaded = readyCount()
+			if not allIn and inCount >= want then
+				allIn = true
+				endsAt = math.min(endsAt, now + cfg.AssetsAfterAllInSeconds)
+			end
+			ReplicatedStorage:SetAttribute("TLK_GateExpected", want)
+			ReplicatedStorage:SetAttribute("TLK_GateIn", inCount)
+			ReplicatedStorage:SetAttribute("TLK_GateReady", loaded)
+			ReplicatedStorage:SetAttribute("TLK_GateEndsAt", endsAt)
+			if (allIn and loaded >= want) or now >= endsAt then
+				break
+			end
+			task.wait(0.2)
+		end
+		ReplicatedStorage:SetAttribute("TLK_GateState", "starting")
 		playScene()
 	end)
 

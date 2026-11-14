@@ -21,6 +21,13 @@
 	When it is done it sets the attribute `TLKLoaded` on ReplicatedFirst, which `Client/Controllers/LoadingController`
 	turns into a message to the server ("this player is ready"): the arrival scene waits for it.
 
+	THE GATE (2026-11-14, the developer). In the Forgotten Lands the server holds the whole party at a gate
+	(Server/World/IntroService, attributes TLK_Gate* on ReplicatedStorage): at most 30 seconds for everyone to load, and
+	once everyone is in, at most 7 more for the assets. This screen shows it (how many have loaded of the party, a count
+	down), says "ready" as soon as THIS player has loaded, and stays up until the gate opens, so the whole party walks
+	into the same first second of the scene. Assets still being fetched when it opens go on loading behind the scene.
+	In the lobby there is no gate: the screen goes when this player is ready.
+
 	Location: ReplicatedFirst.Loading (a LocalScript, runs before anything else)
 ]]
 
@@ -42,7 +49,8 @@ local MIN_SECONDS = 3.5 -- the name must be readable even when everything is alr
 local ASSET_SECONDS = 25 -- the longest the assets may take
 local BODY_SECONDS = 12 -- the longest to wait for the player's body to appear
 local STREAM_SECONDS = 8 -- the longest to wait for the ground round it
-local TOTAL_SECONDS = 45 -- the longest the whole screen may stay
+local TOTAL_SECONDS = 75 -- the longest the whole screen may stay (a gate holds it 30 + 7 at most)
+local GATE_LOOK_SECONDS = 4 -- how long to look for a gate before deciding there is none (the lobby)
 local BATCH = 24 -- assets per request
 local WORKERS = 6 -- requests in flight at once
 local MAX_ASSETS = 3000 -- a world with more than this is loaded for this long and no longer
@@ -139,7 +147,10 @@ local function loadWorld()
 		table.insert(batches, table.move(assets, first, math.min(first + BATCH - 1, #assets), 1, {}))
 	end
 
-	local deadline = os.clock() + ASSET_SECONDS
+	-- the workers go on until everything is fetched, even after the screen has gone; the screen only waits for them
+	-- while nothing else says go (the lobby: ASSET_SECONDS; a gate: until it opens)
+	local deadline = math.huge
+	local holdUntil = os.clock() + ASSET_SECONDS
 	local nextBatch = 1
 	local done = 0
 	local running = 0
@@ -152,17 +163,26 @@ local function loadWorld()
 				ContentProvider:PreloadAsync(batches[mine])
 			end)
 			done += 1
-			screen.setProgress(0.1 + 0.7 * (done / #batches))
+			screen.setProgress(done / #batches)
 		end
 		running -= 1
 	end
 	for _ = 1, math.min(WORKERS, #batches) do
 		task.spawn(worker)
 	end
-	while running > 0 and os.clock() < deadline do
+	while running > 0 do
+		local state = ReplicatedStorage:GetAttribute("TLK_GateState")
+		if state == "starting" or state == "open" then
+			break -- the gate has opened: the rest loads behind the scene
+		end
+		if state == nil and os.clock() > holdUntil then
+			break
+		end
 		task.wait(0.1)
 	end
-	screen.setProgress(0.8)
+	if #batches == 0 then
+		screen.setProgress(1)
+	end
 
 	-- the player's body and the ground it stands on
 	screen.setStatus("Lighting the torches...")
@@ -183,12 +203,9 @@ local function loadWorld()
 			player:RequestStreamAroundAsync(root.Position, STREAM_SECONDS)
 		end)
 	end
-	screen.setProgress(0.95)
-
 	-- a couple of frames drawn with the light on them
 	RunService.RenderStepped:Wait()
 	RunService.RenderStepped:Wait()
-	screen.setProgress(1)
 	screen.setStatus("Ready")
 end
 
@@ -207,14 +224,46 @@ task.spawn(function()
 		task.wait(0.1)
 	end
 
-	-- the bar's last move, and the name on screen long enough to read
-	screen.setProgress(1)
-	task.wait(0.45)
+	-- this player is ready: the server counts it at the gate
+	ReplicatedFirst:SetAttribute("TLKLoaded", true)
+
+	-- the gate: stay up until it opens (the lobby has none: a few seconds of looking, then go)
+	local lookUntil = os.clock() + GATE_LOOK_SECONDS
+	while os.clock() - startedAt < TOTAL_SECONDS do
+		local state = ReplicatedStorage:GetAttribute("TLK_GateState")
+		if state == nil and os.clock() > lookUntil then
+			break
+		end
+		if state == "starting" or state == "open" then
+			break
+		end
+		task.wait(0.15)
+	end
+
+	-- the name on screen long enough to read
 	local remaining = MIN_SECONDS - (os.clock() - startedAt)
 	if remaining > 0 then
 		task.wait(remaining)
 	end
-
-	ReplicatedFirst:SetAttribute("TLKLoaded", true)
+	ReplicatedFirst:SetAttribute("TLKScreenGone", true) -- (the eyes open and the night is heard after this)
 	screen.dismiss()
+end)
+
+-- the gate's numbers, onto the screen, until it goes
+task.spawn(function()
+	while true do
+		local state = ReplicatedStorage:GetAttribute("TLK_GateState")
+		if typeof(state) == "string" then
+			screen.setGate({
+				state = state,
+				ready = ReplicatedStorage:GetAttribute("TLK_GateReady") :: number?,
+				expected = ReplicatedStorage:GetAttribute("TLK_GateExpected") :: number?,
+				endsAt = ReplicatedStorage:GetAttribute("TLK_GateEndsAt") :: number?,
+			})
+			if state == "open" then
+				break
+			end
+		end
+		task.wait(0.2)
+	end
 end)

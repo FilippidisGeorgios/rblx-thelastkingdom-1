@@ -33,6 +33,11 @@ local Intro = {
 	-- begins. (A player whose screen never reports is left behind after this; they spawn straight in.)
 	WaitForLoadingSeconds = 30,
 
+	-- THE GATE (2026-11-14, the developer): the loading screen shows how many of the party have loaded and a count down.
+	WaitForPlayersSeconds = 30, -- the longest everyone waits for the whole party to load, from the first one in
+	AssetsAfterAllInSeconds = 7, -- once the whole party is in, the longest the assets may still hold the start
+	LateJoinSeconds = 120, -- after the first area begins, a player who arrives later than this is sent back to the lobby
+
 	-- Typing speed of a line, and how long it holds once written.
 	CharactersPerSecond = 34,
 	HoldSeconds = 1.8,

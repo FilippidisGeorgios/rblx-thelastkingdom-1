@@ -266,37 +266,8 @@ end
 local function buildGame(parent: Frame)
 	local view = Config.get("View")
 
-	-- field of view: a number between two signs
-	local fovRow = row(parent, "Fov", "FIELD OF VIEW", 1)
-	local plus = sign(fovRow, "+", 0)
-	local value = Components.label({
-		Name = "Value",
-		Text = "",
-		Role = Theme.Role.Strong,
-		TextSize = 22,
-		TextColor = Theme.Color.Cream,
-		Size = UDim2.fromOffset(52, ROW),
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -38, 0.5, 0),
-		Parent = fovRow,
-	})
-	local minus = sign(fovRow, "–", -94)
-	local function fov(): number
-		local kept = player:GetAttribute("ViewFov")
-		return if typeof(kept) == "number" then kept else view.Fov.Default
-	end
-	local function drawFov()
-		value.Text = tostring(math.floor(fov() + 0.5))
-	end
-	plus.Activated:Connect(function()
-		send({ fov = math.min(view.Fov.Max, fov() + view.Fov.Step) })
-	end)
-	minus.Activated:Connect(function()
-		send({ fov = math.max(view.Fov.Min, fov() - view.Fov.Step) })
-	end)
-	table.insert(redraws, drawFov)
-	drawFov()
-	Components.divider(parent, 2)
+	-- (the field of view is no longer a choice, 2026-11-14: the developer locked it to one standard, configs/View.Fov)
+	local _ = view
 
 	local bobRow = row(parent, "HeadBob", "HEAD BOB", 3)
 	switch(bobRow, function()

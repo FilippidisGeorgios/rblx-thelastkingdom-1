@@ -152,9 +152,9 @@ function AudioController.Start()
 	end
 	-- the ambience waits for the game to be on screen (the loading screen sets this when it lifts)
 	task.spawn(function()
-		local player = Players.LocalPlayer
+		local first = game:GetService("ReplicatedFirst")
 		local waited = 0
-		while player:GetAttribute("TLK_Loaded") ~= true and waited < 40 do
+		while first:GetAttribute("TLKScreenGone") ~= true and waited < 80 do
 			waited += task.wait(0.5)
 		end
 		startAmbient(cfg)

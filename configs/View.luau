@@ -13,7 +13,8 @@
 	  THE HEAD       What your friends see: your head and chest follow where you look, up, down and into a turn.
 	  THE STEP       The picture moves a little with each footfall and dips when you land (the HEAD BOB switch in Settings
 	                 turns the stepping off for players it makes dizzy; the dip of a dash stays, small).
-	  FIELD OF VIEW  How wide the picture is, chosen in Settings (`Fov`): a wider one feels faster and shows more.
+	  FIELD OF VIEW  How wide the picture is: ONE standard for every player (`Fov.Default`; the Settings choice was taken out
+	                 on 2026-11-14, the developer's call). Running and dashing still widen it a little.
 
 	Read via: Config.get("View")
 ]]

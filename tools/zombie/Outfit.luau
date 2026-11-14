@@ -27,6 +27,7 @@ local lab = script.Parent
 local Grip = require(lab.Grip)
 local Hold = require(lab.Hold)
 local Arms = require(lab.Arms)
+local Garb = require(lab.Garb)
 
 local function gone(m: Model, names: { string }, patterns: { string }?)
 	for _, n in names do
@@ -124,6 +125,26 @@ end
 
 Outfit.BUILD.undead_knight = function(m: Model)
 	gone(m, { "SwordGrip", "SwordPommel", "SwordGuard", "SwordQuillonA", "SwordQuillonB", "Blade", "Fuller", "BladeTip", "BladeStain" })
+	-- all his clothing and the old block armour go; the new plate and the helm go on (tools/blender/make_garb.py)
+	gone(m, { "torso_hauberk", "greave", "Belt", "Buckle" }, {
+		"^Tab", "^Cl%d", "^CloakYoke$", "^Sk[FBLR]%d", "^StarBar", "^StarCore$", "^Plume", "^Breastplate$", "^BreastRidge$",
+		"^Fauld", "^Gorget", "Couter$", "Greave$", "Poleyn$", "Sabaton", "Tasset", "Vambrace", "^Pauldron", "^Helm", "^VisorSlit$",
+		"^Breath", "^CrestRidge$",
+	})
+	sweep(m)
+	Garb.dress(m, "Knight")
+	-- the gauntlets and the fingers are steel now; what shows of the limbs between the plates is mail
+	local limbs = { RightUpperArm = true, LeftUpperArm = true, RightLowerArm = true, LeftLowerArm = true, RightUpperLeg = true, LeftUpperLeg = true, RightLowerLeg = true, LeftLowerLeg = true, RightFoot = true, LeftFoot = true, RightKneeBall = true, LeftKneeBall = true }
+	for _, d in m:GetDescendants() do
+		if d:IsA("BasePart") and (string.find(d.Name, "Gauntlet") or d.Parent and string.match(d.Parent.Name, "^Fingers")) then
+			d.Material = Enum.Material.Metal
+			d.Color = Color3.fromRGB(44, 46, 50)
+			d.Reflectance = 0.08
+		elseif d:IsA("BasePart") and d.Parent == m and limbs[d.Name] then
+			d.Material = Enum.Material.DiamondPlate
+			d.Color = Color3.fromRGB(34, 34, 38)
+		end
+	end
 	-- the plough guard: hilt at the belly, the point up at a man's face
 	return twoHands(m, "KnightSword", Vector3.new(0.35, 0.0, -1.0), Vector3.new(-0.05, 0.42, -1), -0.36, 0.1, 0.1)
 end
@@ -133,7 +154,10 @@ Outfit.BUILD.the_king = function(m: Model)
 		"^Breastplate$", "^Fauld", "^Gorget", "Couter$", "Gauntlet$", "Greave$", "Poleyn$", "Sabaton$", "Tasset", "Vambrace",
 		"^Pauldron", "^Seam$", "^StarBar", "^StarCore$", "^Tab", "^Cl%d", "^CloakYoke$", "^Ermine$", "^Crown",
 	})
+	-- his old cloth goes too: the coat, its skirt, the belt and the cape take their place
+	gone(m, { "Belt", "Buckle" }, { "^Sk[FBLR]%d" })
 	sweep(m)
+	Garb.dress(m, "King")
 	-- the crown, made to the head: it rests on it
 	local head = (m :: any).Head :: BasePart
 	local crown = Arms.make("Crown", head.CFrame)
