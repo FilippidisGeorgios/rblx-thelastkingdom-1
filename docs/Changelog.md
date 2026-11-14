@@ -1,3 +1,22 @@
+## Version 0.47.0 — Seven looks for the dead, a real skeleton arm, walls that touch exactly
+
+What the developer asked for (2026-11-14): take the dead the game has and make them better, in seven looks shown eight kinds at a
+time; a very realistic skeleton from the middle of the arm down (no skin, no blood) instead of fingers made badly; walls that meet
+with zero difference (no gap, no overlap); everything for The Last Kingdom, and a more frightening game.
+
+- **Seven looks** (`docs/systems/ZombieLooks.md`, `tools/zombie/*`): the Garrison (kept), the Ossuary, the Cinder, the Rime, the
+  Drowned, the Faded Court, the Shrouded, each photographed on the same eight kinds (crawler, shambler, runner, spearman, hollow
+  knight, the King, the Doctor, the Huntsman). Sent as pictures; nothing is in the game until the developer chooses.
+- **A real skeleton arm** (`tools/blender/make_bone_arm.py`, Blender headless): radius, ulna, carpals, metacarpals, phalanges; right
+  and left; uploaded as asset 99818223615911 (`assets/manifest.json`: `bone_arm_v1`). `tools/zombie/Bones.luau` fits it to any body
+  and also builds the shin and foot. Roblox's glTF importer turns a model half a turn about Y: undone in code.
+- **Walls that touch exactly** (`tools/SeamAudit.luau`, `docs/systems/SeamAudit.md`): scan, mend and a before/after proof that no
+  floor moved. Chambers 1 to 9 and the shell: about 2,500 cracks, shallow overlaps and fighting faces closed (meeting exactly:
+  about 800 before, about 6,700 after); 0 of 175,000 walking heights changed. Forgotten Lands saved as version 229; not published.
+- **The register and the first upload:** the three `rock_wall_08` maps (CC0) are on Roblox and in the register (phase 0 closed);
+  the upload folder was approved by the developer. Rule 7 of `docs/Pipelines.md`: every task starts by naming which installed
+  tools it uses.
+
 ## Version 0.46.2 — A friend's head turns (found with two players), the structure for building
 
 - **Fix: a friend's head never turned.** First two-player test (Studio local server, two clients): while one player looked 55 degrees

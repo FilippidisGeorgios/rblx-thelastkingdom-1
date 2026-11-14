@@ -139,6 +139,10 @@ and are never shipped without a human having redrawn or at least chosen and clea
 (`rojo build default.project.json`, `rojo build world.project.json`), `tools/mksync.js` + `tools/SyncFromBundle.luau` to carry the
 scripts into an open Studio. **VERIFIED.** To add: a CI run of the builds and the type check on every push (GitHub Actions).
 
+### 8b. Walls that touch exactly
+
+`tools/SeamAudit.luau` (docs/systems/SeamAudit.md): after any build tool, scan, mend, scan again, compare the walking heights. Status: **VERIFIED** on chambers 1 to 9 and the shell (2026-11-14).
+
 ### 9. Testing what a second player sees
 
 **VERIFIED (2026-11-13) and it found a real bug.** Studio's Test menu starts a local server; the MCP `start_stop_play` starts

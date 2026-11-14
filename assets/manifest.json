@@ -649,6 +649,23 @@
       "owner": "group:32361153",
       "usedBy": [],
       "note": "Uploaded 2026-11-14 as a Decal (group 32361153); image id read from the Decal's Texture."
+    },
+    {
+      "name": "bone_arm_v1",
+      "class": "model",
+      "id": "rbxassetid://99818223615911",
+      "source": {
+        "tool": "Blender (tools/blender/make_bone_arm.py)",
+        "author": "The Last Kingdom"
+      },
+      "licence": "own",
+      "file": "assets/Models/bone_arm/bone_arm.glb",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "tools/zombie/Bones.luau"
+      ],
+      "note": "Skeletal forearm + hand, R and L (4 meshes, 724 and 2120 tris). Uploaded 2026-11-14 to group 32361153 as a Model. The importer turns a glTF half a turn about Y: Bones.luau undoes it (RY180)."
     }
   ]
 }
