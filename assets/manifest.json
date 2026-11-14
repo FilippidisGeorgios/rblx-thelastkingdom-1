@@ -601,6 +601,54 @@
       "usedBy": [
         "configs/ItemArt.luau"
       ]
+    },
+    {
+      "name": "rock_wall_08_color",
+      "class": "image",
+      "id": "rbxassetid://122646337526638",
+      "source": {
+        "tool": "Poly Haven",
+        "url": "https://polyhaven.com/a/rock_wall_08",
+        "author": "Amal Kumar"
+      },
+      "licence": "CC0",
+      "file": "assets/Materials/rock_wall_08/Diffuse_1k.jpg",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "Uploaded 2026-11-14 as a Decal (group 32361153); image id read from the Decal's Texture."
+    },
+    {
+      "name": "rock_wall_08_normal",
+      "class": "image",
+      "id": "rbxassetid://72492009881989",
+      "source": {
+        "tool": "Poly Haven",
+        "url": "https://polyhaven.com/a/rock_wall_08",
+        "author": "Amal Kumar"
+      },
+      "licence": "CC0",
+      "file": "assets/Materials/rock_wall_08/nor_gl_1k.jpg",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "Uploaded 2026-11-14 as a Decal (group 32361153); image id read from the Decal's Texture."
+    },
+    {
+      "name": "rock_wall_08_roughness",
+      "class": "image",
+      "id": "rbxassetid://101427702400597",
+      "source": {
+        "tool": "Poly Haven",
+        "url": "https://polyhaven.com/a/rock_wall_08",
+        "author": "Amal Kumar"
+      },
+      "licence": "CC0",
+      "file": "assets/Materials/rock_wall_08/Rough_1k.jpg",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "Uploaded 2026-11-14 as a Decal (group 32361153); image id read from the Decal's Texture."
     }
   ]
 }

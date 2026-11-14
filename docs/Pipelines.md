@@ -50,8 +50,9 @@ Poly Haven (CC0)  ->  tools/textures/polyhaven.js  ->  assets/Materials/<id>/{Di
    ->  set on the parts of a wall  ->  capture, compare with before  ->  manifest + configs/Materials.luau
 ```
 - **Status: PARTLY.** Search VERIFIED (673 hits for a castle wall); the fetch VERIFIED (`rock_wall_08`: three maps, 2.3 MB, CC0, with
-  `SOURCE.txt`); upload **BLOCKED**: the project's folder is not in Studio's approved upload directories (Assistant Settings >
-  MCP Permissions > upload directories; a security setting, so the developer adds it). The MaterialVariant step is NOT TRIED.
+  `SOURCE.txt`); upload **VERIFIED 2026-11-14** (the three maps went to group 32361153 as Decals, moderation Approved; the image id is
+  read from the Decal's `Texture` with `InsertService:LoadAsset`, and the three are in `assets/manifest.json`). The MaterialVariant
+  step is NOT TRIED.
 - Check: the wall must read as stone from 3 studs and from 40 studs (the tile must not show a pattern); Low must still look like
   Low (a MaterialVariant is not a `SurfaceAppearance`: `GraphicsController` must be taught to thin it).
 
@@ -162,7 +163,7 @@ Still to see with two players: a friend's roll, the spear thrust and sword cut f
 | see the game | yes | `screen_capture`, play sessions, computer use |
 | search and fetch free PBR surfaces | yes | Poly Haven (Blender MCP, `polyhaven.js`) |
 | model a prop or weapon and look at it | yes | Blender (script or live MCP), renders |
-| put a file on Roblox | **blocked** | needs the upload folder approved (see below) |
+| put a file on Roblox | yes (3 textures uploaded 2026-11-14) | Studio `open_cloud_invoke` POST /assets/v1/assets, then read the image id from the Decal |
 | read and write a Figma design | yes (a file and 28 tokens made) | Figma MCP |
 | make a picture or remove a background | **blocked** | Hugging Face `invoke` is off (Gradio setting) |
 | make a voice line | yes (connected) | ElevenLabs (voice and speech only) |
@@ -170,9 +171,7 @@ Still to see with two players: a friend's roll, the spear thrust and sword cut f
 | look up Roblox documentation | yes | Context7, Studio `http_get` |
 | try a second player | yes, by hand (about 4 minutes) | Studio local server + 2 clients, computer use (found the head bug) |
 
-**What the developer has to do once:** in Studio, Assistant Settings > MCP Permissions > the list of folders approved for
-uploads: add `...\rblx-thelastkingdom-1\assets` (or the project folder). Claude cannot and must not do this: it is a security
-setting, and files may not be copied elsewhere to get round it.
+**Upload folder: DONE 2026-11-14** (the developer approved it; the upload worked). The folder must stay approved; files are never copied elsewhere to get round it. A Decal upload gives a Decal id, not an image id: load it and read `Texture`.
 
 ## The order of building (each phase ends with its check, then a commit and a changelog line)
 
