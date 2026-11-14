@@ -21,6 +21,14 @@ was chosen; this page records how they are used together.
    something `Client/Controllers/GraphicsController` can take off or thin on Low. A pipeline is not finished until that is checked.
 6. **Say what is tried.** Status words below: **VERIFIED** (done end to end and looked at), **PARTLY** (some steps done),
    **NOT TRIED**, **BLOCKED** (waiting for something, said which).
+7. **Use the tools we installed, to the full (developer's order, 2026-11-14).** Before any task, read the tool list in
+   `docs/Tooling.md` and say which tools (MCP connectors, Studio plugins, skills, Studio's own AI tools) this task can use. Use
+   every one that fits; do not use one that does not fit. Do not build by hand what a tool makes better, and do not skip a tool
+   from habit. The check is written in the task's plan (one line: "tools: ..."), and in the commit or changelog when it matters.
+   Quick map: surfaces = Poly Haven + Studio `generate_material`; models = Blender MCP + the `scenario-blender-*` skills +
+   Studio `generate_mesh`; rigs/animation = RigEdit Lite, Studio `generate_animation`, `scenario-roblox-animation`; UI = Figma MCP
+   + `scenario-roblox-ui`; effects = VFX Studio + `scenario-roblox-vfx-audio`; sound = ElevenLabs; docs = Context7; builds and
+   tests = Rojo, Luau LSP, F3X / ResizeAlign / Archimedes for hand edits in Studio, the two-player test.
 
 ## Where things live
 
