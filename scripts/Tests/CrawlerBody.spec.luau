@@ -1,7 +1,7 @@
 --!strict
 --[[
 	CrawlerBody.spec
-	A crawler is a standing body with its legs taken away and its torso laid down. The legs are found by following the
+	A crawler is a standing body laid on the floor with its right forearm cut away (the second crawler, 2026-11-14). The legs are found by following the
 	joints out from the thighs without crossing into the trunk; the pose is put where the animation clips will still
 	read as they were written; and the unit's numbers are the ones the shared attack clip expects.
 
@@ -54,6 +54,16 @@ local function body(): Model
 	motor("LeftShoulder", upper, lShoulderArm, CFrame.new(-1, 0.6, 0))
 	motor("RightShoulder", upper, rShoulderArm, CFrame.new(1, 0.6, 0))
 	weld(head, neckPart)
+	-- the forearms and hands, and a ladle in the right hand
+	for _, side in { "Left", "Right" } do
+		local fore = part(side .. "LowerArm")
+		local hand = part(side .. "Hand")
+		motor(side .. "Elbow", if side == "Left" then lShoulderArm else rShoulderArm, fore, CFrame.new(-0.5, 0, 0))
+		motor(side .. "Wrist", fore, hand, CFrame.new(-0.5, 0, 0))
+		if side == "Right" then
+			weld(hand, part("LadleHandle"))
+		end
+	end
 
 	-- legs: thigh, shin, foot (joints), a boot (weld) and a knee ball (weld to the shin)
 	for _, side in { "Left", "Right" } do
@@ -103,61 +113,56 @@ return function(t: any)
 		model:Destroy()
 	end)
 
-	t.test("making a crawler removes the legs and keeps the belt, the pouch, the arms, the head and the root", function()
+	t.test("the second crawler keeps its legs, loses the right forearm and what the hand held, keeps the trunk", function()
 		local model = body()
-		local removed = CrawlerBody.make(model)
-		assert(removed == 10, "ten parts removed: " .. removed)
-		for _, name in { "LeftUpperLeg", "RightFoot", "LeftBootTop", "RightKneeBall" } do
-			assert(model:FindFirstChild(name) == nil, name .. " is gone")
-		end
-		for _, name in { "HumanoidRootPart", "LowerTorso", "UpperTorso", "Head", "Neck", "Belt", "Pouch", "LeftUpperArm", "RightUpperArm" } do
+		CrawlerBody.make(model)
+		for _, name in { "LeftUpperLeg", "RightFoot", "LeftBootTop", "HumanoidRootPart", "LowerTorso", "UpperTorso", "Head", "Neck", "Belt", "LeftUpperArm", "RightUpperArm", "LeftLowerArm", "LeftHand" } do
 			assert(model:FindFirstChild(name) ~= nil, name .. " stays")
 		end
+		for _, name in { "RightLowerArm", "RightHand", "LadleHandle" } do
+			assert(model:FindFirstChild(name) == nil, name .. " is gone")
+		end
+		assert(model:FindFirstChild("StumpWound") ~= nil, "the stump has its wound")
 		for _, d in model:GetDescendants() do
 			if d:IsA("Motor6D") then
 				assert(d.Part0 ~= nil and d.Part1 ~= nil, d.Name .. " is not left holding nothing")
 			end
 		end
 		assert(model:GetAttribute("Crawler") == true, "marked as a crawler")
+		assert(model:GetAttribute("CrawlerVersion") == 2, "the second crawler")
 		model:Destroy()
 	end)
 
-	t.test("the body is laid down by the Root joint's C1, so the clips' own shifts still go the way they were meant", function()
+	t.test("the hips are laid down by the Root joint's C1 (the clips' own shifts still go along the ground)", function()
 		local model = body()
 		local root = model.LowerTorso:FindFirstChild("Root") :: Motor6D
-		local c0, c1 = root.C0, root.C1
+		local c1 = root.C1
 		CrawlerBody.make(model)
-		assert(root.C0.Y < c0.Y, "dropped toward the ground")
 		local pitched = c1:ToObjectSpace(root.C1)
 		local rx = pitched:ToEulerAnglesXYZ()
 		assert(math.abs(math.deg(rx) - CrawlerBody.PITCH) < 1, "pitched about X by the module's angle: " .. math.deg(rx))
 		model:Destroy()
 	end)
 
-	t.test("its welds are fixed Welds, so cloth and heads follow the body as it lies down; its helmet is gone", function()
+	t.test("its welds are fixed Welds; its helmet is gone; the right upper arm is cut short", function()
 		local model = body()
 		local helmet = Instance.new("Model")
 		helmet.Name = "helm_kettle"
 		local iron = Instance.new("Part")
 		iron.Parent = helmet
 		helmet.Parent = model
+		local arm = model:FindFirstChild("RightUpperArm") :: Part
+		local before = arm.Size.X
 		CrawlerBody.make(model)
 		for _, d in model:GetDescendants() do
 			assert(not d:IsA("WeldConstraint"), "no WeldConstraint is left: " .. d:GetFullName())
 		end
-		local belt = model:FindFirstChild("Belt")
-		local held = false
-		for _, d in model:GetDescendants() do
-			if d:IsA("Weld") and (d.Part1 == belt or d.Part0 == belt) then
-				held = true
-			end
-		end
-		assert(held, "the belt is held by a Weld")
 		assert(model:FindFirstChild("helm_kettle") == nil, "the helmet is taken off")
+		assert(math.abs(arm.Size.X - before * CrawlerBody.STUMP) < 1e-3, "the stump is cut to its share")
 		model:Destroy()
 	end)
 
-	t.test("the Neck JOINT is lifted, not the part that shares its name; the shoulders turn out to reach", function()
+	t.test("the Neck JOINT is lifted, not the part that shares its name; the left shoulder is turned to reach", function()
 		local model = body()
 		local neckJoint = model.Head:FindFirstChild("Neck") :: Motor6D
 		local neckPart = model:FindFirstChild("Neck") :: Part
@@ -182,15 +187,12 @@ return function(t: any)
 		model:Destroy()
 	end)
 
-	t.test("the crawler unit: low health, its own body from the standing dead, and the shambler's timings (they share a clip)", function()
-		local crawler, shambler = Enemies.undead_crawler, Enemies.undead_shambler
+	t.test("the crawler unit: low health, slower than a walking player, its own grab from the floor", function()
+		local crawler = Enemies.undead_crawler
 		assert(crawler and crawler.Crawler == true, "it is a crawler")
-		assert(crawler.MaxHealth < shambler.MaxHealth, "it breaks easily")
-		assert(crawler.Tier == "Standard" and crawler.Faction == "Enemies", "an ordinary hostile")
-		for _, key in { "Windup", "Strike", "Recover" } do
-			assert(crawler.AI[key] == shambler.AI[key], key .. " matches the shambler's: the attack clip is shared")
-		end
-		assert(ZombieAnims.KIND.undead_crawler == ZombieAnims.KIND.undead_shambler, "it plays the shambler's attack")
+		assert(crawler.MaxHealth < Enemies.undead_shambler.MaxHealth, "it breaks easily")
+		assert(crawler.AI.MoveSpeed < 16, "never faster than a walking player (16)")
+		assert(ZombieAnims.KIND.undead_crawler == "grab", "it rears up and claws")
 		assert(#crawler.Body > 0, "it wears a standing body")
 	end)
 end

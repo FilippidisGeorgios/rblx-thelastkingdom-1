@@ -1,9 +1,13 @@
 --!strict
 --[[
 	ZombieAnims
-	The motion of the dead, authored here as KeyframeSequences and registered at
-	runtime: no upload, no asset ids. Same pattern, same rules and the same angle
-	convention as SwordAnims (docs/systems/Animation.md §1).
+	The motion of the dead, authored here in code: no upload, no asset ids. Same rules and the same angle convention
+	as the player's clips (docs/systems/Animation.md §1).
+
+	PLAYED BY CLIPPLAYER (2026-11-14). Until 0.47 these were KeyframeSequences registered with KeyframeSequenceProvider,
+	whose ids "are temporary and cannot be used outside of Studio": the dead stood still in the published game. They
+	are now ClipPlayer clips (Shared/Anim/ClipPlayer), written onto the joints' Transform by ZombieAnimController, the way
+	the player's own body has been moved since 0.45.
 
 	--------------------------------------------------------------------------
 	WHAT A CLIP IS
@@ -44,11 +48,9 @@
 	(anticipation), arrives at the top and HOLDS (the last quarter of the windup:
 	that is the telegraph), accelerates into the strike, rebounds and settles.
 
-	Location: ReplicatedStorage.Shared.Anim.ZombieAnims — pure construction, safe
-	to require from either side. Registering needs the client's engine.
+	Location: ReplicatedStorage.Shared.Anim.ZombieAnims — pure construction, safe to require from either side.
 ]]
 
-local KeyframeSequenceProvider = game:GetService("KeyframeSequenceProvider")
 
 local ZombieAnims = {}
 
@@ -66,101 +68,6 @@ end
 type Ease = "in" | "out" | "smooth" | "flat"
 type Pose = { [string]: CFrame }
 type Frame = { time: number, ease: Ease?, pose: Pose }
-
-local EASING = {
-	smooth = { style = Enum.PoseEasingStyle.Cubic, direction = Enum.PoseEasingDirection.InOut },
-	["in"] = { style = Enum.PoseEasingStyle.Cubic, direction = Enum.PoseEasingDirection.In },
-	out = { style = Enum.PoseEasingStyle.Cubic, direction = Enum.PoseEasingDirection.Out },
-	flat = { style = Enum.PoseEasingStyle.Linear, direction = Enum.PoseEasingDirection.In },
-}
-
---==========================================================================
--- Building
---==========================================================================
-local PARENT: { [string]: string } = {
-	LowerTorso = "HumanoidRootPart",
-	UpperTorso = "LowerTorso",
-	Head = "UpperTorso",
-	RightUpperArm = "UpperTorso",
-	RightLowerArm = "RightUpperArm",
-	RightHand = "RightLowerArm",
-	LeftUpperArm = "UpperTorso",
-	LeftLowerArm = "LeftUpperArm",
-	LeftHand = "LeftLowerArm",
-	RightUpperLeg = "LowerTorso",
-	RightLowerLeg = "RightUpperLeg",
-	RightFoot = "RightLowerLeg",
-	LeftUpperLeg = "LowerTorso",
-	LeftLowerLeg = "LeftUpperLeg",
-	LeftFoot = "LeftLowerLeg",
-}
-
--- Parents before children, so a pose can always hang under the one above it.
-local ORDER = {
-	"LowerTorso",
-	"UpperTorso",
-	"Head",
-	"RightUpperArm",
-	"RightLowerArm",
-	"RightHand",
-	"LeftUpperArm",
-	"LeftLowerArm",
-	"LeftHand",
-	"RightUpperLeg",
-	"RightLowerLeg",
-	"RightFoot",
-	"LeftUpperLeg",
-	"LeftLowerLeg",
-	"LeftFoot",
-}
-
-type PoseInstance = Instance
-
-local function newPose(name: string, cf: CFrame?, ease: Ease?, parent: Instance): PoseInstance
-	local p = Instance.new("Pose")
-	p.Name = name
-	p.CFrame = cf or CFrame.new()
-	p.Weight = if cf then 1 else 0
-	local e = EASING[ease or "smooth"]
-	p.EasingStyle = e.style
-	p.EasingDirection = e.direction
-	p.Parent = parent
-	return p
-end
-
-local function keyframe(frame: Frame, sequence: KeyframeSequence)
-	local kf = Instance.new("Keyframe")
-	kf.Name = "Keyframe"
-	kf.Time = frame.time
-
-	-- A bone in the pose needs every ancestor present (weight 0 where they carry nothing).
-	local need: { [string]: boolean } = {}
-	for bone in frame.pose do
-		local b: string? = bone
-		while b and b ~= "HumanoidRootPart" do
-			need[b] = true
-			b = PARENT[b]
-		end
-	end
-	local nodes: { [string]: Instance } = { HumanoidRootPart = newPose("HumanoidRootPart", nil, frame.ease, kf) }
-	for _, bone in ORDER do
-		if need[bone] then
-			nodes[bone] = newPose(bone, frame.pose[bone], frame.ease, nodes[PARENT[bone]])
-		end
-	end
-	kf.Parent = sequence
-end
-
-local function build(name: string, frames: { Frame }, looped: boolean, priority: Enum.AnimationPriority): KeyframeSequence
-	local sequence = Instance.new("KeyframeSequence")
-	sequence.Name = name
-	sequence.Loop = looped
-	sequence.Priority = priority
-	for _, frame in frames do
-		keyframe(frame, sequence)
-	end
-	return sequence
-end
 
 -- A pose that is `f` of the way from rest to `p` (f in 0..1).
 local function part(p: Pose, f: number): Pose
@@ -197,7 +104,7 @@ end
 --==========================================================================
 -- IDLE
 --==========================================================================
-local function idleFrames(): { Frame }
+local function idleFrames(): { Frame } -- (an armed body's idle is this with the arms taken out: ZombieAnims.build)
 	local function breathe(t: number, chest: number, head: number, twitch: number?): Frame
 		return {
 			time = t,
@@ -279,7 +186,7 @@ local function leg(p: number, g: Gait, scale: number): (number, number)
 	return thigh, knee
 end
 
-local function gaitFrames(g: Gait): { Frame }
+local function gaitFrames(g: Gait, armless: boolean?): { Frame }
 	local frames: { Frame } = {}
 	local drag = g.drag or 1
 	local pitch = g.pitch or 0
@@ -313,6 +220,11 @@ local function gaitFrames(g: Gait): { Frame }
 				LeftLowerLeg = deg(lKnee, 0, 0),
 			},
 		}
+		if armless then
+			-- a body that holds a weapon: the arms belong to its hold (ZombieAnims.HOLD), not to the walk
+			local pose = frames[i + 1].pose
+			pose.RightUpperArm, pose.LeftUpperArm, pose.RightLowerArm, pose.LeftLowerArm = nil, nil, nil, nil
+		end
 	end
 	return frames
 end
@@ -399,6 +311,97 @@ local function crawlDeathFrames(): { Frame }
 		{ time = 0.18, ease = "out", pose = { LowerTorso = move(0, 0.05, 0), UpperTorso = deg(14, 0, 4), Head = deg(22, 8, 0), RightUpperArm = deg(10, 0, 6), LeftUpperArm = deg(14, 0, -8), RightLowerArm = deg(10, 0, 0), LeftLowerArm = deg(6, 0, 0) } },
 		{ time = 0.55, ease = "in", pose = { LowerTorso = move(0, -0.25, 0, 0, 0, 4), UpperTorso = deg(-10, 0, 8), Head = deg(-34, 26, 6), RightUpperArm = deg(-14, 0, 16), LeftUpperArm = deg(-8, 0, -20), RightLowerArm = deg(4, 0, 0), LeftLowerArm = deg(0, 0, 0) } },
 		{ time = 0.8, ease = "out", pose = { LowerTorso = move(0, -0.3, 0, 0, 0, 5), UpperTorso = deg(-12, 0, 9), Head = deg(-38, 30, 6), RightUpperArm = deg(-18, 0, 20), LeftUpperArm = deg(-10, 0, -24), RightLowerArm = deg(2, 0, 0), LeftLowerArm = deg(0, 0, 0) } },
+	}
+end
+
+--[[
+	THE SECOND CRAWL (2026-11-14). The crawler now lies with its hips and legs on the ground and its chest up, its right
+	arm cut off above the elbow, its left arm (shorter) held up toward you at rest (Domain/CrawlerBody). It comes ONE
+	PULL AT A TIME: the arm reaches higher, slams down on the floor ahead, and the body is dragged up to it in one lurch
+	while the stump shoves at the ground and the legs trail; then the arm comes up again.
+
+	The root goes at an even pace (the AI moves it), so the body is drawn BEHIND the root while the hand reaches (it
+	stays where it is on the ground) and catches up in the lurch: the hips are shifted back (+Z) by as much as the root
+	moves, then forward in one surge. A clip authored for CRAWL2_PACE, played faster for a faster crawler, moves the
+	body by the same distance a cycle, so this holds at any pace.
+]]
+ZombieAnims.CRAWL2_PACE = 6 -- studs a second the clip is authored for
+ZombieAnims.CRAWL2_SECONDS = 0.62 -- one pull
+
+local function smoothstep(x: number): number
+	x = math.clamp(x, 0, 1)
+	return x * x * (3 - 2 * x)
+end
+
+-- the left arm at phase p: shoulder swing, elbow, shoulder out (degrees, deltas from the raised rest)
+local function pullArm(p: number): (number, number, number)
+	if p < 0.3 then -- reaching further, the claw up
+		local q = smoothstep(p / 0.3)
+		return 16 * q, -12 * q, 4 * q
+	elseif p < 0.48 then -- the slam
+		local q = (p - 0.3) / 0.18
+		q = q * q
+		return 16 - 74 * q, -12 + 12 * q, 4 - 4 * q
+	elseif p < 0.86 then -- the pull: the body is dragged past the planted hand
+		local q = smoothstep((p - 0.48) / 0.38)
+		return -58 - 40 * q, 46 * q, -6 * q
+	end
+	local q = smoothstep((p - 0.86) / 0.14) -- up again
+	return -98 + 98 * q, 46 - 46 * q, -6 + 6 * q
+end
+
+local function crawl2Frames(): { Frame }
+	local frames: { Frame } = {}
+	local T = ZombieAnims.CRAWL2_SECONDS
+	local D = ZombieAnims.CRAWL2_PACE * T -- the root's travel in one pull
+	local n = 16
+	for i = 0, n do
+		local p = i / n
+		-- the hips behind the root while the hand reaches, then the surge (centred on the root)
+		local back = if p < 0.5 then D * p else D * 0.5 * (1 - smoothstep((p - 0.5) / 0.5))
+		back -= D * 0.24
+		local surge = math.max(0, math.sin(math.pi * math.clamp((p - 0.48) / 0.4, 0, 1)))
+		local slam = math.exp(-((p - 0.48) / 0.05) ^ 2)
+		local sx, el, out = pullArm(p)
+		frames[i + 1] = {
+			time = p * T,
+			ease = "flat",
+			pose = {
+				LowerTorso = move(0, 0.03 * surge, back, 0, -4 * surge, 3 * surge),
+				UpperTorso = deg(5 - 14 * surge - 4 * slam, 9 * surge, -4 * surge),
+				Head = deg(-8 * slam + 5 * surge, -6 * surge, 4 * math.sin(2 * math.pi * p)),
+				LeftUpperArm = deg(sx, 0, out),
+				LeftLowerArm = deg(el, 0, 0),
+				LeftHand = deg(-20 * slam + 12 * surge, 0, 0),
+				-- the stump shoves at the ground as the body comes
+				RightUpperArm = deg(-26 * surge + 6 * slam, 0, 8 * surge),
+				-- the legs trail, the knees giving a little
+				RightUpperLeg = deg(3 * surge, 0, -3 * surge),
+				LeftUpperLeg = deg(-2 * surge, 0, 2 * surge),
+				RightLowerLeg = deg(-6 * math.sin(2 * math.pi * (p + 0.2)), 0, 0),
+				LeftLowerLeg = deg(-5 * math.sin(2 * math.pi * (p + 0.65)), 0, 0),
+			},
+		}
+	end
+	return frames
+end
+
+-- The second crawler's idle: it does not lie still, the hand opening and closing in the air, the head working.
+local function crawl2IdleFrames(): { Frame }
+	local function f(t: number, a: number, h: number, s: number): Frame
+		return { time = t, ease = "smooth", pose = { LeftUpperArm = deg(a, 0, a * 0.3), LeftLowerArm = deg(-a * 0.6, 0, 0), Head = deg(h, h * 1.5, 0), RightUpperArm = deg(s, 0, 0), UpperTorso = deg(a * 0.2, 0, 0) } }
+	end
+	return { f(0, 0, 0, 0), f(0.9, 8, 4, -10), f(1.5, -4, -3, 4), f(2.4, 10, 6, -14), f(3.2, 0, 0, 0) }
+end
+
+-- It dies where it lies: the arm gives, the chest goes down onto the floor, the face into the dirt.
+local function crawlDeath2Frames(): { Frame }
+	local z: Pose = { LowerTorso = move(0, 0, 0), UpperTorso = deg(0, 0, 0), Head = deg(0, 0, 0), LeftUpperArm = deg(0, 0, 0), LeftLowerArm = deg(0, 0, 0), RightUpperArm = deg(0, 0, 0) }
+	return {
+		{ time = 0, ease = "smooth", pose = z },
+		{ time = 0.16, ease = "out", pose = { LowerTorso = move(0, 0.05, 0.1), UpperTorso = deg(10, 0, 4), Head = deg(20, 10, 0), LeftUpperArm = deg(24, 0, 10), LeftLowerArm = deg(-10, 0, 0), RightUpperArm = deg(16, 0, 0) } },
+		{ time = 0.55, ease = "in", pose = { LowerTorso = move(0, -0.05, 0, 0, 0, 3), UpperTorso = deg(-52, 0, 8), Head = deg(-30, 24, 6), LeftUpperArm = deg(-80, 0, -20), LeftLowerArm = deg(30, 0, 0), RightUpperArm = deg(-30, 0, 10) } },
+		{ time = 0.8, ease = "out", pose = { LowerTorso = move(0, -0.08, 0, 0, 0, 4), UpperTorso = deg(-62, 0, 9), Head = deg(-36, 28, 6), LeftUpperArm = deg(-92, 0, -26), LeftLowerArm = deg(36, 0, 0), RightUpperArm = deg(-34, 0, 12) } },
 	}
 end
 
@@ -673,19 +676,104 @@ local ATTACKS: { [string]: Attack } = {
 	},
 }
 
--- Which attack each type uses.
+-- the second crawler (CrawlerVersion 2): it rears up on its one arm and claws at your legs
+ATTACKS.grab = {
+	cock = {
+		UpperTorso = deg(14, -10, 0),
+		Head = deg(12, 6, 0),
+		LeftUpperArm = deg(34, 0, 12),
+		LeftLowerArm = deg(40, 0, 0),
+		RightUpperArm = deg(-30, 0, 6),
+		LowerTorso = move(0, 0.05, 0.25),
+	},
+	hit = {
+		UpperTorso = deg(-20, 12, 0),
+		Head = deg(-12, -6, 0),
+		LeftUpperArm = deg(-46, 0, -4),
+		LeftLowerArm = deg(-20, 0, 0),
+		RightUpperArm = deg(-40, 0, 10),
+		LowerTorso = move(0, -0.02, -0.8),
+	},
+	settle = 0.8,
+}
+
+--[[
+	WEAPON ATTACKS (2026-11-14). A body that holds its weapon in a fist (tools/zombie/Grip) attacks by moving the WEAPON:
+	the clip below moves the body (hips, chest, head, legs) and a GRIP track (ZombieAnims.GRIPS) moves the fist along a
+	path in the chest's space; ZombieAnimController solves the arm to it every frame (Shared/Anim/ArmIK) and the second
+	hand follows the haft. So a thrust goes where a thrust goes, whatever the arm is built like.
+]]
+ATTACKS.spearThrust = {
+	cock = { LowerTorso = move(0, -0.12, 0.3, 0, -10, 0), UpperTorso = deg(4, 18, 0), Head = deg(0, -12, 0), RightUpperLeg = deg(12, 0, 0), RightLowerLeg = deg(-14, 0, 0), LeftUpperLeg = deg(-8, 0, 0) },
+	hit = { LowerTorso = move(0, -0.2, -0.85, -4, 8, 0), UpperTorso = deg(-12, -16, 0), Head = deg(4, 10, 0), RightUpperLeg = deg(-22, 0, 0), RightLowerLeg = deg(-10, 0, 0), LeftUpperLeg = deg(30, 0, 0), LeftLowerLeg = deg(-34, 0, 0) },
+}
+ATTACKS.knightCleave = {
+	cock = { LowerTorso = move(0, -0.25, 0.3, 0, -22, 0), UpperTorso = deg(10, -38, 0), Head = deg(-4, 30, 0), RightUpperLeg = deg(10, 0, 0), RightLowerLeg = deg(-16, 0, 0), LeftUpperLeg = deg(-6, 0, 0), LeftLowerLeg = deg(10, 0, 0) },
+	hit = { LowerTorso = move(0, -0.4, -0.9, -6, 26, 0), UpperTorso = deg(-22, 34, 0), Head = deg(8, -24, 0), RightUpperLeg = deg(-28, 0, 0), RightLowerLeg = deg(6, 0, 0), LeftUpperLeg = deg(24, 0, 0), LeftLowerLeg = deg(-28, 0, 0) },
+	settle = 0.85,
+}
+ATTACKS.knightSweep = {
+	cock = { LowerTorso = move(0, -0.35, 0.3, -4, -32, 0), UpperTorso = deg(12, -60, 0), Head = deg(-4, 42, 0), RightUpperLeg = deg(10, 0, 0), RightLowerLeg = deg(-18, 0, 0), LeftUpperLeg = deg(-6, 0, 0), LeftLowerLeg = deg(12, 0, 0) },
+	hit = { LowerTorso = move(0, -0.12, -0.85, 2, 44, 0), UpperTorso = deg(-8, 70, 0), Head = deg(0, -48, 0), RightUpperLeg = deg(-30, 0, 0), RightLowerLeg = deg(8, 0, 0), LeftUpperLeg = deg(18, 0, 0), LeftLowerLeg = deg(-12, 0, 0) },
+	settle = 0.85,
+}
+ATTACKS.kingCut = {
+	cock = { LowerTorso = move(0, -0.15, 0.25, 0, -16, 0), UpperTorso = deg(6, -30, 0), Head = deg(0, 22, 0), RightUpperLeg = deg(8, 0, 0), RightLowerLeg = deg(-10, 0, 0) },
+	hit = { LowerTorso = move(0, -0.25, -0.7, -4, 20, 0), UpperTorso = deg(-14, 28, 0), Head = deg(4, -18, 0), RightUpperLeg = deg(-20, 0, 0), LeftUpperLeg = deg(18, 0, 0), LeftLowerLeg = deg(-20, 0, 0) },
+}
+ATTACKS.kingCleave = {
+	cock = { LowerTorso = move(0, -0.3, 0.35, 4, -12, 0), UpperTorso = deg(16, -20, 0), Head = deg(-6, 14, 0), RightUpperLeg = deg(14, 0, 0), RightLowerLeg = deg(-20, 0, 0), LeftUpperLeg = deg(-8, 0, 0) },
+	hit = { LowerTorso = move(0, -0.5, -1.0, -10, 16, 0), UpperTorso = deg(-30, 18, 0), Head = deg(12, -12, 0), RightUpperLeg = deg(-30, 0, 0), RightLowerLeg = deg(10, 0, 0), LeftUpperLeg = deg(28, 0, 0), LeftLowerLeg = deg(-34, 0, 0) },
+	settle = 0.9,
+}
+
+-- the grip paths: per attack kind, per hand, the fist's place (studs, the chest's axes: x right, y up, z back) and turn
+-- (degrees: yaw about up, + turns the weapon to its left; pitch about x, + lifts its point) AWAY FROM ITS REST hold
+export type GripPose = { p: Vector3, yaw: number?, pitch: number?, roll: number? }
+ZombieAnims.GRIPS = {
+	spearThrust = {
+		Right = { cock = { p = Vector3.new(0.12, 0.04, 0.7), yaw = -4, pitch = 3 }, hit = { p = Vector3.new(-0.3, 0.3, -1.7), yaw = 6, pitch = 6 } },
+	},
+	knightCleave = {
+		Right = { cock = { p = Vector3.new(0.55, 1.55, 0.75), yaw = -10, pitch = 118 }, hit = { p = Vector3.new(-0.9, -0.55, -0.7), yaw = 42, pitch = -48 } },
+	},
+	knightSweep = {
+		Right = { cock = { p = Vector3.new(0.9, 0.55, 0.55), yaw = -85, pitch = -4 }, hit = { p = Vector3.new(-0.85, 0.35, -0.75), yaw = 75, pitch = -6 } },
+	},
+	kingCut = {
+		Right = { cock = { p = Vector3.new(0.45, 1.5, 0.6), yaw = -6, pitch = 125 }, hit = { p = Vector3.new(-0.75, -0.35, -0.95), yaw = 40, pitch = -35 } },
+		Left = { cock = { p = Vector3.new(0.05, 0.1, -0.1) }, hit = { p = Vector3.new(0.15, 0, 0.3), yaw = 8 } },
+	},
+	kingCleave = {
+		Right = { cock = { p = Vector3.new(0.2, 1.8, 0.7), yaw = 0, pitch = 140 }, hit = { p = Vector3.new(-0.4, -0.7, -1.1), yaw = 20, pitch = -60 } },
+	},
+} :: { [string]: { [string]: { cock: GripPose, hit: GripPose } } }
+
+-- THE BLOCK (the King): the shield comes up across the front, the sword drawn back, the knees bend. Held while the
+-- server says "Guard".
+local BLOCK_BODY: Pose = { LowerTorso = move(0, -0.25, 0.1), UpperTorso = deg(-6, 14, 0), Head = deg(-6, -10, 0), RightUpperLeg = deg(16, 0, 0), RightLowerLeg = deg(-22, 0, 0), LeftUpperLeg = deg(-10, 0, 0), LeftLowerLeg = deg(-8, 0, 0) }
+ZombieAnims.BLOCK_GRIP = {
+	Left = { p = Vector3.new(0.45, 0.55, -0.4), yaw = -22, pitch = 6 },
+	Right = { p = Vector3.new(0.2, 0.25, 0.45), pitch = 18 },
+} :: { [string]: GripPose }
+ZombieAnims.BLOCK_IN = 0.14
+
+-- Which attack each type uses (a list: one is picked at each blow).
 local KIND: { [string]: string } = {
 	undead_shambler = "shove",
-	undead_crawler = "shove", -- the same reach, from the floor
+	undead_crawler = "grab", -- rearing up on its one arm (the first, legless crawler shoved like the shambler)
 	undead_runner = "lunge",
 	undead_brute_heavy = "overhead",
-	undead_spearman = "thrust",
+	undead_spearman = "spearThrust",
 	undead_archer = "draw",
 	undead_sentinel = "bash",
-	undead_knight = "sweep",
-	the_king = "bash",
-	the_huntsman = "thrust", -- the boar spear
+	undead_knight = "knightCleave",
+	the_king = "kingCut",
+	the_huntsman = "spearThrust", -- the boar spear
 }
+ZombieAnims.VARIANTS = {
+	undead_knight = { "knightCleave", "knightSweep" },
+} :: { [string]: { string } }
 
 local function attackFrames(a: Attack, W: number, S: number, R: number): { Frame }
 	local frames: { Frame } = {}
@@ -725,84 +813,224 @@ local function attackFrames(a: Attack, W: number, S: number, R: number): { Frame
 end
 
 --==========================================================================
--- Registering
+-- GRIP TRACKS: the weapon's path for an attack, keyed like attackFrames
+--==========================================================================
+export type GripKey = { time: number, ease: Ease, p: Vector3, yaw: number, pitch: number, roll: number }
+
+local function gp(g: GripPose?, f: number): GripKey
+	local p = g and g.p or Vector3.zero
+	return { time = 0, ease = "smooth", p = p * f, yaw = (g and g.yaw or 0) * f, pitch = (g and g.pitch or 0) * f, roll = (g and g.roll or 0) * f }
+end
+
+local function gmix(a: GripKey, b: GripKey, f: number): GripKey
+	return { time = 0, ease = "smooth", p = a.p:Lerp(b.p, f), yaw = a.yaw + (b.yaw - a.yaw) * f, pitch = a.pitch + (b.pitch - a.pitch) * f, roll = a.roll + (b.roll - a.roll) * f }
+end
+
+-- The grip keys of attack `kind` for each hand that has a path, at the server's timings.
+function ZombieAnims.gripTrack(kind: string, t: Timing): { [string]: { GripKey } }?
+	local spec = ZombieAnims.GRIPS[kind]
+	local a = ATTACKS[kind]
+	if not spec or not a then
+		return nil
+	end
+	local W, S, R = t.windup, t.strike, t.recover
+	local out = {}
+	for side, g in spec do
+		local zero, cock, hit = gp(nil, 0), gp(g.cock, 1), gp(g.hit, 1)
+		local keys: { GripKey } = {}
+		local function add(time: number, ease: Ease, k: GripKey)
+			k.time, k.ease = time, ease
+			table.insert(keys, k)
+		end
+		add(0, "smooth", gp(nil, 0))
+		add(W * 0.18, "out", gp(g.hit, 0.16))
+		add(W * 0.74, "smooth", gp(g.cock, 1))
+		add(W, "flat", gp(g.cock, 1))
+		add(W + S, "in", gp(g.hit, 1))
+		local settle = a.settle or 1
+		add(W + S + R * 0.35 * settle, "out", gmix(hit, cock, 0.16))
+		add(W + S + R * settle, "smooth", zero)
+		if settle < 1 then
+			add(W + S + R, "flat", gp(nil, 0))
+		end
+		out[side] = keys
+	end
+	return out
+end
+
+-- The grip at `t` seconds along a track (holding the last key after its end).
+function ZombieAnims.sampleGrip(ClipPlayer: any, keys: { GripKey }, t: number): (Vector3, number, number, number)
+	local n = #keys
+	if n == 0 then
+		return Vector3.zero, 0, 0, 0
+	end
+	if t <= keys[1].time then
+		local k = keys[1]
+		return k.p, k.yaw, k.pitch, k.roll
+	end
+	for i = 1, n - 1 do
+		local a, b = keys[i], keys[i + 1]
+		if t < b.time then
+			local span = b.time - a.time
+			local f = if span > 0 then ClipPlayer.ease(b.ease, (t - a.time) / span) else 1
+			return a.p:Lerp(b.p, f), a.yaw + (b.yaw - a.yaw) * f, a.pitch + (b.pitch - a.pitch) * f, a.roll + (b.roll - a.roll) * f
+		end
+	end
+	local k = keys[n]
+	return k.p, k.yaw, k.pitch, k.roll
+end
+
+--==========================================================================
+-- HOLDS: what the arms of a body that carries a weapon do while it stands and walks
+--==========================================================================
+--[[
+	A body that holds a weapon (STYLE below) walks and idles with clips that leave its arms alone, and its arms play its
+	HOLD instead: the weapon carried at the ready, breathing with the body, the point wandering a little. The rest pose
+	(the weapon in the hands) is baked into the body's joints (tools/zombie/Arms), so a hold is small deltas.
+]]
+local function holdFrames(style: string): { Frame }
+	local S = 1.6
+	local function f(t: number, a: number, b: number, c: number): Frame
+		local pose: Pose = {
+			RightUpperArm = deg(a, 0, b * 0.5),
+			RightLowerArm = deg(b, 0, 0),
+			LeftUpperArm = deg(-a * 0.6, 0, -b * 0.4),
+			LeftLowerArm = deg(c, 0, 0),
+		}
+		if style == "spear" then
+			-- the point weaves: a hunter's spear, never quite still
+			pose.RightHand = deg(c * 0.5, a * 0.6, 0)
+		elseif style == "sword2h" or style == "sword" then
+			pose.RightHand = deg(-a * 0.5, 0, c * 0.4)
+		end
+		return { time = t, ease = "smooth", pose = pose }
+	end
+	return {
+		f(0, 0, 0, 0),
+		f(S * 0.5, 2.5 * S, -2, 1.5),
+		f(S, -1, 1.5, -1),
+		f(S * 1.5, 3, -1, 2),
+		f(S * 2, 0, 0, 0),
+	}
+end
+
+-- How each type holds what it holds (nil: empty hands, its arms swing with the walk).
+--   hold     the HOLD clip its arms play
+--   twoHands the other hand is put on the weapon every frame (ZombieAnimController): the weapon's second grip is an
+--            Attachment called "Grip2"
+ZombieAnims.STYLE = {
+	undead_spearman = { hold = "spear", twoHands = "Left" },
+	the_huntsman = { hold = "spear", twoHands = "Left" },
+	undead_knight = { hold = "sword2h", twoHands = "Left" },
+	the_king = { hold = "sword" },
+	undead_sentinel = { hold = "sword" },
+	undead_archer = { hold = "bow" },
+	undead_brute_heavy = { hold = "tool" },
+} :: { [string]: { hold: string, twoHands: string? } }
+
+--==========================================================================
+-- Building (ClipPlayer clips: played by writing the joints' Transform, so they play in the published game too)
 --==========================================================================
 export type Timing = { windup: number, strike: number, recover: number }
 
-export type Ids = {
-	idle: string,
-	walk: { string },
-	run: string,
-	aggro: string,
-	flinch: string,
-	stumble: string,
-	crawl: string, -- a crawler's walk and run alike
-	crawlDeath: string,
-	death: { string },
-	attack: { [string]: string }, -- by kind
+export type Set = {
+	idle: any,
+	idleArmed: any,
+	walk: { any },
+	walkArmed: { any },
+	run: any,
+	runArmed: any,
+	aggro: any,
+	flinch: any,
+	stumble: any,
+	crawl: any, -- the first (legless) crawler: its walk and run alike
+	crawlDeath: any,
+	crawl2: any, -- the second crawler (CrawlerVersion 2)
+	crawl2Idle: any,
+	crawlDeath2: any,
+	death: { any },
+	attack: { [string]: any }, -- by kind
+	grips: { [string]: { [string]: { GripKey } }? }, -- by kind: the weapon's path, per hand
+	hold: { [string]: any }, -- by style
 	kindOf: { [string]: string }, -- by enemy type
 	length: { [string]: number }, -- seconds, by kind
 }
 
--- Kept alive for the session (see SwordAnims.register for why).
-local registered: { KeyframeSequence } = {}
-
-local function register(seq: KeyframeSequence): string
-	local ok, result = pcall(function()
-		return KeyframeSequenceProvider:RegisterKeyframeSequence(seq)
-	end)
-	if not ok or typeof(result) ~= "string" or result == "" then
-		error("could not register " .. seq.Name .. ": " .. tostring(result))
+local function strip(frames: { Frame }, bones: { string }): { Frame }
+	for _, fr in frames do
+		for _, b in bones do
+			fr.pose[b] = nil
+		end
 	end
-	table.insert(registered, seq)
-	return result
+	return frames
 end
 
---[[
-	Builds and registers the whole set. \`timings\` is by ATTACK KIND (not by enemy
-	type): { windup, strike, recover }, so the clip lasts exactly as long as the
-	server's attack does. A kind with no entry gets a sensible default.
+local ARMS = { "RightUpperArm", "LeftUpperArm", "RightLowerArm", "LeftLowerArm", "RightHand", "LeftHand" }
 
-	Returns nil and the reason if the engine will not register.
+--[[
+	Builds the whole set as ClipPlayer clips. `timings` is by ATTACK KIND: { windup, strike, recover }, so an attack clip
+	lasts exactly as long as the server's attack does. `ClipPlayer` is handed in (Shared/Anim/ClipPlayer).
 ]]
-function ZombieAnims.register(timings: { [string]: Timing }): (Ids?, string?)
-	local ok, result = pcall(function()
-		local P = Enum.AnimationPriority
-		local ids: Ids = {
-			idle = register(build("ZombieIdle", idleFrames(), true, P.Idle)),
-			walk = {},
-			run = register(build("ZombieRun", gaitFrames(RUN), true, P.Movement)),
-			aggro = register(build("ZombieAggro", aggroFrames(), false, P.Action)),
-			flinch = register(build("ZombieFlinch", flinchFrames(), false, P.Action2)),
-			stumble = register(build("ZombieStumble", stumbleFrames(), false, P.Action)),
-			crawl = register(build("ZombieCrawl", crawlFrames(), true, P.Movement)),
-			crawlDeath = register(build("ZombieCrawlDeath", crawlDeathFrames(), false, P.Action4)),
-			death = {
-				register(build("ZombieDeathForward", deathForward(), false, P.Action4)),
-				register(build("ZombieDeathBack", deathBackward(), false, P.Action4)),
-				register(build("ZombieDeathKneel", deathKneel(), false, P.Action4)),
-			},
-			attack = {},
-			kindOf = KIND,
-			length = {},
-		}
-		for i, g in WALKS do
-			table.insert(ids.walk, register(build("ZombieWalk" .. i, gaitFrames(g), true, P.Movement)))
-		end
-		for kind, a in ATTACKS do
-			local t = timings[kind] or { windup = 0.8, strike = 0.15, recover = 0.6 }
-			local frames = attackFrames(a, t.windup, t.strike, t.recover)
-			ids.attack[kind] = register(build("ZombieAttack_" .. kind, frames, false, P.Action))
-			ids.length[kind] = frames[#frames].time
-		end
-		return ids
-	end)
-	if not ok then
-		return nil, tostring(result)
+function ZombieAnims.build(ClipPlayer: any, timings: { [string]: Timing }): Set
+	local function clip(name: string, frames: { Frame }, looped: boolean)
+		return ClipPlayer.clip(name, frames, looped)
 	end
-	return result :: Ids, nil
+	local set: Set = {
+		idle = clip("ZombieIdle", idleFrames(), true),
+		idleArmed = clip("ZombieIdleArmed", strip(idleFrames(), ARMS), true),
+		walk = {},
+		walkArmed = {},
+		run = clip("ZombieRun", gaitFrames(RUN), true),
+		runArmed = clip("ZombieRunArmed", gaitFrames(RUN, true), true),
+		aggro = clip("ZombieAggro", aggroFrames(), false),
+		flinch = clip("ZombieFlinch", flinchFrames(), false),
+		stumble = clip("ZombieStumble", stumbleFrames(), false),
+		crawl = clip("ZombieCrawl", crawlFrames(), true),
+		crawlDeath = clip("ZombieCrawlDeath", crawlDeathFrames(), false),
+		crawl2 = clip("ZombieCrawl2", crawl2Frames(), true),
+		crawl2Idle = clip("ZombieCrawl2Idle", crawl2IdleFrames(), true),
+		crawlDeath2 = clip("ZombieCrawlDeath2", crawlDeath2Frames(), false),
+		death = {
+			clip("ZombieDeathForward", deathForward(), false),
+			clip("ZombieDeathBack", deathBackward(), false),
+			clip("ZombieDeathKneel", deathKneel(), false),
+		},
+		attack = {},
+		grips = {},
+		hold = {},
+		kindOf = KIND,
+		length = {},
+	}
+	for i, g in WALKS do
+		table.insert(set.walk, clip("ZombieWalk" .. i, gaitFrames(g), true))
+		table.insert(set.walkArmed, clip("ZombieWalkArmed" .. i, gaitFrames(g, true), true))
+	end
+	for kind, a in ATTACKS do
+		local t = timings[kind] or { windup = 0.8, strike = 0.15, recover = 0.6 }
+		local frames = attackFrames(a, t.windup, t.strike, t.recover)
+		set.attack[kind] = clip("ZombieAttack_" .. kind, frames, false)
+		set.length[kind] = frames[#frames].time
+		set.grips[kind] = ZombieAnims.gripTrack(kind, t)
+	end
+	-- the block: into the guard and held there
+	set.attack.block = clip("ZombieBlock", {
+		{ time = 0, ease = "smooth", pose = rest(BLOCK_BODY) },
+		{ time = ZombieAnims.BLOCK_IN, ease = "out", pose = BLOCK_BODY },
+		{ time = ZombieAnims.BLOCK_IN + 0.01, ease = "flat", pose = BLOCK_BODY },
+	}, false)
+	for _, style in { "spear", "sword2h", "sword", "bow", "tool" } do
+		set.hold[style] = clip("ZombieHold_" .. style, holdFrames(style), true)
+	end
+	return set
+end
+
+-- The raw frames of an attack kind at given timings (tools/zombie/PoseLab photographs them).
+function ZombieAnims.attackFrames(kind: string, t: Timing): { Frame }?
+	local a = ATTACKS[kind]
+	return if a then attackFrames(a, t.windup, t.strike, t.recover) else nil
 end
 
 ZombieAnims.KIND = KIND
+ZombieAnims.ATTACKS = ATTACKS
 
 return ZombieAnims

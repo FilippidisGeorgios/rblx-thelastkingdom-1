@@ -666,6 +666,20 @@
         "tools/zombie/Bones.luau"
       ],
       "note": "Skeletal forearm + hand, R and L (4 meshes, 724 and 2120 tris). Uploaded 2026-11-14 to group 32361153 as a Model. The importer turns a glTF half a turn about Y: Bones.luau undoes it (RY180)."
+    },
+    {
+      "name": "arms_v1",
+      "class": "model",
+      "id": "rbxassetid://97989313596909",
+      "source": {
+        "tool": "Blender (tools/blender/make_arms.py)"
+      },
+      "licence": "own",
+      "file": "assets/Models/arms/arms.glb",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "spear, boar spear, knight sword, king sword, heater shield, crown, antler; markers M0/MX/MY per item; 2026-11-14"
     }
   ]
 }

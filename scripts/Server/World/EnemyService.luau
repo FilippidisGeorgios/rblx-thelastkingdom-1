@@ -129,7 +129,7 @@ end
 	AI moves it with PivotTo exactly as it moved the box. Its look is animated on
 	each client from the attributes the AI writes (see ZombieAnimController).
 ]]
-local function buildBody(def: any): (Model?, Humanoid?)
+local function buildBody(def: any, enemyId: string?): (Model?, Humanoid?)
 	local names = def.Body
 	if typeof(names) ~= "table" or #names == 0 then
 		return nil, nil
@@ -150,10 +150,14 @@ local function buildBody(def: any): (Model?, Humanoid?)
 	-- One of three gaits, kept for life, so a crowd has no synchronised footfalls.
 	model:SetAttribute("Variant", math.random(1, 3))
 	model:SetAttribute("HitCount", 0)
+	-- the UNIT it is (a crawler wears a shambler's body, whose own "Type" says shambler): the clients pick its moves by this
+	if enemyId then
+		model:SetAttribute("Unit", enemyId)
+	end
 	if def.Cured then
 		livingTint(model)
 	end
-	-- no legs: it drags itself along on its arms (a body made at spawn from a standing one)
+	-- a crawler: laid on the floor, the right forearm gone, made at spawn from a standing body (Domain/CrawlerBody)
 	if def.Crawler then
 		CrawlerBody.make(model)
 	end
@@ -172,7 +176,7 @@ function EnemyService.spawn(enemyId: string, position: Vector3, healthMult: numb
 	local def = enemies[enemyId]
 	assert(def, "Unknown enemy id: " .. tostring(enemyId))
 
-	local bodyModel, bodyHumanoid = buildBody(def)
+	local bodyModel, bodyHumanoid = buildBody(def, enemyId)
 	local model: Model, humanoid: Humanoid
 	if bodyModel and bodyHumanoid then
 		model, humanoid = bodyModel, bodyHumanoid
@@ -240,7 +244,7 @@ function EnemyService.spawnStatic(enemyId: string, position: Vector3, facing: Ve
 	if not def then
 		return nil
 	end
-	local model = buildBody(def)
+	local model = buildBody(def, enemyId)
 	if not model then
 		return nil
 	end

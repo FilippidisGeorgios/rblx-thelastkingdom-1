@@ -198,8 +198,9 @@ local function seats(joint: any): (CFrame?, CFrame?)
 end
 
 -- The joints of an R15 body by the part they move (Motor6D or AnimationConstraint). Nil until the body has its torso
--- and both hips (a body still streaming in).
-function ClipPlayer.rig(character: Model): Rig?
+-- and both hips (a body still streaming in). `legless`: a body made without legs on purpose (a crawler that lost them)
+-- needs only its torso.
+function ClipPlayer.rig(character: Model, legless: boolean?): Rig?
 	local joints: { [string]: any } = {}
 	local a0: { [string]: CFrame } = {}
 	local a1: { [string]: CFrame } = {}
@@ -218,7 +219,7 @@ function ClipPlayer.rig(character: Model): Rig?
 			end
 		end
 	end
-	if not (joints.LowerTorso and joints.UpperTorso and joints.RightUpperLeg and joints.LeftUpperLeg) then
+	if not (joints.LowerTorso and joints.UpperTorso and (legless or (joints.RightUpperLeg and joints.LeftUpperLeg))) then
 		return nil
 	end
 	return { joints = joints, a0 = a0, a1 = a1, character = character, count = count, complete = count == total }

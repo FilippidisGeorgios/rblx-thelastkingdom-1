@@ -6,19 +6,19 @@
 	"The King" so there is no doubt who this is; what he fights WITH changes as he loses health, and each
 	change is a thing the player has to answer.
 
-	  1. THE CROWNED (100 to 66%)   shield on the arm and the arming sword. Walks down the Steps and
-	                                presses with the sword's bash. At 80% he raises a horn and the guard
-	                                answers: two spearmen out of the dark at the edge of the court.
-	  2. THE ARCHER KING (66 to 33%) the shield goes to his back, the great bow into his hand. He leaps back
-	                                up the Steps to the landing and rains arrows on the court: a ring of pale
-	                                frost on the ground shows where each one will land, a second and a bit
-	                                before it does; and every second volley is an aimed shot, through the
-	                                cover that you thought was safe. Climb the Steps at him and he sidesteps
-	                                across the landing.
-	  3. THE HOLLOW (33 to 0%)       the power under the castle takes over: the seams of the armour open on
-	                                a cold light, the shield falls off his back, the bow is gone, the sword
-	                                is two-handed and he is faster; and rings of frost spread over the court
-	                                that slow whoever stands in them.
+	  1. THE CROWNED (100 to 66%)   the bordeaux shield on his arm and a sharp sword with a cold light on it.
+	                                Walks down the Steps and cuts. He DEFENDS: when you come at him from the
+	                                front the shield comes up and a blow on it does almost nothing (GUARD):
+	                                go round him, or wait for the cut and answer it. At 80% he raises his
+	                                voice and the guard answers: two spearmen out of the dark.
+	  2. THE COLD COURT (66 to 33%) he raises the sword and the cold falls on the court: a ring of pale frost
+	                                on the ground shows where the ice will come down, a second and a bit
+	                                before it does. He fights on with sword and shield between. (Until
+	                                2026-11-14 this was the Archer King with a great bow: the developer took
+	                                the bow away.)
+	  3. THE HOLLOW (33 to 0%)       the power under the castle takes over: the shield cracks and falls, the
+	                                sword is in both hands, he is faster, and rings of frost spread over the
+	                                court that slow whoever stands in them.
 
 	THE PHASES CANNOT BE SKIPPED. `KingFloor` on the model is the health he cannot be hurt below in the
 	current face (a combat modifier clamps every blow to it), and while he changes face he is `KingGuard`ed
@@ -60,14 +60,22 @@ local King = {}
 local rng = Random.new()
 
 local PIVOT_ABOVE_FLOOR = 2.5
-local SETS = { "SwordSet", "ShieldArm", "ShieldBack", "BowSet", "GreatSet" }
+local SETS = { "SwordSet", "ShieldArm" }
 
--- The sets of arms he shows, per face.
+-- The sets of arms he shows, per face (the shield is dropped, not hidden, when the Hollow comes).
 local FACES = {
 	crowned = { SwordSet = true, ShieldArm = true },
-	archer = { ShieldBack = true, BowSet = true },
-	hollow = { GreatSet = true },
+	archer = { SwordSet = true, ShieldArm = true },
+	hollow = { SwordSet = true },
 }
+
+-- THE GUARD: how he defends with the shield (2026-11-14)
+local GUARD_FRONT = 0.3 -- a blow from within this much of straight ahead (the dot of the two directions) meets the shield
+local GUARD_TAKES = 0.15 -- what of a blow on the raised shield gets through
+local GUARD_SECONDS = 1.5 -- how long the shield stays up
+local GUARD_REST = 2.2 -- seconds before it comes up again on its own
+local GUARD_NEAR = 11 -- he raises it when a living player comes this close in front of him
+local RAIN_EVERY = 6.5 -- the Cold Court: seconds between the falls of ice
 
 --==========================================================================
 -- the pipeline modifier: a face cannot be skipped, and a guarded body takes nothing
@@ -87,6 +95,18 @@ local function registerModifier()
 		if model:GetAttribute("KingGuard") == true then
 			context.blocked = true
 			return
+		end
+		-- the shield: a blow from in front, while it is up, mostly glances off
+		local source = context.source
+		local from = source and source.model
+		if model:GetAttribute("Guard") == true and from and from:IsA("Model") then
+			local at = model:GetPivot()
+			local d = from:GetPivot().Position - at.Position
+			local flat = Vector3.new(d.X, 0, d.Z)
+			if flat.Magnitude > 1e-3 and at.LookVector:Dot(flat.Unit) >= GUARD_FRONT then
+				context.amount = context.amount * GUARD_TAKES
+				model:SetAttribute("GuardHits", ((model:GetAttribute("GuardHits") :: number?) or 0) + 1)
+			end
 		end
 		local room = context.target.health.current - (model:GetAttribute("KingFloor") :: number)
 		if room <= 0 then
@@ -126,7 +146,7 @@ local function showFace(model: Model, face: string)
 	for _, name in SETS do
 		setSet(model, name, on[name] == true)
 	end
-	model:SetAttribute("AttackKind", if face == "crowned" then "bash" elseif face == "archer" then "draw" else "sweep")
+	model:SetAttribute("AttackKind", if face == "hollow" then "kingCleave" else "kingCut")
 end
 
 local function lightSeams(model: Model, lit: boolean, seconds: number)
@@ -218,6 +238,9 @@ function King.create(ctx: any, def: any)
 	local banked = 0
 	local nextFrostAt = 0
 	local bar: Frame? = nil
+	local guardUntil = 0 -- the shield is up until then
+	local guardRest = 0 -- and may not come up on its own before then
+	local nextRainAt = 0
 
 	local function ignoreList(): { Instance }
 		return if model then { model } else {}
@@ -351,7 +374,13 @@ function King.create(ctx: any, def: any)
 			detection = 400,
 			leash = 400,
 		})
-		EnemyAIService.setHooks(kingId :: string, nil)
+		-- a cut drops the shield for as long as it takes
+		EnemyAIService.setHooks(kingId :: string, {
+			windup = function()
+				m:SetAttribute("Guard", false)
+				guardUntil = 0
+			end,
+		})
 		EnemyAIService.hold(kingId :: string, false)
 		ctx.progress(1, 3)
 	end
@@ -440,7 +469,7 @@ function King.create(ctx: any, def: any)
 	local function onArcherWindup(_: string, target: any)
 		volleyCount += 1
 		plannedVolley = {}
-		if volleyCount % 2 == 1 then
+		if true then -- every fall is marked (the aimed arrow went with the bow)
 			-- the marked rain: every living player within 100, predicted a second ahead
 			for _, info in livingPlayers() do
 				if (info.root.Position - (model :: Model):GetPivot().Position).Magnitude <= 110 then
@@ -457,7 +486,7 @@ function King.create(ctx: any, def: any)
 	local function onArcherStrike(_: string, target: any, selfPos: Vector3)
 		local volley = plannedVolley
 		plannedVolley = {}
-		if #volley > 0 then
+		if #volley > 0 or true then
 			for _, v in volley do
 				task.spawn(function()
 					arrowFalls(v.at)
@@ -471,8 +500,8 @@ function King.create(ctx: any, def: any)
 			end
 			return
 		end
-		-- the aimed shot, through whatever is in the way (cover is real: it can stop this one)
-		local r = Config.get("Enemies")[def.enemy].Ranged
+		-- (the aimed arrow went with the bow, 2026-11-14)
+		local r = nil and Config.get("Enemies")[def.enemy].Ranged
 		if target and target.model and r then
 			local targetPos = (target.model :: Model):GetPivot().Position
 			ProjectileService.fire({
@@ -514,30 +543,34 @@ function King.create(ctx: any, def: any)
 		m:SetAttribute("KingGuard", true)
 		EnemyAIService.hold(id, true)
 		EnemyAIService.setHooks(id, nil)
-		ctx.note("He withdraws. The shield goes to his back, and he is going for the bow.", 5)
+		ctx.note("He lifts the sword over his head. The cold in the stones comes up through the court.", 5)
 		cry(0.9)
 		showFace(m, "archer")
-		-- back up the Steps in one leap
-		leap(landingFeet, 1.3, 14)
 		m:SetAttribute("KingFloor", maxHealth * (1 / 3) + 1)
 		EnemyAIService.tune(id, {
-			ranged = true,
+			ranged = false,
 			meleeRange = 0,
-			attackRange = 105,
+			attackRange = 9,
 			minRange = 0,
-			moveSpeed = 8,
-			attackCooldown = 3.0,
+			moveSpeed = 12,
+			attackDamage = 48,
+			attackCooldown = 1.7,
 			windup = 0.9,
-			strike = 0.1,
-			recover = 0.5,
-			spawnPosition = landingFeet,
+			strike = 0.2,
+			recover = 0.8,
 		})
-		EnemyAIService.setHooks(id, { windup = onArcherWindup, strike = onArcherStrike })
+		EnemyAIService.setHooks(id, {
+			windup = function()
+				m:SetAttribute("Guard", false)
+				guardUntil = 0
+			end,
+		})
 		EnemyAIService.hold(id, false)
 		m:SetAttribute("KingGuard", false)
 		transitioning = false
+		nextRainAt = os.clock() + 2.5
 		ctx.progress(2, 3)
-		ctx.note("Where the pale rings are, the arrows will be. Move.", 5)
+		ctx.note("Where the pale rings are, the ice will fall. Move.", 5)
 	end
 
 	--======================================================================
@@ -631,11 +664,45 @@ function King.create(ctx: any, def: any)
 		cry(1.0)
 		lightSeams(m, true, 1.6)
 		showFace(m, "hollow")
-		-- the shield on his back drops and is left
-		local old = m:FindFirstChild("ShieldBack")
+		-- the shield cracks and falls from his arm, and is left where it lies
+		m:SetAttribute("Guard", false)
+		local old = m:FindFirstChild("ShieldArm")
 		if old then
-			local at = m:GetPivot().Position
-			puff(ctx.folder, at, 22, 8)
+			puff(ctx.folder, m:GetPivot().Position, 22, 8)
+			old.Parent = ctx.folder
+			for _, d in old:GetDescendants() do
+				if d:IsA("JointInstance") or d:IsA("WeldConstraint") then
+					d:Destroy()
+				end
+			end
+			local handle = old:FindFirstChild("Handle")
+			if handle and handle:IsA("BasePart") then
+				for _, d in old:GetDescendants() do
+					if d:IsA("BasePart") then
+						if d ~= handle then
+							local w = Instance.new("WeldConstraint")
+							w.Part0 = handle
+							w.Part1 = d
+							w.Parent = d
+						end
+						d.Anchored = false
+						d.Massless = false
+						d.CanCollide = d.Name == "Shield_Face"
+					end
+				end
+				handle.AssemblyLinearVelocity = m:GetPivot().LookVector * -6 + Vector3.new(0, 4, 0)
+			end
+			task.delay(40, function()
+				old:Destroy()
+			end)
+		end
+		-- the cold in the blade burns brighter
+		for _, d in m:GetDescendants() do
+			if d:IsA("ParticleEmitter") and d.Name == "SwordCold" then
+				d.Rate = d.Rate * 2.5
+			elseif d:IsA("PointLight") and d.Name == "SwordGlow" then
+				d.Brightness = d.Brightness * 2
+			end
 		end
 		-- down the Steps to meet whoever is nearest
 		local nearest: PlayerInfo? = nil
@@ -701,29 +768,37 @@ function King.create(ctx: any, def: any)
 			end
 		end
 		lightSeams(m, false, 3)
-		-- the crown breaks: two points fall away and the band darkens
-		local points = {}
-		for _, d in m:GetDescendants() do
-			if d:IsA("BasePart") and d.Name == "CrownPoint" then
-				table.insert(points, d)
-			elseif d:IsA("BasePart") and d.Name == "CrownBand" then
-				TweenService:Create(d, TweenInfo.new(2), { Color = Color3.fromRGB(96, 84, 52) }):Play()
-			end
-		end
-		for i = 1, math.min(2, #points) do
-			local p = points[i]
-			p.Parent = Workspace
-			p.Anchored = false
-			p.CanCollide = true
-			p.Massless = false
-			for _, w in p:GetChildren() do
-				if w:IsA("WeldConstraint") then
-					w:Destroy()
+		-- the crown slips from his head and rolls on the stones, and its gold goes dull
+		local crown = m:FindFirstChild("Crown")
+		if crown then
+			crown.Parent = ctx.folder
+			local handle = crown:FindFirstChild("Handle")
+			for _, d in crown:GetDescendants() do
+				if d:IsA("JointInstance") then
+					d:Destroy()
 				end
 			end
-			p.AssemblyLinearVelocity = Vector3.new(rng:NextNumber(-4, 4), 6, rng:NextNumber(-4, 4))
-			task.delay(30, function()
-				p:Destroy()
+			for _, d in crown:GetDescendants() do
+				if d:IsA("BasePart") then
+					if handle and d ~= handle then
+						local w = Instance.new("WeldConstraint")
+						w.Part0 = handle :: BasePart
+						w.Part1 = d
+						w.Parent = d
+					end
+					d.Anchored = false
+					d.Massless = false
+					d.CanCollide = d.Name == "Crown_Band"
+					if d.Name == "Crown_Band" then
+						TweenService:Create(d, TweenInfo.new(2.5), { Color = Color3.fromRGB(110, 92, 58), Reflectance = 0 }):Play()
+					end
+				end
+			end
+			if handle and handle:IsA("BasePart") then
+				handle.AssemblyLinearVelocity = Vector3.new(rng:NextNumber(-3, 3), 5, rng:NextNumber(-3, 3))
+			end
+			task.delay(60, function()
+				crown:Destroy()
 			end)
 		end
 		puff(ctx.folder, m:GetPivot().Position + Vector3.new(0, 2, 0), 30, 8, Color3.fromRGB(150, 130, 100))
@@ -895,11 +970,36 @@ function King.create(ctx: any, def: any)
 					end
 					return
 				end
-				if face == "archer" and not transitioning and now - lastSidestep > 5.5 then
-					for _, info in livingPlayers() do
-						if (info.root.Position - m:GetPivot().Position).Magnitude <= 11 then
-							task.spawn(sidestep)
-							break
+				-- the cold falls on the court (the second face)
+				if face == "archer" and not transitioning and now >= nextRainAt then
+					nextRainAt = now + RAIN_EVERY
+					task.spawn(function()
+						onArcherWindup("", nil)
+						task.wait(1.15)
+						if face == "archer" and not finished then
+							onArcherStrike("", nil, m:GetPivot().Position)
+						end
+					end)
+				end
+				-- the shield: up when someone comes at him from the front, down when he cuts or the time is out
+				if (face == "crowned" or face == "archer") and not transitioning then
+					local state = m:GetAttribute("State")
+					local busy = state == "Windup" or state == "Strike" or state == "Recover"
+					if m:GetAttribute("Guard") == true then
+						if busy or now >= guardUntil then
+							m:SetAttribute("Guard", false)
+							guardRest = now + GUARD_REST
+						end
+					elseif not busy and now >= guardRest then
+						local at = m:GetPivot()
+						for _, info in livingPlayers() do
+							local d = info.root.Position - at.Position
+							local flat = Vector3.new(d.X, 0, d.Z)
+							if flat.Magnitude <= GUARD_NEAR and flat.Magnitude > 1e-3 and at.LookVector:Dot(flat.Unit) >= GUARD_FRONT then
+								m:SetAttribute("Guard", true)
+								guardUntil = now + GUARD_SECONDS
+								break
+							end
 						end
 					end
 				end
