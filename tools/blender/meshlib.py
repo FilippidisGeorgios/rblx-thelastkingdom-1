@@ -201,3 +201,37 @@ def point(name, at, mat):
     for v in bm.verts:
         v.co = B((v.co.x + at[0], v.co.z + at[1], v.co.y + at[2]))
     new_obj(name, bm, mat)
+
+
+def section_loft(sections):
+    """sections: list of (x, [(y, z) ...]) rings with the same count, Roblox axes; ends capped."""
+    bm = bmesh.new()
+    rings = [[bm.verts.new(B((x, y, z))) for (y, z) in pts] for x, pts in sections]
+    n = len(sections[0][1])
+    for i in range(len(rings) - 1):
+        for k in range(n):
+            a, b = rings[i][k], rings[i][(k + 1) % n]
+            c, d = rings[i + 1][(k + 1) % n], rings[i + 1][k]
+            if len({a, b, c, d}) == 4:
+                bm.faces.new((a, b, c, d))
+    bm.faces.new(list(reversed(rings[0])))
+    bm.faces.new(rings[-1])
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+
+def blade(x0, x1, width_fn, thick_fn, fuller_fn=None, n=28):
+    """A blade along X: half-width w(u) (the edges, along Y), half-thickness t(u), optional fuller depth f(u)."""
+    secs = []
+    for i in range(n + 1):
+        u = i / n
+        x = x0 + (x1 - x0) * u
+        w = max(width_fn(u), 0.002)
+        t = max(thick_fn(u), 0.0015)
+        f = fuller_fn(u) if fuller_fn else 0.0
+        mid = t * (1 - f)
+        pts = [(w, 0), (0.55 * w, 0.82 * t), (0.2 * w, t), (0.0, mid), (-0.2 * w, t), (-0.55 * w, 0.82 * t),
+               (-w, 0), (-0.55 * w, -0.82 * t), (-0.2 * w, -t), (0.0, -mid), (0.2 * w, -t), (0.55 * w, -0.82 * t)]
+        secs.append((x, pts))
+    return section_loft(secs)

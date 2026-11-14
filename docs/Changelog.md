@@ -1,3 +1,62 @@
+## Version 0.48.0 — The dead move in the published game, hands that close on what they hold, the King and the Hollow Knight remade, the gate at the loading screen
+
+What the developer asked for (2026-11-14): fingers that touch exactly what a zombie holds; the crawlers more upright, the right
+arm cut off and bloody, the left shorter and reaching, one pull at a time, no pole in the hand; the spearman's pole shorter, real,
+held right, with a good animation; the Hollow Knight's sword smaller, all his clothing off, far more realistic armour of many small
+pieces and a frightening helm; the King without a bow, a head the crown sits on exactly, a taller thinner crown, no armour, a
+brown overcoat with gold and a little white, a cape exactly his height, cloth that moves when he moves, a realistic bordeaux shield
+he defends with and a sharp sword with an effect; the Huntsman's horns real and darker, his spear a little shorter and real; very
+quiet sounds (a hit, the night, a sword drawn); the camera fixed in full screen with the mouse held, no field-of-view setting, the
+weapons out of the player's way (the bow to the right on his own screen); the loading screen with players loaded of the party, a
+30-second gate, 7 seconds for the assets once everyone is in, a late player joining the intro where the others are, no one in
+after 2 minutes into the first area, and a much richer, darker picture.
+
+- **The dead finally move in the published game.** Their clips were KeyframeSequences registered with KeyframeSequenceProvider,
+  whose ids "cannot be used outside of Studio": in the live game they stood still. `ZombieAnimController` now plays them with
+  `ClipPlayer` (the joints' Transform at PreSimulation, as the player's body since 0.45): layers (base, hold, action,
+  overlays), every frame within 55 studs, every second within 105, every third to 170.
+- **Hands that hold** (`tools/zombie/Grip`): the fingers are rebuilt in three phalanges round the haft, every one laid on a line
+  tangent to the haft (touching it at one line: no gap, not inside); measured 0.007 studs from the shaft's axis line to the fist.
+  `tools/zombie/Hold` + new `Shared/Anim/ArmIK` bake the arms so the fist is exactly on the grip (`ClipPlayer.reach` is written
+  for the square player body and missed by a third of a stud on the dead). At runtime the second hand of a two-handed weapon is
+  put on its `Grip2` every frame, so it stays on the haft through any clip.
+- **Weapon attacks by path**: a spear thrust, the knight's cleave and sweep, the King's cut and two-handed cleave are written as
+  the WEAPON's path in the chest's space (`ZombieAnims.GRIPS`); the arm is solved to it each frame. The King's block lifts the
+  shield across his front (`Guard`).
+- **The second crawler** (`Domain/CrawlerBody`): legs on the floor, chest up, head looking up at you, the right arm cut above the
+  elbow (a dark wound, the bone, a slow drip), the left forearm shorter and held up toward you; it crawls one pull at a time (the
+  body stays while the hand reaches, then lurches up to it), speed 6 (a walking player is 16); its own grab; no ladle.
+- **Real arms from Blender** (`tools/blender/make_arms.py`, asset arms_v1): a 7.6-stud spear, a boar spear, a hand-and-a-half
+  sword, the King's arming sword (gilded cross, gold-wire grip, star pommel; a cold trail, frost motes and a faint light), a bordeaux
+  heater shield with a gold rim, rivets and the star in relief, a crown made to the King's head (24 radii measured round it: the
+  rim rests on the head), an antler.
+- **The King and the Hollow Knight remade** (`tools/blender/make_garb.py`, asset garb_v1; `tools/zombie/Garb`, `Outfit`): the King
+  in a brown wool coat with gold braid and buttons, ermine collar and cuffs, a belt, an eight-panel skirt and a six-strip bordeaux
+  cape (cloth on joints, swayed by springs from his motion: the cape streams back as he walks and swings on a turn); the knight in
+  blackened plate (cuirass with a keel, plackart, gorget, faulds, tassets, pauldrons, couters, vambraces, cuisses, poleyns,
+  greaves, sabatons), a bascinet with a hound-skull visor whose eye slits glow cold, a mail aventail; his clothing gone.
+- **The King's fight** (`Trial/King`): no bow; the shield comes up when someone comes at him from the front and a blow on it does
+  15%; the second face rains ice on marked rings instead of arrows; in the last face the shield cracks and falls, the cold in the
+  blade burns brighter; at the end the crown slips from his head and rolls.
+- **Quiet sounds** (`AudioController`, `configs/Audio`): a low drone and a far wind under everything, a muffled thud at a zombie
+  that is hit, a light sword drawn from its scabbard. (An ElevenLabs set made for the game was asked for; its free queue was busy.)
+- **The camera**: one field of view for all (the Settings row is gone); the mouse is put back in the middle every frame in first
+  person when nothing asks for it free (full screen, alt-tab, Roblox's menu); a panel that closes gives it back within 0.1 s.
+- **Your own arms aside**: in first person with a weapon out, your OWN client draws both arms swung together down and to the right
+  (`BodyAnimController.viewOffset`); friends see the true pose.
+- **The gate** (`IntroService`, `Loading`, `TitleScreen`): at most 30 s for the whole party (its size from the teleport data),
+  at most 7 s more once everyone is in, at once if all have loaded; a player who arrives during the scene joins it at the same
+  moment; one who arrives more than 2 minutes into the first area goes back to the lobby. The loading screen is new: a blood moon,
+  a ruined fortress in silhouette with burning windows, fog, crows, embers, lightning; THE LAST KINGDOM; Waiting for players X / Y;
+  an hourglass with Starting in; the assets.
+- **Weapon pictures** rendered from modelled weapons (`tools/blender/make_icons.py`, `assets/Icons/weapons`): a dark war sword, a
+  barbed spear, a war bow; `Icons.PICTURES` takes their ids once uploaded.
+- **Not done / not checked**: Studio closed (and the screen locked) before the King's and the knight's garb could be checked
+  after reopening and before any play test of the gate, the new loading screen, the cloth, the attacks and the sounds; the
+  pictures are not uploaded; the Huntsman still wears the old stag skull (the new antler is made, not fitted); the player's own
+  sword, walk, run, crouch and roll animations and the movement were not reworked; the HUD and the pack were not restyled
+  beyond the pictures.
+
 ## Version 0.47.0 — Seven looks for the dead, a real skeleton arm, walls that touch exactly
 
 What the developer asked for (2026-11-14): take the dead the game has and make them better, in seven looks shown eight kinds at a

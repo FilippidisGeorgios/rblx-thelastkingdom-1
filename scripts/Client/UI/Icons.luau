@@ -489,7 +489,46 @@ end
 --[[
 	By name, for a caller that holds the kind in data. `kind` is one of the names above.
 ]]
+--[[
+	PICTURES (2026-11-14, the developer: "not the boring little sword and bow: sharper, wilder, darker"). A weapon kind
+	with an uploaded picture (tools/blender/make_icons.py renders them from modelled weapons; assets/Icons/weapons) is
+	shown as that picture; until a picture is uploaded, the drawn icon below stands in. Fill the ids here.
+]]
+Icons.PICTURES = {
+	sword = "",
+	spear = "",
+	bow = "",
+} :: { [string]: string }
+
+local function picture(id: string, props: Props): Frame
+	local holder = Instance.new("Frame")
+	holder.Name = "Picture"
+	holder.BackgroundTransparency = 1
+	local size = props.Size or 40
+	holder.Size = UDim2.fromOffset(size, size)
+	holder.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+	holder.Position = props.Position or UDim2.new()
+	holder.LayoutOrder = props.LayoutOrder or 0
+	local image = Instance.new("ImageLabel")
+	image.BackgroundTransparency = 1
+	image.Size = UDim2.fromScale(1.25, 1.25)
+	image.AnchorPoint = Vector2.new(0.5, 0.5)
+	image.Position = UDim2.fromScale(0.5, 0.5)
+	image.Image = id
+	image.ScaleType = Enum.ScaleType.Fit
+	if props.Tint then
+		image.ImageColor3 = props.Tint
+	end
+	image.Parent = holder
+	holder.Parent = props.Parent
+	return holder
+end
+
 function Icons.create(kind: string, props: Props): Frame?
+	local id = Icons.PICTURES[kind]
+	if id and id ~= "" then
+		return picture(id, props)
+	end
 	local make = (Icons :: any)[kind]
 	if kind == "create" or type(make) ~= "function" then
 		return nil
