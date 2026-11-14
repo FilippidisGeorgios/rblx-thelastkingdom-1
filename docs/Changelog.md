@@ -51,11 +51,16 @@ after 2 minutes into the first area, and a much richer, darker picture.
   an hourglass with Starting in; the assets.
 - **Weapon pictures** rendered from modelled weapons (`tools/blender/make_icons.py`, `assets/Icons/weapons`): a dark war sword, a
   barbed spear, a war bow; `Icons.PICTURES` takes their ids once uploaded.
-- **Not done / not checked**: Studio closed (and the screen locked) before the King's and the knight's garb could be checked
-  after reopening and before any play test of the gate, the new loading screen, the cloth, the attacks and the sounds; the
-  pictures are not uploaded; the Huntsman still wears the old stag skull (the new antler is made, not fitted); the player's own
-  sword, walk, run, crouch and roll animations and the movement were not reworked; the HUD and the pack were not restyled
-  beyond the pictures.
+- **The Huntsman's horns** (2026-11-15): his stag skull was one generated mesh; Studio's segment_mesh split it into the skull
+  and the antlers (the split parts come turned half round, as glTF imports do), the antlers were darkened to a deep brown with a
+  grain (Wood), the skull kept its bone. A modelled pair (asset antlers_v1) was made and left out: thinner than his own.
+- **Checked in play (2026-11-15)**: the four in the court: the spearman, the knight, the King and a crawler hold their weapons,
+  wind up and strike along their paths (the spear thrust, the knight's blade over the shoulder, the King's cut with the shield
+  forward, the crawler's lunge at the floor); the King's cape streams back as he walks; the weapon bar shows the new pictures; the
+  loading screen (shown by hand with 2 / 4 and 23 s) draws as meant; a clean boot (85 server, 31 client modules). The King's
+  sword trail drew a white sheet: made fainter and bluer. Saved to Roblox v245, not published.
+- **Not done**: the player's own sword, walk, run, crouch and roll animations and the movement were not reworked; the HUD and the
+  pack were not restyled beyond the weapon pictures; the gate was not tried with two players; the sounds were not listened to.
 
 ## Version 0.47.0 — Seven looks for the dead, a real skeleton arm, walls that touch exactly
 

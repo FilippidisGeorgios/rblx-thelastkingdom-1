@@ -195,12 +195,13 @@ Outfit.BUILD.the_king = function(m: Model)
 		trail.Name = "SwordTrail"
 		trail.Attachment0 = a0
 		trail.Attachment1 = a1
-		trail.Lifetime = 0.2
+		-- (2026-11-15: at 0.35 it drew a white sheet across his front in play; fainter and bluer)
+		trail.Lifetime = 0.16
 		trail.MinLength = 0.05
-		trail.LightEmission = 0.7
+		trail.LightEmission = 0.45
 		trail.LightInfluence = 0.2
-		trail.Color = ColorSequence.new(Color3.fromRGB(200, 226, 255), Color3.fromRGB(120, 170, 255))
-		trail.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(1, 1) })
+		trail.Color = ColorSequence.new(Color3.fromRGB(170, 205, 255), Color3.fromRGB(110, 150, 230))
+		trail.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.72), NumberSequenceKeypoint.new(1, 1) })
 		trail.WidthScale = NumberSequence.new(1, 0.4)
 		trail.Parent = handle
 	end

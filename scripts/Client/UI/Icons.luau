@@ -495,9 +495,9 @@ end
 	shown as that picture; until a picture is uploaded, the drawn icon below stands in. Fill the ids here.
 ]]
 Icons.PICTURES = {
-	sword = "",
-	spear = "",
-	bow = "",
+	sword = "rbxassetid://72295026761848",
+	spear = "rbxassetid://74205604807301",
+	bow = "rbxassetid://113928900844748",
 } :: { [string]: string }
 
 local function picture(id: string, props: Props): Frame

@@ -149,7 +149,7 @@ local function window(parent: Instance, x: number, y: number, lit: boolean)
 end
 
 local function fortress(parent: Instance): Frame
-	local f = frame(parent, "Fortress", UDim2.fromScale(0.5, 1), UDim2.fromScale(0.92, 0.5), STONE, 1, 3)
+	local f = frame(parent, "Fortress", UDim2.fromScale(0.5, 1.02), UDim2.fromScale(1.1, 0.62), STONE, 1, 3)
 	f.AnchorPoint = Vector2.new(0.5, 1)
 	local aspect = Instance.new("UIAspectRatioConstraint")
 	aspect.AspectRatio = GW / GH * 1.0
@@ -237,9 +237,10 @@ function TitleScreen.show(): Handle
 	local sky = frame(root, "Sky", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), Color3.new(1, 1, 1), 0, 1)
 	gradient(sky, ColorSequence.new({
 		ColorSequenceKeypoint.new(0, SKY_TOP),
-		ColorSequenceKeypoint.new(0.55, Color3.fromRGB(20, 6, 10)),
-		ColorSequenceKeypoint.new(0.86, SKY_LOW),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 6, 8)),
+		ColorSequenceKeypoint.new(0.4, Color3.fromRGB(22, 6, 10)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(96, 22, 20)),
+		ColorSequenceKeypoint.new(0.8, SKY_LOW),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 4, 6)),
 	}), nil, 90)
 
 	-- the picture drifts in very slowly (a frame larger than the screen, eased toward the middle)
@@ -355,10 +356,14 @@ function TitleScreen.show(): Handle
 	hourglassHolder.Size = UDim2.fromScale(0.4, 0.03)
 	hourglassHolder.ZIndex = 10
 	hourglassHolder.Parent = words
-	local hourglass = label(hourglassHolder, "Hourglass", "\u{231B}", UDim2.fromScale(0.3, 0), UDim2.fromScale(0.06, 1), GOLD, SERIF, Enum.FontWeight.Regular)
-	local countdown = label(hourglassHolder, "Starting", "Starting in 30", UDim2.fromScale(0.56, 0), UDim2.fromScale(0.5, 1), MUTED, SERIF, Enum.FontWeight.Regular)
-	countdown.TextXAlignment = Enum.TextXAlignment.Left
-	countdown.AnchorPoint = Vector2.new(0.5, 0)
+	local countdown = label(hourglassHolder, "Starting", "Starting in 30", UDim2.fromScale(0.5, 0), UDim2.fromScale(1, 1), MUTED, SERIF, Enum.FontWeight.Regular)
+	-- the hourglass sits just left of the words, wherever they end up
+	local hourglass = label(hourglassHolder, "Hourglass", "\u{231B}", UDim2.fromScale(0.5, 0), UDim2.fromScale(0.08, 1), GOLD, SERIF, Enum.FontWeight.Regular)
+	hourglass.AnchorPoint = Vector2.new(1, 0)
+	countdown:GetPropertyChangedSignal("TextBounds"):Connect(function()
+		local half = countdown.TextBounds.X / 2 / math.max(1, hourglassHolder.AbsoluteSize.X)
+		hourglass.Position = UDim2.fromScale(0.5 - half - 0.01, 0)
+	end)
 
 	local assetsLine = label(words, "Assets", "Assets  0%", UDim2.fromScale(0.5, 0.84), UDim2.fromScale(0.3, 0.024), MUTED, SERIF, Enum.FontWeight.Regular)
 	local track = frame(words, "Track", UDim2.fromScale(0.5, 0.869), UDim2.fromScale(0.24, 0.004), Color3.fromRGB(30, 22, 18), 0, 10)

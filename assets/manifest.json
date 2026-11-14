@@ -694,6 +694,62 @@
       "owner": "group:32361153",
       "usedBy": [],
       "note": "the King's coat, skirt (8 swinging panels) and cape (6 strips x 2); the Hollow Knight's plate and hound-skull helm; one frame marker set Garb_M0/MX/MY; 2026-11-14"
+    },
+    {
+      "name": "icon_weapon_sword",
+      "class": "image",
+      "id": "rbxassetid://72295026761848",
+      "source": {
+        "tool": "Blender (tools/blender/make_icons.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/weapons/icon_sword.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "weapon bar / pack picture, 512px, transparent; 2026-11-14"
+    },
+    {
+      "name": "icon_weapon_spear",
+      "class": "image",
+      "id": "rbxassetid://74205604807301",
+      "source": {
+        "tool": "Blender (tools/blender/make_icons.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/weapons/icon_spear.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "weapon bar / pack picture, 512px, transparent; 2026-11-14"
+    },
+    {
+      "name": "icon_weapon_bow",
+      "class": "image",
+      "id": "rbxassetid://113928900844748",
+      "source": {
+        "tool": "Blender (tools/blender/make_icons.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/weapons/icon_bow.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "weapon bar / pack picture, 512px, transparent; 2026-11-14"
+    },
+    {
+      "name": "antlers_v1",
+      "class": "model",
+      "id": "rbxassetid://90179327215180",
+      "source": {
+        "tool": "Blender (tools/blender/make_antlers.py)"
+      },
+      "licence": "own",
+      "file": "assets/Models/antlers/antlers.glb",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [],
+      "note": "made; the Huntsman wears his OLD antler shape instead (segmented from StagSkullMesh with Studio segment_mesh, darkened to 46,32,22 Wood): the made pair was thinner; 2026-11-15"
     }
   ]
 }
