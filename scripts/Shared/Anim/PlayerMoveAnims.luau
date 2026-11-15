@@ -25,7 +25,8 @@
 	SAME stride time (forward, back, right, left), which the controller blends by the way the feet are really going; a
 	diagonal is two of them at the same step. A sidestep reaches out with the leading leg and closes with the other (the
 	legs never cross); a backward step is shorter and the chest sits back.
-	And DUCKED (Ctrl): a low idle and a low walk every way, the knees deep and the chest forward.
+	And CROUCHED (Ctrl): a still crouch and a crouched walk every way, a real one (the hips lowered, the legs folded under
+	them by IK, the chest over the knees; see THE CROUCH).
 
 	--------------------------------------------------------------------------
 	ANGLES (a joint's rotation away from the standard R15 rest, degrees)
@@ -196,7 +197,7 @@ local STYLES: { Style } = {
 	{
 		name = "Soldier",
 		walk = { D = 0.76, S = 30, K = 40, stance = 0.6, bend = 4, arms = 22, elbow = 14, elbowSwing = 14, armOut = 5, legOut = 1.5, yaw = 6, roll = 2.5, bob = 0.11, lean = 4, head = 0.7, nod = 1.5, impact = 1.5, ankle = 14 },
-		run = { D = 0.6, S = 46, K = 92, stance = 0.38, bend = 6, arms = 46, elbow = 70, elbowSwing = 18, armOut = 7, legOut = 1, yaw = 9, roll = 2, bob = 0.2, lean = 13, head = 0.8, nod = 2.5, impact = 3, ankle = 22 },
+		run = { D = 0.6, S = 46, K = 92, stance = 0.38, bend = 6, arms = 40, elbow = 62, elbowSwing = 12, armOut = 7, legOut = 1, yaw = 9, roll = 2, bob = 0.2, lean = 13, head = 0.8, nod = 2.5, impact = 3, ankle = 22 },
 		idle = { stance = 3, bend = 6, lean = 2, elbow = 12, armOut = 5, sway = 1.6, breath = 1.4, look = 7 },
 		jump = "tuck",
 		fall = { arms = 38, legs = 1 },
@@ -253,19 +254,114 @@ local function leg(p: number, g: Gait): (number, number, number)
 	return thigh, knee, ankle
 end
 
+--[[
+	THE GROUND (2026-11-15). The square body's legs, measured on the body itself (tools/Filmstrip `geometry`: every
+	player has this one body, Services/AvatarService): the joint seats of the hips, knees and ankles in the root's space.
+	With them the height of a foot's sole can be worked out for any pose, and every gait is set on the ground BY ITS
+	OWN LEGS: the hips go exactly as low as the planted foot needs, so a foot never sinks into the floor or floats over
+	it, and a run leaves the ground only between two steps (the hips then follow a short arc).
+]]
+local LEG_SEATS = {
+	-- LowerTorso: its seat on the root, and the part's centre from its joint
+	torso0 = CFrame.new(0, -1, 0),
+	torso1 = CFrame.new(0, 0.2, 0),
+	-- hip (on the LowerTorso, x mirrored for the left), knee, ankle; and each part's centre from its own joint
+	hip = Vector3.new(0.5, -0.2, 0),
+	thigh1 = CFrame.new(0, -0.4208, 0),
+	knee0 = CFrame.new(0, -0.4009, 0),
+	shin1 = CFrame.new(0, -0.3792, 0),
+	ankle0 = CFrame.new(0, -0.5472, 0),
+	foot1 = CFrame.new(0, -0.1019, 0),
+	-- the foot is 1 x 0.3 x 1: its sole's corners from its centre
+	sole = { Vector3.new(0.5, -0.15, 0.5), Vector3.new(-0.5, -0.15, 0.5), Vector3.new(0.5, -0.15, -0.5), Vector3.new(-0.5, -0.15, -0.5) },
+	-- the root's centre stands 3 studs above the floor (HipHeight 2 + half of the 2-stud root)
+	stand = 3,
+}
+
+-- How high the lowest corner of one foot's sole is above the floor under `pose` ("Right" or "Left").
+local function soleHeight(pose: Pose, side: string): number
+	local s = LEG_SEATS
+	local torso = s.torso0 * (pose.LowerTorso or CFrame.new()) * s.torso1
+	local hip = if side == "Right" then s.hip else Vector3.new(-s.hip.X, s.hip.Y, s.hip.Z)
+	local thigh = torso * CFrame.new(hip) * (pose[side .. "UpperLeg"] or CFrame.new()) * s.thigh1
+	local shin = thigh * s.knee0 * (pose[side .. "LowerLeg"] or CFrame.new()) * s.shin1
+	local foot = shin * s.ankle0 * (pose[side .. "Foot"] or CFrame.new()) * s.foot1
+	local low = math.huge
+	for _, corner in s.sole do
+		low = math.min(low, (foot * corner).Y)
+	end
+	return low + s.stand
+end
+
+PlayerMoveAnims.soleHeight = soleHeight
+
+--[[
+	Sets a gait's frames on the ground. `planted(at)` says which feet are down at a sample ("Right", "Left", both or
+	neither); `rise` lifts the whole body (a crouch: the root itself is lowered by the Humanoid, so the feet must reach
+	that much higher). A walk always has a foot down; a run's flights are filled with an arc from take-off to landing.
+]]
+local FLIGHT_ARC = 0.2 -- how far the hips rise in a run's flight above the line from take-off to landing, studs
+
+local function ground(frames: { Frame }, phases: { number }, stance: number, rise: number)
+	local n = #frames
+	local need: { number? } = {}
+	for i, frame in frames do
+		local at = phases[i]
+		local right = wrap(at) < stance
+		local left = wrap(at + 0.5) < stance
+		local low: number? = nil
+		if right then
+			low = soleHeight(frame.pose, "Right")
+		end
+		if left then
+			local l = soleHeight(frame.pose, "Left")
+			low = if low then math.min(low, l) else l
+		end
+		need[i] = if low then rise - low else nil
+	end
+	-- a flight: from the last foot down to the next, on a line with an arc over it (the samples wrap round)
+	for i = 1, n do
+		if need[i] == nil then
+			local a, b = i, i
+			local da, db = 0, 0
+			repeat
+				a = if a == 1 then n else a - 1
+				da += 1
+			until need[a] ~= nil or da > n
+			repeat
+				b = if b == n then 1 else b + 1
+				db += 1
+			until need[b] ~= nil or db > n
+			local from, to = need[a] or 0, need[b] or 0
+			local u = da / (da + db)
+			frames[i].pose.LowerTorso = CFrame.new(0, from + (to - from) * u + FLIGHT_ARC * 4 * u * (1 - u), 0) * frames[i].pose.LowerTorso
+			frames[i].ease = "flat"
+		end
+	end
+	for i = 1, n do
+		local d = need[i]
+		if d then
+			frames[i].pose.LowerTorso = CFrame.new(0, d, 0) * frames[i].pose.LowerTorso
+		end
+	end
+end
+
 -- What changes a gait without being a new one: played `back`ward (the feet go the other way), and `squat` degrees
--- of extra thigh so that a deep knee bend keeps the feet under the hips (the ducked walk), with the hips `sink` lower.
-type GaitOptions = { back: boolean?, squat: number?, sink: number? }
+-- of extra thigh so that a deep knee bend keeps the feet under the hips (the ducked walk), and `rise`: how far the
+-- Humanoid itself lowers the body (a crouch), which the feet must reach up to.
+type GaitOptions = { back: boolean?, squat: number?, sink: number?, rise: number? }
 
 local function gaitFrames(g: Gait, options: GaitOptions?): { Frame }
 	local frames: { Frame } = {}
 	local back = options ~= nil and options.back == true
 	local squat = (options and options.squat) or 0
-	local sink = (options and options.sink) or 0
+	local rise = (options and options.rise) or 0
+	local phases: { number } = {}
 	for i = 0, SAMPLES do
 		local t = i / SAMPLES
 		-- backward: the same step, run the other way round (the heel leaves first, the toe lands)
 		local at = if back then 1 - t else t
+		phases[i + 1] = at
 		local rThigh, rKnee, rAnkle = leg(at, g)
 		local lThigh, lKnee, lAnkle = leg(at + 0.5, g)
 		rThigh += squat
@@ -275,8 +371,7 @@ local function gaitFrames(g: Gait, options: GaitOptions?): { Frame }
 		local c = math.cos(TAU * at)
 		local fall = math.max(bump(at - 0.05, 0.07), bump(at - 0.55, 0.07))
 		local late = math.max(bump(at - 0.12, 0.08), bump(at - 0.62, 0.08))
-		-- the body is lowest just after each heel lands and highest as it passes over the planted foot
-		local drop = -sink - g.bob * (0.5 + 0.5 * math.cos(2 * TAU * (at - 0.07)))
+		-- (how high the hips are is not drawn: `ground` sets them where the planted foot needs them)
 		-- arms: opposite to the legs, a beat behind; the forearm bends more on the forward swing
 		local swing = math.cos(TAU * (at - 0.06))
 		local rArm, lArm = -g.arms * swing, g.arms * swing
@@ -284,7 +379,7 @@ local function gaitFrames(g: Gait, options: GaitOptions?): { Frame }
 			time = t * g.D,
 			ease = "flat",
 			pose = {
-				LowerTorso = move(0, drop, 0, 0, -g.yaw * 0.5 * c, g.roll * c),
+				LowerTorso = deg(0, -g.yaw * 0.5 * c, g.roll * c),
 				UpperTorso = deg(-g.lean - g.impact * fall, g.yaw * c, -g.roll * 0.5 * c),
 				Head = deg(g.lean * 0.75 - g.nod * late, -g.yaw * g.head * c, g.roll * 0.3 * c),
 				RightUpperArm = deg(rArm, 0, g.armOut),
@@ -302,6 +397,7 @@ local function gaitFrames(g: Gait, options: GaitOptions?): { Frame }
 			},
 		}
 	end
+	ground(frames, phases, g.stance, rise)
 	return frames
 end
 
@@ -317,7 +413,8 @@ local CLOSE = 5
 local function sideFrames(g: Gait, dir: number, options: GaitOptions?): { Frame }
 	local frames: { Frame } = {}
 	local squat = (options and options.squat) or 0
-	local sink = (options and options.sink) or 0
+	local rise = (options and options.rise) or 0
+	local phases: { number } = {}
 	local reach = math.min(g.S * 0.8, 30)
 	local half = (reach + CLOSE) / 2
 	local lead = (reach - CLOSE) / 2
@@ -337,13 +434,13 @@ local function sideFrames(g: Gait, dir: number, options: GaitOptions?): { Frame 
 		local lLift = -lKnee * 0.5 + squat
 		local c = math.cos(TAU * t)
 		local fall = math.max(bump(t - 0.05, 0.07), bump(t - 0.55, 0.07))
-		local drop = -sink - g.bob * 0.8 * (0.5 + 0.5 * math.cos(2 * TAU * (t - 0.07)))
 		local swing = math.cos(TAU * (t - 0.06))
+		phases[i + 1] = t
 		frames[i + 1] = {
 			time = t * g.D,
 			ease = "flat",
 			pose = {
-				LowerTorso = move(0, drop, 0, 0, 0, -dir * 1.5 + g.roll * 0.8 * c),
+				LowerTorso = deg(0, 0, -dir * 1.5 + g.roll * 0.8 * c),
 				UpperTorso = deg(-g.lean * 0.5 - g.impact * 0.6 * fall, -dir * 3, -dir * 2 - g.roll * 0.4 * c),
 				Head = deg(g.lean * 0.35, dir * 3, dir * 1.5),
 				-- the arms a little out for balance, swinging small
@@ -360,6 +457,7 @@ local function sideFrames(g: Gait, dir: number, options: GaitOptions?): { Frame 
 			},
 		}
 	end
+	ground(frames, phases, g.stance, rise)
 	return frames
 end
 
@@ -374,10 +472,6 @@ local function backGait(g: Gait): Gait
 	b.bob = g.bob * 0.8
 	return b
 end
-
--- The DUCKED walk (Ctrl): knees deep, chest forward, arms tucked, a short quiet step.
-local DUCK: Gait = { D = 0.92, S = 22, K = 26, stance = 0.62, bend = 58, arms = 7, elbow = 62, elbowSwing = 6, armOut = 8, legOut = 4, yaw = 4, roll = 2, bob = 0.04, lean = 26, head = 0.9, nod = 0.8, impact = 0.5, ankle = 9 }
-local DUCK_OPTIONS: GaitOptions = { squat = 30, sink = 0.12 }
 
 --==========================================================================
 -- IDLE: the stance, breathing, the weight going from foot to foot, a look round now and then
@@ -414,38 +508,108 @@ local function idleFrames(s: Style): { Frame }
 			},
 		}
 	end
+	-- both feet down, all the time
+	ground(frames, table.create(#frames, 0), 1, 0)
 	return frames
 end
 
--- Ducked and still: down on the haunches, the chest forward, the arms in, breathing.
-local function duckIdleFrames(): { Frame }
+--==========================================================================
+-- THE CROUCH (Ctrl). 2026-11-15: a real one. Until now the body was made SMALLER (half its height); the developer
+-- asked for real crouching. The Humanoid now lowers the hips (CrouchService: HipHeight down by `drop`, the same as
+-- configs/Crouch.HipDrop, Tests/Crouch.spec checks it) and the legs fold under them by IK so each foot is set on the
+-- floor where the step puts it (flat while it bears the weight), the pelvis tips forward, the chest leans over the
+-- knees and the head comes up to look ahead. The head stays under 3.8 studs (tools/Filmstrip), so the cellar's crawl
+-- was raised from 3.4 to 4.1 (a standing body, 5.2, still cannot pass). The same build gives the still crouch, the walk ahead and back, and the side steps.
+--==========================================================================
+local CROUCH = {
+	drop = 0.95, -- studs the Humanoid lowers the hips by (configs/Crouch.HipDrop)
+	pelvis = -18, -- the pelvis tipped forward, degrees
+	chest = -27, -- and the chest further over it (45 degrees in all)
+	head = 40, -- the head lifted back to look ahead
+	back = 0.35, -- the hips sit back this far, so the head, over the knees, is not far ahead of the body
+	step = 0.55, -- how far a foot goes ahead of the hip, and behind it, while it bears the weight
+	lift = 0.32, -- how high a foot comes up as it goes forward again
+	width = 0.6, -- the feet this far out from the middle (the hips are 0.5): a wider base, low down
+	stride = 0.92, -- seconds for two steps at DUCK_PACE
+	stance = 0.62, -- share of the stride a foot is down
+}
+PlayerMoveAnims.CROUCH_DROP = CROUCH.drop
+
+-- the square body's leg: hip to knee, knee to ankle, ankle to sole (LEG_SEATS)
+local THIGH, SHIN, ANKLE = 0.8217, 0.9264, 0.2519
+
+--[[
+	The thigh and knee (the pose's angles, degrees: thigh forward +, knee bent -) that put the ankle `ahead` studs in
+	front of the hip and `below` under it, with the pelvis tipped `pelvis` degrees. The knee always bends forward.
+]]
+local function legIK(ahead: number, below: number, pelvis: number): (number, number, number)
+	local r = math.clamp(math.sqrt(ahead * ahead + below * below), 0.25, THIGH + SHIN - 1e-3)
+	local phi = math.atan2(ahead, below)
+	local alpha = math.acos(math.clamp((THIGH * THIGH + r * r - SHIN * SHIN) / (2 * THIGH * r), -1, 1))
+	local beta = math.acos(math.clamp((THIGH * THIGH + SHIN * SHIN - r * r) / (2 * THIGH * SHIN), -1, 1))
+	local world = math.deg(phi + alpha)
+	local knee = -(180 - math.deg(beta))
+	-- (the pose's thigh is measured from the pelvis; the third value is the foot's angle that keeps the sole flat)
+	return world - pelvis, knee, -(world + knee)
+end
+
+-- `forward`, `side`: the way the feet go in the body's own space ((1, 0) ahead, (-1, 0) back, (0, 1) right, (0, -1)
+-- left); (0, 0) is the crouch held still.
+local function crouchFrames(forward: number, side: number): { Frame }
+	local c = CROUCH
+	local still = forward == 0 and side == 0
+	local length = if still then 5 else c.stride
 	local frames: { Frame } = {}
-	local LENGTH = 5
-	local N = 16
-	for k = 0, N do
-		local t = k / N
-		local breath = math.sin(TAU * t * 2)
-		local shift = math.sin(TAU * t)
-		frames[k + 1] = {
-			time = t * LENGTH,
-			ease = "flat",
-			pose = {
-				LowerTorso = move(0.02 * shift, -0.12 - 0.01 * breath, 0, 0, 0, -1.2 * shift),
-				UpperTorso = deg(-DUCK.lean - 1.2 * breath, 0, 0.6 * shift),
-				Head = deg(DUCK.lean * 0.8 + 0.5 * breath, 0, 0),
-				RightUpperArm = deg(18 + breath, 0, 8),
-				LeftUpperArm = deg(18 + breath, 0, -8),
-				RightLowerArm = deg(64, 0, 0),
-				LeftLowerArm = deg(64, 0, 0),
-				RightUpperLeg = deg(40 + shift, 0, 6),
-				LeftUpperLeg = deg(34 - shift, 0, -6),
-				RightLowerLeg = deg(-64 - shift, 0, 0),
-				LeftLowerLeg = deg(-58 + shift, 0, 0),
-				RightFoot = deg(22, 0, -6),
-				LeftFoot = deg(22, 0, 6),
-			},
-		}
+	local phases: { number } = {}
+	-- the hip joints stand this high over the floor when the hips are lowered by `drop` and nothing else moves them
+	local hip = 2 - c.drop
+	for i = 0, SAMPLES do
+		local t = i / SAMPLES
+		phases[i + 1] = t
+		local pose: Pose = {}
+		local breath = math.sin(TAU * t * (if still then 2 else 1))
+		local sway = if still then 0 else math.cos(TAU * t)
+		for _, name in { "Right", "Left" } do
+			local sign = if name == "Right" then 1 else -1
+			local p = wrap(t + (if name == "Left" then 0.5 else 0))
+			local along, up = 0, 0
+			if not still then
+				if p < c.stance then
+					-- down: the foot goes from ahead of the hip to behind it
+					along = c.step * (1 - 2 * p / c.stance)
+				else
+					-- up: it comes forward again, lifted, quick and eased
+					local q = (p - c.stance) / (1 - c.stance)
+					along = c.step * (-1 + 2 * (0.5 - 0.5 * math.cos(math.pi * q)))
+					up = c.lift * math.sin(math.pi * q)
+				end
+			end
+			-- a still crouch: one foot a little ahead of the other, the weight shifting with the breath
+			local ahead = if still then 0.22 * sign + 0.03 * breath else along * forward
+			local below = hip - ANKLE - up
+			local thigh, knee, flat = legIK(ahead, below, c.pelvis)
+			local lateral = (c.width - 0.5) * sign + along * side
+			local out = math.deg(math.atan2(lateral, below))
+			pose[name .. "UpperLeg"] = deg(thigh, 0, out)
+			pose[name .. "LowerLeg"] = deg(knee, 0, 0)
+			-- the sole flat while it bears the weight; the toes down a little as it lifts
+			pose[name .. "Foot"] = deg(flat - 14 * (up / c.lift), 0, -out)
+		end
+		pose.LowerTorso = CFrame.new(0, 0, c.back) * deg(c.pelvis, 4 * sway * forward, 2.5 * sway)
+		pose.UpperTorso = deg(c.chest - 1.5 * breath, -3 * sway * forward, -1.2 * sway)
+		pose.Head = deg(c.head + 0.8 * breath, 0, 0)
+		-- the arms forward and low, the forearms up, hands ready by the knees; a small swing against the legs
+		local swing = if still then 0 else 7 * math.cos(TAU * (t - 0.06))
+		pose.RightUpperArm = deg(56 - swing * forward, 0, 12)
+		pose.LeftUpperArm = deg(56 + swing * forward, 0, -12)
+		pose.RightLowerArm = deg(40, 0, 0)
+		pose.LeftLowerArm = deg(40, 0, 0)
+		pose.RightHand = deg(-8, 0, 0)
+		pose.LeftHand = deg(-8, 0, 0)
+		frames[i + 1] = { time = t * length, ease = "flat", pose = pose }
 	end
+	-- the feet reach down to the floor the lowered hips stand over
+	ground(frames, phases, if still then 1 else c.stance, c.drop)
 	return frames
 end
 
@@ -563,8 +727,9 @@ local ROLL_LENGTH = 0.6
 
 local function rollFrames(): ({ Frame }, { { any } })
 	local tuck: Pose = {
-		UpperTorso = deg(-38, 0, 0),
-		Head = deg(-42, 0, 0),
+		-- curled tight: the back round, the chin on the chest (a body that is a ball rolls; a plank does not)
+		UpperTorso = deg(-62, 0, 0),
+		Head = deg(-48, 0, 0),
 		RightUpperLeg = deg(112, 0, 6), LeftUpperLeg = deg(112, 0, -6),
 		RightLowerLeg = deg(-138, 0, 0), LeftLowerLeg = deg(-138, 0, 0),
 		RightFoot = deg(30, 0, 0), LeftFoot = deg(30, 0, 0),
@@ -599,15 +764,19 @@ local function rollFrames(): ({ Frame }, { { any } })
 		RightLowerArm = deg(18, 0, 0), LeftLowerArm = deg(18, 0, 0),
 	}
 	-- the turn round the hips (negative X: the head goes forward and under) and how low the hips are, by time
+	-- (2026-11-15: the hips' heights are MEASURED, not guessed: at each key the lowest point of the whole body,
+	-- head and shoulders included, is exactly on the floor (tools/Filmstrip `whole`); before, the head went 2 studs
+	-- into the ground at the top of the turn and the feet half a stud at the landing. The hips go up and over the
+	-- shoulders, as they do in a real forward roll.)
 	local turn: { { any } } = {
 		{ 0.00, 0, 0, 0, false },
-		{ 0.06, -32, -0.75, -0.2, reach },
-		{ 0.13, -95, -1.35, -0.35, tuck },
-		{ 0.21, -165, -1.5, -0.3, tuck },
-		{ 0.29, -235, -1.5, -0.2, tuck },
-		{ 0.37, -300, -1.4, -0.1, tuck },
-		{ 0.45, -335, -1.15, 0, land },
-		{ 0.53, -355, -0.55, 0, up },
+		{ 0.06, -32, -0.27, -0.2, reach },
+		{ 0.13, -95, 0.84, -0.35, tuck },
+		{ 0.21, -165, 0.08, -0.3, tuck },
+		{ 0.29, -235, -1.33, -0.2, tuck },
+		{ 0.37, -300, -1.44, -0.1, tuck },
+		{ 0.45, -335, -0.54, 0, land },
+		{ 0.53, -355, 0, 0, up },
 		{ 0.60, -360, 0, 0, up },
 	}
 	local frames: { Frame } = {}
@@ -716,11 +885,11 @@ function PlayerMoveAnims.clips(set: number): { [string]: ClipDef }
 		runBack = { frames = gaitFrames(runBack, { back = true }), looped = true },
 		runRight = { frames = sideFrames(s.run, 1), looped = true },
 		runLeft = { frames = sideFrames(s.run, -1), looped = true },
-		duckIdle = { frames = duckIdleFrames(), looped = true },
-		duck = { frames = gaitFrames(DUCK, DUCK_OPTIONS), looped = true },
-		duckBack = { frames = gaitFrames(backGait(DUCK), { back = true, squat = 30, sink = 0.12 }), looped = true },
-		duckRight = { frames = sideFrames(DUCK, 1, DUCK_OPTIONS), looped = true },
-		duckLeft = { frames = sideFrames(DUCK, -1, DUCK_OPTIONS), looped = true },
+		duckIdle = { frames = crouchFrames(0, 0), looped = true },
+		duck = { frames = crouchFrames(1, 0), looped = true },
+		duckBack = { frames = crouchFrames(-1, 0), looped = true },
+		duckRight = { frames = crouchFrames(0, 1), looped = true },
+		duckLeft = { frames = crouchFrames(0, -1), looped = true },
 		jump = { frames = jumpFrames(s), looped = false },
 		fall = { frames = fallFrames(s), looped = true },
 		roll = { frames = (rollFrames()), looped = false },

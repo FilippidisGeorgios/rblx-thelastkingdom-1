@@ -8,12 +8,14 @@
 	Stand up again and everything comes back. You can only stand where there is room: under a low ceiling the
 	server keeps you down.
 
-	HOW. Roblox's own R15 body scale (`BodyHeightScale` on the Humanoid), tweened, so nothing pops. This is a first
-	version on purpose: a body that is shorter and slower. A real crouch (bent knees, a lowered back) is a
-	hand-made animation, which the developer has said comes in the animation pass.
+	HOW (2026-11-15, the animation pass: a REAL crouch). The body keeps its size: the Humanoid lowers the hips
+	(`HipHeight` down by `HipDrop`, tweened, so nothing pops) and the crouch clips (Shared/Anim/PlayerMoveAnims, THE
+	CROUCH) fold the legs under them by IK, tip the pelvis and the chest forward and lift the head to look ahead; the
+	eyes go down and forward with the head (`EyeShift`, Client/Controllers/ViewController). Until then the body was
+	made half its size (`BodyHeightScale` 0.5).
 
-	THE LOW PASSAGES are built to this: a ceiling 3.4 studs high clears a crouched body (about 3.0) and stops a
-	standing one (about 5.2).
+	THE LOW PASSAGES are built to this: a ceiling 4.3 studs high clears a crouched body (4.0 at its highest) and stops
+	a standing one (about 5.2). The cellar's crawl (tools/BuildCellar) was raised from 3.4 to 4.3 for the real crouch.
 
 	Read via: Config.get("Crouch")
 ]]
@@ -21,11 +23,18 @@
 local Crouch = {
 	Enabled = true,
 
-	-- BodyHeightScale while crouched: the SAME for every player (an avatar's own height scale is 0.9 to 1.05), so a
-	-- low passage fits everyone. Measured on an avatar at the tallest scale, 1.05: it is 5.15 studs high standing and
-	-- 2.98 studs high at 0.5 (the head and hair do not shrink, so the height is about 1.0 + 3.95 x the scale):
-	-- under a 3.4 ceiling with 0.4 of air above the head.
-	CrouchScale = 0.5,
+	-- How far the Humanoid lowers the hips, studs. MUST be PlayerMoveAnims.CROUCH_DROP (the clips are built for it;
+	-- Tests/Crouch.spec checks). Every player has the same square body (Services/AvatarService), so one number fits all.
+	HipDrop = 0.95,
+
+	-- How high the crouched body is at its highest (the head's top over the floor, the walk's highest moment),
+	-- measured with tools/Filmstrip; and the clear height of a low passage built for it.
+	CrouchedHeight = 4.0,
+	PassageHeight = 4.3,
+
+	-- Where the eyes go when crouched, against where they are standing (the root is already lower by HipDrop): the
+	-- head is lower on the bent body and over the knees, ahead (object space of the root: -Z is ahead).
+	EyeShift = Vector3.new(0, -0.44, -0.85),
 
 	-- Share of the walking speed kept while crouched.
 	SpeedMult = 0.5,

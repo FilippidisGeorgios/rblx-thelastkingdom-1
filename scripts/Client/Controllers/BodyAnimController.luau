@@ -176,9 +176,11 @@ end
 	turn as one), the aim, the draw and every cut still play; only where they sit in your picture changes. Friends see the
 	true pose. Faded in and out over VIEW_FADE.
 ]]
-local VIEW_OFFSET: { [string]: { yaw: number, pitch: number } } = {
+-- `only`: a one-handed weapon swings only its own arm aside (the free arm, hanging, is out of the picture already;
+-- swung with the other it came up into the bottom-left corner as a grey block)
+local VIEW_OFFSET: { [string]: { yaw: number, pitch: number, only: string? } } = {
 	bow = { yaw = -13, pitch = -7 },
-	sword = { yaw = -11, pitch = -15 },
+	sword = { yaw = -17, pitch = -25, only = "Right" }, -- (2026-11-15: lower and further right; it stood in the middle)
 	spear = { yaw = -9, pitch = -11 },
 }
 local VIEW_FADE = 0.18
@@ -214,7 +216,7 @@ function viewOffset(body: any, pose: { [string]: CFrame }, dt: number): { [strin
 	for _, side in { "Right", "Left" } do
 		local part = side .. "UpperArm"
 		local a0 = body.rig.a0[part]
-		if a0 then
+		if a0 and (o.only == nil or o.only == side) then
 			shown[part] = a0:Inverse() * q * a0 * (pose[part] or IDENTITY)
 		end
 	end
@@ -892,11 +894,20 @@ end
 
 -- Your own cut or thrust, drawn the moment you press (Controllers/CombatController). The server's word of it is then
 -- not drawn a second time.
+-- Told of each of your own cuts (ViewController sets it: the picture leans with the blade): which cut of the weapon's
+-- row it is (1, 2, ...) and how long it lasts. A callback, not a require: ViewController already requires this module.
+BodyAnimController.onLocalSwing = nil :: ((attack: number, seconds: number) -> ())?
+
 function BodyAnimController.playLocalSwing()
 	local body = myBody()
 	if body and body.drawn then
 		body.ownAt = os.clock()
 		swing(body)
+		local told = BodyAnimController.onLocalSwing
+		local kind = body.kind and PlayerActionAnims.KINDS[body.kind]
+		if told and kind and kind.attacks then
+			told(body.attack, 0.42 / math.max(attackRate(body, kind), 0.2))
+		end
 	end
 end
 

@@ -52,11 +52,12 @@ return function(t: any)
 		assert(not Crouch.hasRoom(0.4, 3.2, 5.4), "a low ceiling keeps you down")
 	end)
 
-	t.test("the real numbers: a crouched body fits a 3.4 passage and a standing one does not", function()
-		-- measured in a playtest on the tallest avatar scale (1.05): height = about 1.0 + 3.95 x BodyHeightScale
-		local crouched = 1.0 + 3.95 * Config.CrouchScale
-		assert(crouched < 3.4, ("crouched %.2f must fit under 3.4"):format(crouched))
-		assert(Config.StandHeight > 3.4, "standing must not")
+	t.test("the real numbers: a crouched body fits a low passage and a standing one does not", function()
+		-- the real crouch (2026-11-15): the clips are built for the hips lowered by exactly HipDrop
+		local Anims = require(game:GetService("ReplicatedStorage").Shared.Anim.PlayerMoveAnims)
+		assert(math.abs(Anims.CROUCH_DROP - Config.HipDrop) < 1e-6, "configs/Crouch.HipDrop must be PlayerMoveAnims.CROUCH_DROP")
+		assert(Config.CrouchedHeight < Config.PassageHeight, ("crouched %.2f must fit under %.2f"):format(Config.CrouchedHeight, Config.PassageHeight))
+		assert(Config.StandHeight > Config.PassageHeight, "standing must not")
 		assert(Config.SpeedMult > 0 and Config.SpeedMult < 1, "slower, never stopped")
 	end)
 end

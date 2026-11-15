@@ -7,7 +7,7 @@
 	  the STAIR   an open stone-lined trench, 8 wide, going south from the ground at z -662 down to the floor at z -686
 	  the LANDING and the DOOR   a short flat floor at the foot (z -686 to -692) and a heavy locked door in the wall at z -692
 	  the LARDER  a roofed hall behind the door, x -96 to -66, z -706 to -694, 9 high: shelves, casks, hams, a table, a chest
-	  the CRAWL   a LOW passage (3.4 high, 5 wide) that leaves the larder's east end and bends twice: you must crouch
+	  the CRAWL   a LOW passage (4.3 high, 5 wide) that leaves the larder's east end and bends twice: you must crouch
 	  the CISTERN a flooded vault under the Dairy, x -44 to -26, z -716 to -700, 7 high: a pool, a dais, the hoard, and three mounds
 	              of rubble where the dead dig up through the floor
 	The floor of everything underground is y = -12 (the ground above is y = 2). The ceilings are slabs under 3 studs
@@ -47,7 +47,7 @@ local CELL = 4 -- terrain cells are 4 studs
 ]]
 local HALL_TOP = -6.3 -- the underside of the larder and cistern ceilings
 local TOP = -3 -- the top of every ceiling slab and wall: inside the earth, above the reach of the ground's edge
-local CRAWL_H = 3.4 -- the clear height of the low passage
+local CRAWL_H = 4.3 -- the clear height of the low passage (3.4 until 2026-11-15: the real crouch stands 4.0 high)
 local CRAWL_TOP = -4.5 -- the top of the low passage's roof slab (it must pass -6, where the ground above hangs)
 
 local STAIR_X = -85 -- the centre line of the stair, and of the door

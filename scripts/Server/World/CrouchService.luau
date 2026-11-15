@@ -9,12 +9,12 @@
 	    ceiling is not missed) and keeps the player down under anything solid. The player is told in a line at the top
 	    ("There is no room to stand.").
 
-	WHAT CHANGES. The body gets shorter (R15 `BodyHeightScale`, tweened), the WalkSpeed takes a claim (so the Brass
+	WHAT CHANGES. The hips go down (`HipHeight` lowered by configs/Crouch.HipDrop, tweened; the clips fold the legs
+	under them: a real crouch since 2026-11-15, the body was made half its size before), the WalkSpeed takes a claim (so the Brass
 	Stirrup and the King's frost are not trampled; see Domain/Crouch), and `Crouching` is published on the Player and
 	on the Humanoid, which the hunters and the dead will read when they listen for footsteps.
 
-	A new body (respawn) is always standing. A player whose rig has no `BodyHeightScale` (an R6 body) still gets the
-	slower walk, and the log says so once.
+	A new body (respawn) is always standing.
 
 	Place: Forgotten Lands ONLY (Server/World).
 ]]
@@ -45,18 +45,17 @@ type State = {
 	last: number?,
 	humanoid: Humanoid?,
 	noteToken: number,
-	-- the body as it was standing: its own height scale (an avatar may be 1.05, or 0.9) and how tall it stood
-	standScale: number,
+	-- the body as it was standing: its hips' height and how tall it stood
+	standHip: number,
 	standHeight: number,
 }
 
 local states: { [Player]: State } = {}
-local warnedNoScale = false
 
 local function stateOf(player: Player): State
 	local state = states[player]
 	if not state then
-		state = { crouched = false, claim = {}, last = nil, humanoid = nil, noteToken = 0, standScale = 1, standHeight = 0 }
+		state = { crouched = false, claim = {}, last = nil, humanoid = nil, noteToken = 0, standHip = 2, standHeight = 0 }
 		states[player] = state
 	end
 	return state
@@ -85,13 +84,9 @@ local function tell(player: Player, text: string)
 	end)
 end
 
-local function setScale(humanoid: Humanoid, scale: number, seconds: number): boolean
-	local value = humanoid:FindFirstChild("BodyHeightScale")
-	if not (value and value:IsA("NumberValue")) then
-		return false
-	end
-	TweenService:Create(value, TweenInfo.new(seconds, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Value = scale }):Play()
-	return true
+-- The hips to this height, eased (the clips bend the legs to the same time: BodyAnimController blends over it too).
+local function setHips(humanoid: Humanoid, hipHeight: number, seconds: number)
+	TweenService:Create(humanoid, TweenInfo.new(seconds, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { HipHeight = hipHeight }):Play()
 end
 
 --[[
@@ -156,16 +151,12 @@ local function goDown(player: Player, humanoid: Humanoid, state: State)
 	MovementService.stopRun(player)
 	state.crouched = true
 	state.humanoid = humanoid
-	-- remember the standing body before it changes: the avatar's own scale, and how tall it is
-	local value = humanoid:FindFirstChild("BodyHeightScale")
-	state.standScale = if value and value:IsA("NumberValue") then value.Value else 1
+	-- remember the standing body before it changes: its hips, and how tall it is
+	state.standHip = humanoid.HipHeight
 	local measured = height(player.Character :: Model, humanoid)
 	state.standHeight = if measured > 1 then measured else cfg.StandHeight
 	humanoid.WalkSpeed = CrouchRules.enter(state.claim, humanoid.WalkSpeed, cfg.SpeedMult)
-	if not setScale(humanoid, math.min(state.standScale, cfg.CrouchScale), cfg.TweenSeconds) and not warnedNoScale then
-		warnedNoScale = true
-		log:warn("this body has no BodyHeightScale (R6?): crouching only slows the walk")
-	end
+	setHips(humanoid, math.max(0.3, state.standHip - cfg.HipDrop), cfg.TweenSeconds)
 	publish(player, humanoid, true)
 end
 
@@ -177,7 +168,7 @@ local function standUp(player: Player, humanoid: Humanoid?, state: State)
 		if speed then
 			humanoid.WalkSpeed = speed
 		end
-		setScale(humanoid, state.standScale, cfg.TweenSeconds)
+		setHips(humanoid, state.standHip, cfg.TweenSeconds)
 	else
 		state.claim = {}
 	end

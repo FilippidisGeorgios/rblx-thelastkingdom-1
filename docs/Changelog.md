@@ -1,3 +1,36 @@
+## Version 0.50.0 — A real crouch, feet on the ground, a true forward roll, a sword that is felt
+
+What the developer asked for (2026-11-14, item 11 of the long brief, taken on 2026-11-15: "yes, the movements"): the best
+sword animations, and crouch, run, walk and Q-roll animations; better movement.
+
+- **A way to SEE a movement whole** (`tools/Filmstrip`): a row of the game's own square body, each at the next moment of a
+  clip, from the side through a long lens, with numbers: how high the lowest foot (or, `whole`, the lowest point of the body)
+  is over the floor at each moment, how high the head reaches. Every change below was measured with it.
+- **Feet on the ground** (`Shared/Anim/PlayerMoveAnims`, `ground`): the square body's leg seats are written in the module and
+  the height of a sole is worked out for any pose; every gait (walk, run, back, sides, the still stance) now sets the hips
+  exactly as low as the planted foot needs. Measured before: the run's foot was 0.33 over the floor at the heel strike and
+  0.11 in it at mid-stance, the still stance 0.1 in the floor; now 0.00 on every planted sample. A run leaves the ground
+  only between two steps, on a short arc. The running fists come to the chest, not the chin.
+- **A real crouch** (Ctrl): the body is no longer made half its size. The Humanoid lowers the hips by `HipDrop` (0.95,
+  `Server/World/CrouchService`, `configs/Crouch`) and the clips fold the legs under them by IK (each foot set on the floor
+  where the step puts it, flat while it bears the weight), tip the pelvis and the chest forward (45 degrees), sit the hips
+  back and lift the head to look ahead; the eyes go down and ahead with the head (`ViewController`, `EyeShift`). The same
+  build gives the still crouch and the crouched walk ahead, back and to each side. Seen in play: hips 1.05, the body 3.6
+  high, nothing shrunk. A real crouch is taller than the half-size body was (4.0 at its highest), so **the cellar's crawl
+  was raised from 3.4 to 4.3** (its roof slabs, posts and beams in the place; `tools/BuildCellar`); a standing body still
+  cannot pass. `Tests/Crouch.spec` checks that the config and the clips agree.
+- **A true forward roll** (Q): measured, the head went 2.4 studs into the ground at the top of the turn and the feet half a
+  stud at the landing. The tuck is curled tighter (chin on the chest, the back round) and the hips' height at every key is
+  now the one that puts the lowest point of the whole body on the floor: the hips go up and over the shoulders, the back
+  rolls along the floor, and the body comes up through a crouch.
+- **The sword, felt** (`ViewController`, `BodyAnimController`): every cut leans the picture with the blade, one way for the
+  first cut and the other for the second (they cross, as the blade does), and the eyes go a little into the blow. In your
+  own view the sword sits lower and further right, and only the sword arm is moved aside (the free arm had come up into the
+  bottom-left corner as a grey block). The developer's own cuts are kept number for number.
+- 341 of 341 tests pass in a fresh run; both places build; FL saved v252, Hub v317 (not published).
+- **Not done / not seen**: a friend's crouch and roll seen from another player's screen (needs two players); the jump and
+  the fall were not reworked; the three movement sets are still waiting on the developer's choice (set 1 is in use).
+
 ## Version 0.49.0 — The HUD in iron and the pack in leather
 
 What the developer asked for (2026-11-14, item 12 of the long brief, taken first on 2026-11-15: "first the HUD and the pack"):

@@ -78,6 +78,8 @@ local chips: { Chip } = {}
 
 -- the eyes
 local eyeOffset = Vector3.zero
+-- crouched (2026-11-15, a real crouch): how far down the eyes are, 0 standing .. 1 crouched, eased with the hips
+local crouchNow = 0
 local leanNow = 0
 local fovAdd = 0
 local landGoal = 0
@@ -85,6 +87,11 @@ local dashAt = -math.huge
 local dashFor = 0.5
 local dashSide = 0
 local kickOffset = Vector3.zero
+-- a cut of your own (2026-11-15, "the best sword animations"): the picture leans with the blade and the eyes go a
+-- little into the blow, so a cut is FELT in first person and not only seen
+local SWING_LEAN = 3.2 -- degrees at the middle of the cut
+local SWING_PUSH = Vector3.new(0, -0.05, -0.12) -- the eyes into the blow, studs
+local swingAt, swingFor, swingDir = -math.huge, 0.4, 0
 local kickUntil = 0
 
 -- the body's parts that are shown to their own eyes
@@ -432,14 +439,27 @@ local function stepBefore(dt: number)
 		lean += -dashSide * cfg.Dash.Lean * arc
 	end
 
-	local kick = if now < kickUntil then kickOffset else Vector3.zero
+	-- a cut: one smooth lean that way and back, the eyes into it at the strike
+	local swingPush = Vector3.zero
+	local sa = (now - swingAt) / swingFor
+	if sa >= 0 and sa < 1 then
+		local arc = math.sin(math.pi * sa)
+		lean += swingDir * SWING_LEAN * arc
+		swingPush = SWING_PUSH * arc * arc
+	end
+
+	local kick = (if now < kickUntil then kickOffset else Vector3.zero) + swingPush
 	local ease = math.min(1, dt * bob.Ease)
 	eyeOffset += (want + Vector3.new(0, -landGoal - dashDip, 0) + kick - eyeOffset) * ease
 	leanNow += (lean - leanNow) * ease
 
-	-- the eyes sit a little up and forward of the head's middle (smaller on a ducked body)
+	-- the eyes sit a little up and forward of the head's middle
 	local scale = math.clamp(root.Size.Y / 2, 0.4, 1.2)
-	humanoid.CameraOffset = Vector3.new(cfg.Eye.X, cfg.Eye.Y * scale, cfg.Eye.Z) + eyeOffset
+	-- crouched: down and ahead with the head, over the knees (configs/Crouch.EyeShift; the hips are already lower)
+	local ducked = humanoid:GetAttribute("Crouching") == true
+	crouchNow += ((if ducked then 1 else 0) - crouchNow) * math.min(1, dt * 10)
+	local crouchEye = Config.get("Crouch").EyeShift * crouchNow
+	humanoid.CameraOffset = Vector3.new(cfg.Eye.X, cfg.Eye.Y * scale, cfg.Eye.Z) + eyeOffset + crouchEye
 
 	if not waking then
 		local wantAdd = cfg.RunFov * run * moving + dashFov
@@ -470,6 +490,13 @@ function ViewController.dash(side: number, seconds: number)
 	dashAt = os.clock()
 	dashFor = math.max(seconds, 0.1)
 	dashSide = math.clamp(side, -1, 1)
+end
+
+-- One of your own cuts began: the odd cuts lean one way, the even ones the other (they cross, as the blade does).
+local function onSwing(attack: number, seconds: number)
+	swingAt = os.clock()
+	swingFor = math.clamp(seconds, 0.2, 0.9)
+	swingDir = if attack % 2 == 1 then 1 else -1
 end
 
 -- A knock to the eyes for a moment (a pick striking stone): `offset` in studs, for `seconds`.
@@ -691,6 +718,8 @@ end
 function ViewController.Init() end
 
 function ViewController.Start()
+	-- your own cuts lean the picture (BodyAnimController tells of them: it cannot require this module)
+	BodyAnimController.onLocalSwing = onSwing
 	cfg = Config.get("View")
 	build()
 
