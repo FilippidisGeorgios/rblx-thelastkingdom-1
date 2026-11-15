@@ -264,12 +264,24 @@ return function(args: { [string]: any }): string
 	if times then
 		count = #times
 	end
+	-- `moves`: one clip per body, all at `at` seconds (poses side by side)
+	local many: { string }? = args.moves
+	if many then
+		count = #many
+	end
 	for i = 0, count - 1 do
 		local t = if times then times[i + 1] else from + (to - from) * i / steps
 		local body = template:Clone()
 		body.Name = ("At%.2f"):format(t)
 		local pose: { [string]: CFrame } = {}
-		ClipPlayer.sample(clip, t, pose, 1)
+		if many then
+			local d = moves[many[i + 1]]
+			assert(d, "no movement clip called " .. tostring(many[i + 1]))
+			t = args.at or 0
+			ClipPlayer.sample(ClipPlayer.clip("m" .. i, d.frames, d.looped), t, pose, 1)
+		else
+			ClipPlayer.sample(clip, t, pose, 1)
+		end
 		if name == "roll" then
 			pose.LowerTorso = MoveAnims.rollHips(t, Vector3.new(0, 0, -1))
 		end

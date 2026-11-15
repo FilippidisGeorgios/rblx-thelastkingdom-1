@@ -26,6 +26,8 @@ local Lighting = game:GetService("Lighting")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
+local Sfx = require(script.Parent.Sfx)
+
 local IntroCinema = {}
 
 export type Shot = (t: number) -> (CFrame, number)
@@ -197,6 +199,8 @@ function IntroCinema.rig(): Rig
 	end
 
 	function rig.flash()
+		-- thunder, a moment after the light (configs/Audio.Ui.Thunder)
+		Sfx.play("Thunder")
 		task.spawn(function()
 			for _, step in { { 0.34, 0.05 }, { 0.03, 0.1 }, { 0.5, 0.05 }, { 0, 0.8 } } do
 				if not grade.Parent then

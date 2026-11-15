@@ -1,3 +1,37 @@
+## Version 0.52.0 — Sound you can hear, the party on the hill in its own ways, the sword put away for the scene
+
+What the developer asked for (2026-11-15): the sword hidden while the arrival scene plays; sound effects ("it has nothing
+so far"), a very light one as the letters are written, one with the lightning, sound in the game in general; the
+speaker's name over the face picture (letters alone, as wide as the name needs, the nickname, not the account name), the
+face picture smaller and lower; the party doing something while it waits on the hill, not only one of them speaking: the
+three in front speak (chosen at random), all are seen in general, the camera closes on the one who speaks, they do not
+stand side by side and each waits in a way of their own.
+
+- **Why nothing was heard** (measured in play): every sound loaded and played, at 0.035 to 0.16 of full: inaudible. The
+  far drone and wind are now 0.22 and 0.15, a blow on the dead 0.4, a sword drawn 0.26 (`configs/Audio`).
+- **New sounds**, all from Pro Sound Effects (Roblox's licensed library, free in any experience):
+  - a blade through the air at every swing of every player, heard by all near (`AudioController`, `BodyAnimController.onSwing`);
+  - the dead groan now and then: one within 70 studs of you, at random, every 3.5 to 8 seconds, slowed and low;
+  - the screen's own (new `Client/UI/Sfx`, `configs/Audio.Ui`): a typewriter key, cut short and very light, every third
+    letter of a line; a leather-bound book opening when a speaker's name appears and when the pack opens; a deep far
+    blow as the title rises; thunder half a second after each lightning flash, in the scene and on the loading screen.
+- **The sword is put away** while the scene plays (and a sword drawn late, by a slow load, too) and given back after it
+  to whoever had it out (`IntroService`, `WeaponVisualService.setDrawn`). Seen: drawn nil in the scene, true after it.
+- **The name over the face**: the speaker's nickname as they wrote it (Roblox's display name, no longer in capitals), in
+  gold letters alone over the face picture, made smaller to fit when it is long; the picture smaller and down to the
+  foot of the box; the words to its right (`UI/IntroUI`).
+- **The party on the hill** (`IntroService`): eight places, loosely grouped and none in a line, three in front and five
+  behind (a ninth and more further back); who stands where is shuffled each time; the three in front are the ones who
+  speak, the lines going round them in a shuffled order, so the face and over-the-shoulder shots close on each of them in
+  turn. Each place has a way of waiting, played on every screen (`ScenePose` on the character; `PlayerMoveAnims` SCENE
+  POSES, `BodyAnimController`): weight on one leg with a hand on the hip, arms folded, kneeling with a forearm on the knee,
+  a hand shading the eyes, sitting on the ground with the arms on the knees, crouched, both hands on the hips, turned to
+  look back at the others; all breathing. The front ones stand or kneel (their faces are filmed); sitting and crouching
+  are for those behind. Feet on the ground, measured with tools/Filmstrip (`moves`: one pose per body).
+- 341 of 341 tests pass in a fresh run; both places build; FL saved v255, Hub synced and saved (not published).
+- **Not seen**: the party of several on the hill (a test in Studio has one player: the eight places and the turns of the
+  three speakers are not yet seen with eyes); how loud it all is to a listener (the volumes are measured, not heard).
+
 ## Version 0.51.0 — The arrival scene: a face that has a head, a struck-gold title, a leather page for the words
 
 What the developer asked for (2026-11-14, item 13 of the long brief, taken on 2026-11-15 when they said "go on with more of

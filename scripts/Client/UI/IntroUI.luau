@@ -33,6 +33,8 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Theme = require(script.Parent.Theme)
+local Sfx = require(script.Parent.Sfx)
+local Config = require(game:GetService("ReplicatedStorage").Shared.Config)
 
 local IntroUI = {}
 
@@ -307,12 +309,11 @@ function IntroUI.create(holdSeconds: number): Handle
 	plate.Position = UDim2.new(0, 18, 0, 10)
 	plate.Size = UDim2.fromOffset(160, 30)
 	plate.AutomaticSize = Enum.AutomaticSize.X
-	plate.BackgroundColor3 = Theme.Iron.Black
+	-- (2026-11-15, the developer: the name over the face picture, in letters alone, as wide as the name needs)
+	plate.BackgroundTransparency = 1
 	plate.BorderSizePixel = 0
 	plate.ZIndex = 6
 	plate.Parent = box
-	Theme.ironPlate(plate, 8).ZIndex = 6
-	Theme.goldStroke(plate, 1)
 	local platePad = Instance.new("UIPadding")
 	platePad.PaddingLeft = UDim.new(0, 12)
 	platePad.PaddingRight = UDim.new(0, 12)
@@ -323,7 +324,17 @@ function IntroUI.create(holdSeconds: number): Handle
 	nameText.AutomaticSize = Enum.AutomaticSize.X
 	nameText.TextWrapped = false
 	nameText.ZIndex = 7
+	nameText.TextXAlignment = Enum.TextXAlignment.Left
 	Theme.metalText(nameText)
+	local nameShade = Instance.new("UIStroke")
+	nameShade.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	nameShade.Color = Color3.fromRGB(16, 8, 4)
+	nameShade.Thickness = 1.2
+	nameShade.Transparency = 0.2
+	nameShade.Parent = nameText
+	-- a long name is made smaller to fit, never larger than the size the screen gives
+	local nameFit = Instance.new("UITextSizeConstraint")
+	nameFit.Parent = nameText
 
 	local lineText = label(box, "Line", Theme.Role.Body, Theme.Color.Parchment)
 	lineText.Position = UDim2.new(0, 18, 0, 22)
@@ -421,23 +432,35 @@ function IntroUI.create(holdSeconds: number): Handle
 		skipGroup.Position = UDim2.new(1, -24, 0.5, -math.floor(ph / 2))
 		pips.Position = UDim2.fromOffset(0, ph + 3)
 		pips.Size = UDim2.fromOffset(w, 6)
-		plate.Size = UDim2.fromOffset(0, math.max(26, nameText.TextSize + 12))
+		nameFit.MaxTextSize = nameText.TextSize
 		titleRule.Size = UDim2.new(titleRule.Size.X.Scale, 0, 0, 2)
 		titleRuleTop.Size = UDim2.new(titleRuleTop.Size.X.Scale, 0, 0, 1)
 	end
 	local function layoutLine()
 		-- the face is a square as tall as most of the box; the text starts after it, when there is one
-		local side = math.floor(box.AbsoluteSize.Y * 0.74)
+		-- the name in a row along the top, the face picture under it down to the foot of the box (smaller than
+		-- before, and no gap under it), the words to the right of both
+		local h = box.AbsoluteSize.Y
+		local nameH = math.max(18, math.floor(h * 0.22))
+		local side = math.max(24, h - nameH - 18)
+		portrait.AnchorPoint = Vector2.new(0, 1)
+		portrait.Position = UDim2.new(0, 20, 1, -9)
 		portrait.Size = UDim2.fromOffset(side, side)
-		portraitFrame.Size = UDim2.fromOffset(side + 10, side + 10)
-		portraitFrame.Position = UDim2.new(0, 14 + side / 2, 0.5, 4)
+		portraitFrame.Size = UDim2.fromOffset(side + 8, side + 8)
+		portraitFrame.Position = UDim2.new(0, 20 + side / 2, 1, -9 - side / 2)
 		portraitFrame.Visible = portrait.Visible
-		local face = if portrait.Visible then side + 14 else 0
-		local x = 18 + face + (if face > 0 then 12 else 0)
-		local plateH = plate.AbsoluteSize.Y > 0 and plate.AbsoluteSize.Y or 26
-		plate.Position = UDim2.new(0, x, 0, 10)
-		lineText.Position = UDim2.new(0, x, 0, 10 + plateH + 6)
-		lineText.Size = UDim2.new(1, -(x + 18), 1, -(10 + plateH + 12))
+		-- the name: over the face, as wide as it needs (up to a little more than the face and the gap beside it)
+		plate.AutomaticSize = Enum.AutomaticSize.None
+		plate.AnchorPoint = Vector2.new(0, 0)
+		plate.Position = UDim2.new(0, 18, 0, 6)
+		plate.Size = UDim2.fromOffset(math.floor(math.max(side * 1.9, 120)), nameH)
+		nameText.AutomaticSize = Enum.AutomaticSize.None
+		nameText.Size = UDim2.fromScale(1, 1)
+		nameText.TextScaled = true
+		local x = if portrait.Visible then 20 + side + 18 else 18
+		local top = if portrait.Visible then 10 else 6 + nameH + 4
+		lineText.Position = UDim2.new(0, x, 0, top + (if portrait.Visible then nameH * 0.5 else 0))
+		lineText.Size = UDim2.new(1, -(x + 18), 1, -(top + 10))
 	end
 	resize()
 	local camera = Workspace.CurrentCamera
@@ -591,6 +614,7 @@ function IntroUI.create(holdSeconds: number): Handle
 		TweenService:Create(titleShade, inInfo, { Transparency = 0.2 }):Play()
 		emberGoal = 1
 		runEmbers()
+		Sfx.play("Title")
 		-- it settles from a little too large, slowly, for as long as it is on screen
 		TweenService:Create(titleScale, TweenInfo.new(math.max(seconds, 1), Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 		task.delay(0.5, function()
@@ -614,7 +638,9 @@ function IntroUI.create(holdSeconds: number): Handle
 	function handle.say(name: string, text: string, charactersPerSecond: number, image: string?)
 		typeToken += 1
 		local token = typeToken
-		nameText.Text = string.upper(name)
+		-- the name as the player wrote it (their nickname: Roblox's display name), not in capitals
+		local newName = nameText.Text ~= name
+		nameText.Text = name
 		lineText.Text = ""
 		if image and image ~= "" then
 			portrait.Image = image
@@ -623,11 +649,17 @@ function IntroUI.create(holdSeconds: number): Handle
 			portrait.Visible = false
 		end
 		layoutLine()
+		if newName or not box.Visible or box.GroupTransparency > 0.5 then
+			Sfx.play("Name")
+		end
 		if not box.Visible or box.GroupTransparency > 0.5 then
 			box.Visible = true
 			box.Position = BOX_BELOW
 			TweenService:Create(box, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = BOX_AT, GroupTransparency = 0 }):Play()
 		end
+		local typed = 0
+		local okA, audio = pcall(Config.get, "Audio")
+		local typeEvery = (okA and audio and audio.Ui and audio.Ui.Type and audio.Ui.Type.Every) or 3
 		task.spawn(function()
 			local shown = ""
 			for _, code in utf8.codes(text) do
@@ -636,6 +668,13 @@ function IntroUI.create(holdSeconds: number): Handle
 				end
 				shown ..= utf8.char(code)
 				lineText.Text = shown
+				-- a very light key every few letters (not on a space)
+				if code ~= 32 then
+					typed += 1
+					if typed % typeEvery == 0 then
+						Sfx.play("Type")
+					end
+				end
 				task.wait(1 / charactersPerSecond)
 			end
 		end)

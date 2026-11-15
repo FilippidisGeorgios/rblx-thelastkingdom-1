@@ -24,6 +24,7 @@ local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local BodyAnimController = require(script.Parent.BodyAnimController)
 
 local AudioController = {}
 
@@ -140,6 +141,36 @@ local function watchCharacter(character: Model, cfg: any)
 	end)
 end
 
+-- The dead groan now and then: one near the eyes, at random (configs/Audio.Groan).
+local function groans(cfg: any)
+	local g = cfg.Groan
+	if not g or #g.Ids == 0 then
+		return
+	end
+	task.spawn(function()
+		while true do
+			task.wait(g.EveryMin + math.random() * (g.EveryMax - g.EveryMin))
+			local camera = workspace.CurrentCamera
+			if camera then
+				local near = {}
+				for _, m in CollectionService:GetTagged(UNDEAD_TAG) do
+					local head = m:IsA("Model") and (m:FindFirstChild("Head") or m.PrimaryPart)
+					local humanoid = m:FindFirstChildOfClass("Humanoid")
+					if head and head:IsA("BasePart") and (not humanoid or humanoid.Health > 0)
+						and (head.Position - camera.CFrame.Position).Magnitude < g.Range then
+						table.insert(near, head)
+					end
+				end
+				if #near > 0 then
+					local at = near[math.random(1, #near)]
+					local id = g.Ids[math.random(1, #g.Ids)]
+					oneShot(id, at, g.Volume, g.PitchMin + math.random() * (g.PitchMax - g.PitchMin), g.RollOffMax or 60)
+				end
+			end
+		end
+	end)
+end
+
 function AudioController.Init()
 	effects = group("TLK_Effects", 1)
 	ambience = group("TLK_Ambience", 1)
@@ -159,6 +190,18 @@ function AudioController.Start()
 		end
 		startAmbient(cfg)
 	end)
+	-- a blade through the air at every swing, anyone's
+	local sw = cfg.Swing
+	if sw and #sw.Ids > 0 then
+		BodyAnimController.onSwing(function(character: Model)
+			local at = character:FindFirstChild("RightHand") or character:FindFirstChild("HumanoidRootPart")
+			if at and at:IsA("BasePart") then
+				local id = sw.Ids[math.random(1, #sw.Ids)]
+				oneShot(id, at, sw.Volume, sw.PitchMin + math.random() * (sw.PitchMax - sw.PitchMin), sw.RollOffMax or 40)
+			end
+		end)
+	end
+	groans(cfg)
 	for _, m in CollectionService:GetTagged(UNDEAD_TAG) do
 		watchUndead(m, cfg)
 	end

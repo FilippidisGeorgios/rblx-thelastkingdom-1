@@ -103,16 +103,100 @@ local function rootOf(player: Player): BasePart?
 	return if root and root:IsA("BasePart") then root else nil
 end
 
+--[[
+	THE PARTY ON THE HILL (2026-11-15, the developer: "not only one speaks: the three in front speak; everyone is seen;
+	not side by side; each in a way of their own"). Eight places in the first mark's own space (x to its right, z back
+	toward the cameras), loosely grouped, none in a line: three in front (they are the ones who speak) and five behind;
+	a ninth player and more stand a little further back. Who stands where is shuffled for each scene. Each place has a
+	way of waiting (`ScenePose` on the character; Shared/Anim/PlayerMoveAnims SCENE POSES, played by every client):
+	the front ones stand or kneel, so their faces can be filmed; the ones behind may sit or crouch.
+]]
+local WeaponVisualService = require(script.Parent.WeaponVisualService)
+
+local SPOTS = {
+	{ x = 0.0, z = -1.6, yaw = 4 },
+	{ x = -6.2, z = -0.4, yaw = 14 },
+	{ x = 5.8, z = -0.9, yaw = -10 },
+	{ x = -2.9, z = 3.6, yaw = 8 },
+	{ x = 3.2, z = 4.2, yaw = -6 },
+	{ x = -9.8, z = 3.2, yaw = 20 },
+	{ x = 9.4, z = 4.8, yaw = -18 },
+	{ x = 0.4, z = 7.2, yaw = 0 },
+}
+local FRONT = 3
+local FRONT_POSES = { "watch", "arms", "kneel", "brow" }
+local BACK_POSES = { "sit", "crouch", "hips", "lookback", "watch", "arms" }
+local spotPoses: { string } = {}
+
+local function shuffled<T>(list: { T }, rng: Random): { T }
+	local out = table.clone(list)
+	for i = #out, 2, -1 do
+		local j = rng:NextInteger(1, i)
+		out[i], out[j] = out[j], out[i]
+	end
+	return out
+end
+
+-- A way of waiting for every place: the front ones from the standing poses, the others from the rest.
+local function dealPoses(rng: Random)
+	local front = shuffled(FRONT_POSES, rng)
+	local back = shuffled(BACK_POSES, rng)
+	table.clear(spotPoses)
+	for i = 1, #SPOTS do
+		spotPoses[i] = if i <= FRONT then front[(i - 1) % #front + 1] else back[(i - FRONT - 1) % #back + 1]
+	end
+end
+
+-- The weapon in hand is put away while the scene plays (the drawn sword crossed the speaker's face), and given back
+-- after it to whoever had it out.
+local hadDrawn: { [Player]: boolean } = {}
+
+local function putAway(player: Player)
+	local ok, drawn = pcall(WeaponVisualService.isDrawn, player)
+	if ok and drawn then
+		hadDrawn[player] = true
+		pcall(WeaponVisualService.setDrawn, player, false)
+	end
+end
+
+local function giveBack(player: Player)
+	if hadDrawn[player] then
+		hadDrawn[player] = nil
+		pcall(WeaponVisualService.setDrawn, player, true)
+	end
+end
+
 local function standOnHill(player: Player, index: number)
 	local folder = introFolder()
-	local mark = folder and folder:FindFirstChild("Stand" .. ((index - 1) % 6 + 1))
+	local mark = folder and folder:FindFirstChild("Stand1")
 	local root = rootOf(player)
 	if not (mark and mark:IsA("BasePart") and root) then
 		return
 	end
 	local character = player.Character :: Model
-	character:PivotTo(mark.CFrame)
-	root.Anchored = true -- standing still, looking at the castle; the idle still plays
+	local spot = SPOTS[(index - 1) % #SPOTS + 1]
+	local ring = math.floor((index - 1) / #SPOTS)
+	local place = mark.CFrame * CFrame.new(spot.x + ring * 1.7, 0, spot.z + ring * 6)
+	-- on the ground under the place (the hill is not flat): the root stands 3 studs over it
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.RespectCanCollide = true
+	local ignore: { Instance } = { folder :: Instance }
+	for _, other in Players:GetPlayers() do
+		if other.Character then
+			table.insert(ignore, other.Character)
+		end
+	end
+	params.FilterDescendantsInstances = ignore
+	local hit = Workspace:Raycast(place.Position + Vector3.new(0, 12, 0), Vector3.new(0, -40, 0), params)
+	local at = if hit then Vector3.new(place.Position.X, hit.Position.Y + 3, place.Position.Z) else place.Position
+	local ahead = mark.CFrame.LookVector
+	local flat = Vector3.new(ahead.X, 0, ahead.Z).Unit
+	local look = CFrame.fromAxisAngle(Vector3.yAxis, math.rad(spot.yaw)):VectorToWorldSpace(flat)
+	character:PivotTo(CFrame.lookAt(at, at + look))
+	root.Anchored = true -- still, looking at the castle; the way of waiting plays on every screen
+	character:SetAttribute("ScenePose", spotPoses[(index - 1) % #SPOTS + 1] or "watch")
+	putAway(player)
 end
 
 -- Back to where the run begins: the arrival pad, spread out so nobody lands on
@@ -129,6 +213,8 @@ local function standAtGate(player: Player, index: number)
 	local at = base + offset + Vector3.new(0, 3, 0)
 	-- Facing into the castle (away from the gate, which is at +Z).
 	;(player.Character :: Model):PivotTo(CFrame.lookAt(at, at + Vector3.new(0, 0, -1)))
+	;(player.Character :: Model):SetAttribute("ScenePose", nil)
+	giveBack(player)
 	-- The body is still anchored from the hill. With streaming on, the ground at the
 	-- gate may not have reached this client yet (it was 800 studs away a moment
 	-- ago): hold the body until it has, or it lands on nothing and falls.
@@ -210,14 +296,28 @@ local function playScene()
 	state = "playing"
 	skipVotes = {}
 
-	-- Who says what: a shuffled rotation through the party, so the lines move
-	-- between people and the first line is not always the host's.
-	local order = table.clone(cast)
+	-- Who stands where is shuffled; the three in front are the ones who speak, in a shuffled rotation, so the lines
+	-- move between them and the first line is not always the host's.
 	local rng = Random.new()
-	for i = #order, 2, -1 do
-		local j = rng:NextInteger(1, i)
-		order[i], order[j] = order[j], order[i]
+	cast = shuffled(cast, rng)
+	dealPoses(rng)
+	local front: { Player } = {}
+	for i = 1, math.min(FRONT, #cast) do
+		front[i] = cast[i]
 	end
+	local order = shuffled(front, rng)
+
+	-- while the scene plays nobody holds a weapon (a sword drawn late, by a slow load, is put away too)
+	task.spawn(function()
+		while state == "playing" do
+			for _, player in cast do
+				if player.Parent then
+					putAway(player)
+				end
+			end
+			task.wait(0.5)
+		end
+	end)
 	-- One entry per beat ("" where nobody speaks): a remote turns an array with
 	-- holes into a dictionary, so the list is kept dense.
 	local speakers: { string } = {}
@@ -351,6 +451,7 @@ function IntroService.Start()
 			local character = player.Character
 			if character and character:WaitForChild("HumanoidRootPart", 5) and state == "waiting" then
 				standOnHill(player, table.find(Players:GetPlayers(), player) or 1)
+				character:SetAttribute("ScenePose", "watch")
 			end
 		end
 		player.CharacterAdded:Connect(function()

@@ -452,6 +452,18 @@ function TitleScreen.show(): Handle
 		-- lightning
 		if now >= nextFlash then
 			nextFlash = now + 6 + math.random() * 9
+			-- thunder a moment after the light (PSE: distant deep booms; the same as configs/Audio.Ui.Thunder)
+			task.delay(0.55, function()
+				local s = Instance.new("Sound")
+				s.SoundId = "rbxassetid://9113169432"
+				s.Volume = 0.4
+				s.PlaybackSpeed = 0.85 + math.random() * 0.15
+				s.Parent = game:GetService("SoundService")
+				s.Ended:Once(function()
+					s:Destroy()
+				end)
+				s:Play()
+			end)
 			flash.BackgroundTransparency = 0.55
 			TweenService:Create(flash, TweenInfo.new(0.09), { BackgroundTransparency = 0.95 }):Play()
 			task.delay(0.13, function()

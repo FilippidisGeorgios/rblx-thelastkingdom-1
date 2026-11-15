@@ -334,14 +334,14 @@ local function ground(frames: { Frame }, phases: { number }, stance: number, ris
 			until need[b] ~= nil or db > n
 			local from, to = need[a] or 0, need[b] or 0
 			local u = da / (da + db)
-			frames[i].pose.LowerTorso = CFrame.new(0, from + (to - from) * u + FLIGHT_ARC * 4 * u * (1 - u), 0) * frames[i].pose.LowerTorso
+			frames[i].pose.LowerTorso = CFrame.new(0, from + (to - from) * u + FLIGHT_ARC * 4 * u * (1 - u), 0) * (frames[i].pose.LowerTorso or CFrame.new())
 			frames[i].ease = "flat"
 		end
 	end
 	for i = 1, n do
 		local d = need[i]
 		if d then
-			frames[i].pose.LowerTorso = CFrame.new(0, d, 0) * frames[i].pose.LowerTorso
+			frames[i].pose.LowerTorso = CFrame.new(0, d, 0) * (frames[i].pose.LowerTorso or CFrame.new())
 		end
 	end
 end
@@ -555,14 +555,15 @@ end
 
 -- `forward`, `side`: the way the feet go in the body's own space ((1, 0) ahead, (-1, 0) back, (0, 1) right, (0, -1)
 -- left); (0, 0) is the crouch held still.
-local function crouchFrames(forward: number, side: number): { Frame }
+local function crouchFrames(forward: number, side: number, rise: number?): { Frame }
 	local c = CROUCH
+	local lowered = rise or c.drop
 	local still = forward == 0 and side == 0
 	local length = if still then 5 else c.stride
 	local frames: { Frame } = {}
 	local phases: { number } = {}
 	-- the hip joints stand this high over the floor when the hips are lowered by `drop` and nothing else moves them
-	local hip = 2 - c.drop
+	local hip = 2 - lowered
 	for i = 0, SAMPLES do
 		local t = i / SAMPLES
 		phases[i + 1] = t
@@ -609,7 +610,133 @@ local function crouchFrames(forward: number, side: number): { Frame }
 		frames[i + 1] = { time = t * length, ease = "flat", pose = pose }
 	end
 	-- the feet reach down to the floor the lowered hips stand over
-	ground(frames, phases, if still then 1 else c.stance, c.drop)
+	ground(frames, phases, if still then 1 else c.stance, lowered)
+	return frames
+end
+
+--==========================================================================
+-- SCENE POSES (2026-11-15). The party on the hill in the arrival scene: the developer asked that not everyone stands
+-- the same way. Each is one way of waiting (breathing, a small shift of weight), played by every client on a body whose
+-- character has the attribute `ScenePose` (Server/World/IntroService gives one to each player). The legs that bear
+-- the weight are set on the ground by their soles (`ground`); kneeling and sitting fold the legs by IK (`legIK`).
+--==========================================================================
+local SCENE_POSES = { "watch", "arms", "kneel", "brow", "sit", "crouch", "hips", "lookback" }
+PlayerMoveAnims.SCENE_POSES = SCENE_POSES
+
+-- An upper arm turned about its own length FIRST (`twist`, + turns the elbow's bend in toward the body for the right
+-- arm), then taken out to the side (`out`), then swung forward (`x`). (`deg` does it the other way round: out, then
+-- a turn about the upright, which on an arm held out swings it round instead of turning it.)
+local function limb(x: number, twist: number, out: number): CFrame
+	return CFrame.Angles(rad(x), 0, 0) * CFrame.Angles(0, 0, rad(out)) * CFrame.Angles(0, rad(twist), 0)
+end
+
+local function scenePoseFrames(name: string): { Frame }
+	if name == "crouch" then
+		-- the still crouch, on a root that stands where it is (the scene does not lower the hips)
+		return crouchFrames(0, 0, 0)
+	end
+	local frames: { Frame } = {}
+	local phases: { number } = {}
+	local LENGTH = 5
+	local N = 12
+	for k = 0, N do
+		local t = k / N
+		phases[k + 1] = 0
+		local breath = math.sin(TAU * t * 2)
+		local shift = math.sin(TAU * t)
+		local p: Pose = {
+			RightUpperLeg = deg(3, 0, 2),
+			LeftUpperLeg = deg(3, 0, -2),
+			RightLowerLeg = deg(-5, 0, 0),
+			LeftLowerLeg = deg(-5, 0, 0),
+			RightFoot = deg(2, 0, -2),
+			LeftFoot = deg(2, 0, 2),
+			RightUpperArm = deg(4, 0, 5),
+			LeftUpperArm = deg(4, 0, -5),
+			RightLowerArm = deg(10, 0, 0),
+			LeftLowerArm = deg(10, 0, 0),
+		}
+		local chest, head, twist, headTurn = -2.0, 1.0, 0.0, 0.0
+		if name == "watch" then
+			-- the weight on the right leg, the left knee easy, the right hand on the hip
+			p.LowerTorso = deg(0, -6, 3 + 0.6 * shift)
+			p.RightUpperLeg = deg(2, 0, 3)
+			p.RightLowerLeg = deg(-2, 0, 0)
+			p.LeftUpperLeg = deg(9, 0, -6)
+			p.LeftLowerLeg = deg(-16, 0, 0)
+			p.LeftFoot = deg(7, 0, 6)
+			p.RightUpperArm = limb(-6, 100, 38)
+			p.RightLowerArm = deg(100, 0, 0)
+			twist, headTurn = 8, -6
+		elseif name == "arms" then
+			-- arms folded over the chest
+			p.RightUpperArm = limb(14, 78, -6)
+			p.LeftUpperArm = limb(14, -78, 6)
+			p.RightLowerArm = deg(96, 0, 0)
+			p.LeftLowerArm = deg(96, 0, 0)
+			p.LeftUpperLeg = deg(3, 0, -5)
+			p.RightUpperLeg = deg(3, 0, 5)
+			chest = -1
+		elseif name == "kneel" then
+			-- down on the left knee, the right foot planted ahead, the right forearm on the right knee
+			local thighR, kneeR, flatR = legIK(0.7, 0.98, 0)
+			p.RightUpperLeg = deg(thighR, 0, 4)
+			p.RightLowerLeg = deg(kneeR, 0, 0)
+			p.RightFoot = deg(flatR, 0, -4)
+			p.LeftUpperLeg = deg(-14, 0, -3)
+			p.LeftLowerLeg = deg(-76, 0, 0)
+			p.LeftFoot = deg(52, 0, 3)
+			p.RightUpperArm = deg(46, 0, 8)
+			p.RightLowerArm = deg(40, 0, 0)
+			p.LeftUpperArm = deg(8, 0, -6)
+			p.LeftLowerArm = deg(16, 0, 0)
+			chest, head = -7, 6
+		elseif name == "brow" then
+			-- the right hand raised to shade the eyes, looking hard at the castle
+			p.RightUpperArm = deg(132, -20, 10)
+			p.RightLowerArm = deg(112, 0, 0)
+			p.RightHand = deg(-20, 0, 0)
+			p.LeftUpperLeg = deg(10, 0, -3)
+			p.LeftLowerLeg = deg(-12, 0, 0)
+			chest, head = -4, 5
+		elseif name == "sit" then
+			-- on the ground, knees up, the forearms on the knees
+			local thigh, knee, flat = legIK(1.15, 0.28, 0)
+			p.RightUpperLeg = deg(thigh, 0, 9)
+			p.LeftUpperLeg = deg(thigh, 0, -9)
+			p.RightLowerLeg = deg(knee, 0, 0)
+			p.LeftLowerLeg = deg(knee, 0, 0)
+			p.RightFoot = deg(flat, 0, -9)
+			p.LeftFoot = deg(flat, 0, 9)
+			p.RightUpperArm = deg(62, 0, 10)
+			p.LeftUpperArm = deg(62, 0, -10)
+			p.RightLowerArm = deg(48, 0, 0)
+			p.LeftLowerArm = deg(48, 0, 0)
+			chest, head = -14, 12
+		elseif name == "hips" then
+			-- both hands on the hips, the feet apart
+			p.RightUpperArm = limb(-6, 100, 38)
+			p.LeftUpperArm = limb(-6, -100, -38)
+			p.RightLowerArm = deg(100, 0, 0)
+			p.LeftLowerArm = deg(100, 0, 0)
+			p.RightUpperLeg = deg(2, 0, 7)
+			p.LeftUpperLeg = deg(2, 0, -7)
+			p.RightFoot = deg(2, 0, -7)
+			p.LeftFoot = deg(2, 0, 7)
+			chest = -1
+		elseif name == "lookback" then
+			-- turned at the waist, looking back over the shoulder at the others
+			p.LowerTorso = deg(0, 8, 0)
+			p.LeftUpperLeg = deg(6, 0, -3)
+			p.LeftLowerLeg = deg(-10, 0, 0)
+			twist, headTurn = 22, 34
+		end
+		p.UpperTorso = deg(chest - 1.2 * breath, twist, 0)
+		p.Head = deg(head + 0.6 * breath, headTurn + 1.5 * shift, 0)
+		frames[k + 1] = { time = t * LENGTH, ease = "flat", pose = p }
+	end
+	-- the feet that bear the weight are on the ground (a kneel and a sit too: their soles are down)
+	ground(frames, phases, 1, 0)
 	return frames
 end
 
@@ -890,6 +1017,14 @@ function PlayerMoveAnims.clips(set: number): { [string]: ClipDef }
 		duckBack = { frames = crouchFrames(-1, 0), looped = true },
 		duckRight = { frames = crouchFrames(0, 1), looped = true },
 		duckLeft = { frames = crouchFrames(0, -1), looped = true },
+		pose_watch = { frames = scenePoseFrames("watch"), looped = true },
+		pose_arms = { frames = scenePoseFrames("arms"), looped = true },
+		pose_kneel = { frames = scenePoseFrames("kneel"), looped = true },
+		pose_brow = { frames = scenePoseFrames("brow"), looped = true },
+		pose_sit = { frames = scenePoseFrames("sit"), looped = true },
+		pose_crouch = { frames = scenePoseFrames("crouch"), looped = true },
+		pose_hips = { frames = scenePoseFrames("hips"), looped = true },
+		pose_lookback = { frames = scenePoseFrames("lookback"), looped = true },
 		jump = { frames = jumpFrames(s), looped = false },
 		fall = { frames = fallFrames(s), looped = true },
 		roll = { frames = (rollFrames()), looped = false },

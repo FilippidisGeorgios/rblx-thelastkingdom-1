@@ -121,6 +121,9 @@ type Body = {
 	phase: number,
 	run: number,
 	duck: number,
+	-- the arrival scene's way of waiting (the character's `ScenePose`, Server/World/IntroService) and how far in it is
+	scene: number?,
+	scenePose: string?,
 	ahead: number, -- the way the feet go in the body's own space: ahead (+) or back (-)
 	aside: number, -- right (+) or left (-)
 	moving: number, -- 0 standing .. 1 walking, eased (for the eyes' step)
@@ -346,6 +349,14 @@ local function sampleState(body: Body, name: string, layer: Layer, clips: { [str
 			ClipPlayer.sample(clips.duckIdle, layer.time, scratchB, 1)
 			mix(out, scratchB, body.duck)
 		end
+		-- the arrival scene: a way of waiting of its own (each one in the party has another)
+		local sceneW = body.scene or 0
+		local pose = body.scenePose and clips["pose_" .. body.scenePose]
+		if sceneW > 0.001 and pose then
+			table.clear(scratchB)
+			ClipPlayer.sample(pose, layer.time, scratchB, 1)
+			mix(out, scratchB, sceneW)
+		end
 		-- turning on the spot: the feet shuffle round instead of sliding
 		local shuffle = math.clamp((math.abs(body.turn) - 0.9) / 4, 0, 0.42)
 		if shuffle > 0.01 then
@@ -394,6 +405,11 @@ local function stepFeet(body: Body, dt: number, now: number, clips: { [string]: 
 
 	local ducked = humanoid:GetAttribute("Crouching") == true
 	body.duck = moveToward(body.duck, if ducked then 1 else 0, dt / 0.2)
+	local scenePose = body.character:GetAttribute("ScenePose")
+	if typeof(scenePose) == "string" then
+		body.scenePose = scenePose
+	end
+	body.scene = moveToward(body.scene or 0, if typeof(scenePose) == "string" then 1 else 0, dt / 0.5)
 	body.run = moveToward(body.run, if along > RUN_ABOVE and not ducked then 1 else 0, dt / 0.22)
 
 	local want = chooseState(body, now, along, v)
@@ -487,10 +503,19 @@ local function attackRate(body: Body, kind: any): number
 	return math.clamp(kind.pace / math.max(cooldown, 0.2), 0.45, 1.6)
 end
 
+-- Told of every swing of every body (AudioController plays the blade through the air at it).
+local swingHeard: ((character: Model) -> ())? = nil
+function BodyAnimController.onSwing(fn: (character: Model) -> ())
+	swingHeard = fn
+end
+
 local function swing(body: Body)
 	local kind = body.kind and PlayerActionAnims.KINDS[body.kind]
 	if not (kind and kind.attacks) then
 		return
+	end
+	if swingHeard then
+		task.spawn(swingHeard, body.character)
 	end
 	body.attack = body.attack % #kind.attacks + 1
 	play(body, kind.attacks[body.attack], attackRate(body, kind), false, nil)

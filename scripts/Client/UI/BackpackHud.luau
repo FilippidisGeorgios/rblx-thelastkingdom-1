@@ -37,6 +37,7 @@ local Components = require(script.Parent.Components)
 local ItemCard = require(script.Parent.ItemCard)
 local Icons = require(script.Parent.Icons)
 local IconButton = require(script.Parent.IconButton)
+local Sfx = require(script.Parent.Sfx)
 
 local BackpackHud = {}
 
@@ -696,6 +697,7 @@ function BackpackHud.create(): Handle
 		end
 		panelOpen = true
 		panelToken += 1
+		Sfx.play("Pack")
 		panel.Visible = true
 		panel.Position = PANEL_HIDDEN
 		panelScale.Scale = 0.94
