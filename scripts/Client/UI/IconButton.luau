@@ -4,7 +4,9 @@
 	The small square buttons that sit on the edge of the screen (Settings, Profile, Inventory): a picture from `Icons`
 	and NOTHING ELSE. No word, ever: the developer's rule for these buttons is that the picture says what it is.
 	A black plate with a dark-grey edge; it lifts a little when the cursor is on it (the edge turns lighter) and
-	sinks when pressed.
+	sinks when pressed. Since 2026-11-15 the plate is RENDERED blackened iron with a rivet in each corner
+	(Theme.ironPlate), and the pictures are rendered too (Icons.PICTURES): "it looks fake" was the word for the old
+	flat ones.
 
 	Presentation only: it reports a click and nothing else. A button that stands for something switched on (crouching)
 	can be lit with `setActive(true)`: its edge turns gold.
@@ -19,11 +21,9 @@ local Icons = require(script.Parent.Icons)
 
 local IconButton = {}
 
--- The plate and its edge: black and dark grey (the picture inside keeps its own colours).
-local PLATE_TOP = Color3.fromRGB(30, 30, 33)
-local PLATE_BOTTOM = Color3.fromRGB(5, 5, 7)
-local EDGE = Color3.fromRGB(78, 78, 84)
-local EDGE_LIT = Color3.fromRGB(132, 132, 140)
+-- The plate's edge: dark grey (the picture inside keeps its own colours; the plate is Theme.ironPlate).
+local EDGE = Theme.Iron.Edge
+local EDGE_LIT = Theme.Iron.EdgeLit
 local ACTIVE = Color3.fromRGB(198, 158, 66) -- the gold edge of a button that is switched on
 
 export type Props = {
@@ -48,17 +48,17 @@ function IconButton.create(props: Props): Handle
 	button.AnchorPoint = props.AnchorPoint or Vector2.zero
 	button.Position = props.Position or UDim2.new()
 	button.Size = props.Size or UDim2.fromOffset(50, 50)
-	button.BackgroundColor3 = Color3.new(1, 1, 1)
-	button.BackgroundTransparency = 0.04
+	button.BackgroundColor3 = Theme.Iron.Black
+	button.BackgroundTransparency = 0.1
 	button.BorderSizePixel = 0
 	button.ZIndex = 2
 	button.Parent = props.Parent
-	Theme.surface(button, PLATE_TOP, PLATE_BOTTOM)
-	Theme.corner(button, UDim.new(0, 8))
+	Theme.corner(button, UDim.new(0, 3))
+	Theme.ironPlate(button, 10)
 
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = EDGE
-	stroke.Thickness = 1.6
+	stroke.Thickness = 1.2
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Parent = button
 
@@ -109,7 +109,7 @@ function IconButton.create(props: Props): Handle
 		pose(1.07, 2.2, lit())
 	end)
 	button.MouseLeave:Connect(function()
-		pose(1, if active then 2.2 else 1.6, if active then ACTIVE else EDGE)
+		pose(1, if active then 2.2 else 1.2, if active then ACTIVE else EDGE)
 	end)
 	button.MouseButton1Down:Connect(function()
 		pose(0.93, 2.2, lit())
@@ -131,7 +131,7 @@ function IconButton.create(props: Props): Handle
 			active = on
 			TweenService:Create(stroke, Theme.Motion.Fast, {
 				Color = if on then ACTIVE else EDGE,
-				Thickness = if on then 2.2 else 1.6,
+				Thickness = if on then 2.2 else 1.2,
 			}):Play()
 		end,
 	}

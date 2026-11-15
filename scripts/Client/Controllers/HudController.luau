@@ -52,8 +52,8 @@ function HudController.Start()
 	local profile = IconButton.create({
 		Name = "ProfileButton",
 		Parent = gui,
-		Icon = "person",
-		IconSize = 28,
+		Icon = "person", -- the great helm (Icons.PICTURES)
+		IconSize = 38,
 		Size = UDim2.fromOffset(BUTTON_W, BUTTON_H),
 		OnClick = function()
 			ProfileController.toggle()
@@ -63,9 +63,8 @@ function HudController.Start()
 	local gear = IconButton.create({
 		Name = "SettingsButton",
 		Parent = gui,
-		Icon = "gear",
-		Tint = Color3.fromRGB(168, 168, 174), -- a grey cog
-		IconSize = 30,
+		Icon = "gear", -- an iron cog, grey of its own (Icons.PICTURES)
+		IconSize = 38,
 		Size = UDim2.fromOffset(BUTTON_W, BUTTON_H),
 		OnClick = function()
 			SettingsUI.toggle()

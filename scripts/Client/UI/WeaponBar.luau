@@ -2,9 +2,11 @@
 --[[
 	WeaponBar
 	The weapons a player carries, along the bottom of the screen (the developer, 2026-11-10: "not Roblox's own plain bar,
-	a nice one; the mouse wheel chooses"). One small black plate for each weapon with its picture and its number key;
-	the one in hand is lifted, larger and edged in gold, and its name is written above the bar for a moment when it is
-	taken. The bow's plate counts its arrows (a dash when the quiver is not on the back).
+	a nice one; the mouse wheel chooses"). One small plate of blackened iron for each weapon (Theme.ironPlate, rivets
+	in its corners) with its rendered picture and its number key; the one in hand is lifted, larger, edged like iron
+	hot from the forge with a glow rising from its foot (2026-11-15: "darker, not for little children"), and its name
+	is written above the bar for a moment when it is taken. The bow's plate counts its arrows (a dash when the quiver
+	is not on the back).
 
 	Presentation only. It draws what it is given (`set`, `setArrows`) and reports a plate that was pressed (`onPick`):
 	the controller (Controllers/CombatController) turns the wheel and the number keys into the same thing, and the
@@ -30,15 +32,14 @@ export type Handle = {
 	destroy: () -> (),
 }
 
-local PLATE = 58
+local PLATE = 62
 local GAP = 8
 local MARGIN = 16
-local PLATE_TOP = Color3.fromRGB(30, 30, 33)
-local PLATE_BOTTOM = Color3.fromRGB(5, 5, 7)
-local EDGE = Color3.fromRGB(78, 78, 84)
-local GOLD = Color3.fromRGB(214, 172, 78)
+local PICTURE = 48
+local EDGE = Theme.Iron.Edge
+local HOT = Theme.Iron.Ember
 
-type Slot = { button: TextButton, plate: Frame, stroke: UIStroke, scale: UIScale, count: TextLabel?, kind: string }
+type Slot = { button: TextButton, plate: Frame, stroke: UIStroke, scale: UIScale, heat: Frame, count: TextLabel?, kind: string }
 
 function WeaponBar.create(gui: ScreenGui): Handle
 	local root = Instance.new("Frame")
@@ -116,24 +117,43 @@ function WeaponBar.create(gui: ScreenGui): Handle
 			plate.AnchorPoint = Vector2.new(0.5, 1)
 			plate.Position = UDim2.new(0.5, 0, 1, 0)
 			plate.Size = UDim2.fromOffset(PLATE, PLATE)
-			plate.BackgroundColor3 = Color3.new(1, 1, 1)
-			plate.BackgroundTransparency = 0.06
+			plate.BackgroundColor3 = Theme.Iron.Black
+			plate.BackgroundTransparency = 0.1
 			plate.BorderSizePixel = 0
 			plate.Parent = button
-			Theme.surface(plate, PLATE_TOP, PLATE_BOTTOM)
-			Theme.corner(plate, UDim.new(0, 8))
+			Theme.corner(plate, UDim.new(0, 3))
+			Theme.ironPlate(plate, 10)
 			local stroke = Instance.new("UIStroke")
 			stroke.Color = EDGE
-			stroke.Thickness = 1.6
+			stroke.Thickness = 1.2
 			stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 			stroke.Parent = plate
 			local scale = Instance.new("UIScale")
 			scale.Parent = plate
 
-			local icon = Icons.create(weapon.kind, { Size = 40, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Parent = plate })
-				or Icons.create("sword", { Size = 40, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Parent = plate })
+			-- the forge's glow, rising from the foot of the plate of the weapon in hand (off until then)
+			local heat = Instance.new("Frame")
+			heat.Name = "Heat"
+			heat.AnchorPoint = Vector2.new(0, 1)
+			heat.Position = UDim2.fromScale(0, 1)
+			heat.Size = UDim2.fromScale(1, 0.75)
+			heat.BackgroundColor3 = HOT
+			heat.BackgroundTransparency = 1
+			heat.BorderSizePixel = 0
+			heat.ZIndex = 2
+			heat.Parent = plate
+			local heatFade = Instance.new("UIGradient")
+			heatFade.Rotation = 90
+			heatFade.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(1, 0.62),
+			})
+			heatFade.Parent = heat
+
+			local icon = Icons.create(weapon.kind, { Size = PICTURE, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Parent = plate })
+				or Icons.create("sword", { Size = PICTURE, AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.52), Parent = plate })
 			if icon then
-				icon.ZIndex = 2
+				icon.ZIndex = 3
 			end
 
 			local key = Instance.new("TextLabel")
@@ -142,9 +162,10 @@ function WeaponBar.create(gui: ScreenGui): Handle
 			key.Position = UDim2.fromOffset(5, 2)
 			key.Size = UDim2.fromOffset(14, 14)
 			key.TextSize = 12
-			key.TextColor3 = Theme.Color.Muted
+			key.TextColor3 = Theme.Iron.Bone
+			key.TextTransparency = 0.25
 			key.Text = tostring(index)
-			key.ZIndex = 3
+			key.ZIndex = 4
 			key.Parent = plate
 			Theme.applyFont(key, Theme.Role.Strong)
 
@@ -158,7 +179,7 @@ function WeaponBar.create(gui: ScreenGui): Handle
 				made.Size = UDim2.fromOffset(26, 14)
 				made.TextXAlignment = Enum.TextXAlignment.Right
 				made.TextSize = 13
-				made.ZIndex = 3
+				made.ZIndex = 4
 				made.Parent = plate
 				Theme.applyFont(made, Theme.Role.Strong)
 				count = made
@@ -169,7 +190,7 @@ function WeaponBar.create(gui: ScreenGui): Handle
 					pick(index)
 				end
 			end)
-			slots[index] = { button = button, plate = plate, stroke = stroke, scale = scale, count = count, kind = weapon.kind }
+			slots[index] = { button = button, plate = plate, stroke = stroke, scale = scale, heat = heat, count = count, kind = weapon.kind }
 		end
 		drawCount()
 	end
@@ -194,9 +215,10 @@ function WeaponBar.create(gui: ScreenGui): Handle
 		shownSelected = inHand
 		for index, slot in slots do
 			local on = index == inHand
-			TweenService:Create(slot.scale, Theme.Motion.Normal, { Scale = if on then 1.14 else 1 }):Play()
+			TweenService:Create(slot.scale, Theme.Motion.Normal, { Scale = if on then 1.12 else 1 }):Play()
 			TweenService:Create(slot.plate, Theme.Motion.Normal, { Position = UDim2.new(0.5, 0, 1, if on then -8 else 0) }):Play()
-			TweenService:Create(slot.stroke, Theme.Motion.Normal, { Color = if on then GOLD else EDGE, Thickness = if on then 2.4 else 1.6 }):Play()
+			TweenService:Create(slot.stroke, Theme.Motion.Normal, { Color = if on then HOT else EDGE, Thickness = if on then 2 else 1.2 }):Play()
+			TweenService:Create(slot.heat, Theme.Motion.Normal, { BackgroundTransparency = if on then 0 else 1 }):Play()
 		end
 		-- its name, for a moment
 		local weapon = weapons[inHand]

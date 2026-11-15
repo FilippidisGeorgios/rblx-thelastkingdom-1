@@ -192,7 +192,7 @@ local function tile(parent: Instance, order: number, value: string, caption: str
 	local left = 0
 	if itemId == "coin" then
 		-- gold is counted with a coin in the corner, not with a word
-		Icons.coin({ Size = 26, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Parent = frame })
+		Icons.create("coin", { Size = 26, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Parent = frame })
 	elseif itemId then
 		local picture = Instance.new("Frame")
 		picture.Size = UDim2.fromOffset(60, 60)

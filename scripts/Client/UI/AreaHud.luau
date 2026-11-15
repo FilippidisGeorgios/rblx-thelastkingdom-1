@@ -118,8 +118,9 @@ function AreaHud.create(): Handle
 		label.Size = UDim2.new(1, 0, 0, 34)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.TextYAlignment = Enum.TextYAlignment.Bottom
-		label.TextSize = 27
-		label.TextColor3 = Theme.Color.Gold
+		label.TextSize = 24
+		-- gold struck in metal: lit at the top, dark at the foot (2026-11-15)
+		Theme.metalText(label)
 		label.TextTransparency = 1
 		label.Text = ""
 		label.Parent = root

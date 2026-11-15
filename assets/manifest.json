@@ -750,6 +750,102 @@
       "owner": "group:32361153",
       "usedBy": [],
       "note": "made; the Huntsman wears his OLD antler shape instead (segmented from StagSkullMesh with Studio segment_mesh, darkened to 46,32,22 Wood): the made pair was thinner; 2026-11-15"
+    },
+    {
+      "name": "hud_plate",
+      "class": "image",
+      "id": "rbxassetid://102806322016688",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/hud_plate.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "blackened iron plate, rivets; 9-slice 24..104 of 128"
+    },
+    {
+      "name": "hud_panel",
+      "class": "image",
+      "id": "rbxassetid://103628929372549",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/hud_panel.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "the pack's page: leather, stitching, iron corners; 9-slice 96..416 of 512"
+    },
+    {
+      "name": "icon_pack",
+      "class": "image",
+      "id": "rbxassetid://110086793387902",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/pic_pack.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "edge button: the pack"
+    },
+    {
+      "name": "icon_helm",
+      "class": "image",
+      "id": "rbxassetid://80502165829518",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/pic_helm.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "edge button: the profile (great helm)"
+    },
+    {
+      "name": "icon_cog",
+      "class": "image",
+      "id": "rbxassetid://106758502337136",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/pic_cog.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "edge button: settings (iron cog)"
+    },
+    {
+      "name": "icon_coin",
+      "class": "image",
+      "id": "rbxassetid://82142576237455",
+      "source": {
+        "tool": "Blender (tools/blender/make_hud.py)"
+      },
+      "licence": "own",
+      "file": "assets/Icons/hud/pic_coin.png",
+      "uploadedAt": "2026-11-14",
+      "owner": "group:32361153",
+      "usedBy": [
+        "scripts/Client/UI/Theme.luau"
+      ],
+      "note": "gold, wherever it is counted"
     }
   ]
 }

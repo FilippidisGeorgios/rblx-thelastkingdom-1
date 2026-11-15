@@ -71,6 +71,94 @@ Theme.Color = {
 }
 
 --============================================================================
+-- Iron and leather: the HUD's surfaces (2026-11-15)
+--============================================================================
+
+--[[
+	The developer, 2026-11-14: "a much better, realistic UI: it looks fake now; darker, not for little children".
+	So the HUD (the bars, the edge buttons, the weapon places, the pack) stands on RENDERED surfaces instead of flat
+	frames: a blackened iron plate with a rivet in each corner, and a page of dark oiled leather with stitching and
+	an iron bracket at each corner (tools/blender/make_hud.py, assets/Icons/hud). Both are 9-sliced, so they take
+	any size and their riveted corners never stretch.
+]]
+Theme.Art = {
+	Plate = "rbxassetid://102806322016688", -- 128 px, its corners 24 px
+	Page = "rbxassetid://103628929372549", -- 512 px, its corners 96 px
+}
+
+Theme.Iron = {
+	Black = Color3.fromRGB(10, 10, 11), -- under a plate while its picture loads
+	Edge = Color3.fromRGB(70, 68, 66), -- the dark-grey edge of the edge buttons (the developer's rule, 2026-10-30)
+	EdgeLit = Color3.fromRGB(136, 132, 126),
+	Trough = Color3.fromRGB(5, 5, 6), -- the groove a bar runs in
+	Ember = Color3.fromRGB(206, 112, 52), -- the edge of the weapon in hand: iron hot from the forge
+	Bone = Color3.fromRGB(226, 214, 188), -- small numbers and keys on iron
+}
+
+-- The iron plate under a button or a place: fills `parent`, under everything else in it. `corner` is how many
+-- pixels each riveted corner takes on screen (the picture's are 24: 12 draws them at half size).
+function Theme.ironPlate(parent: Instance, corner: number?): ImageLabel
+	local plate = Instance.new("ImageLabel")
+	plate.Name = "Iron"
+	plate.BackgroundTransparency = 1
+	plate.Size = UDim2.fromScale(1, 1)
+	plate.Image = Theme.Art.Plate
+	plate.ScaleType = Enum.ScaleType.Slice
+	plate.SliceCenter = Rect.new(24, 24, 104, 104)
+	plate.SliceScale = (corner or 12) / 24
+	plate.ZIndex = if parent:IsA("GuiObject") then parent.ZIndex else 1
+	plate.Parent = parent
+	return plate
+end
+
+-- The leather page under a panel, with its iron corners `corner` pixels wide. `inset` is the panel's own padding:
+-- the page reaches out past it to the panel's real edge.
+function Theme.leatherPage(parent: Instance, corner: number?, inset: number?): ImageLabel
+	local pad = inset or 0
+	local page = Instance.new("ImageLabel")
+	page.Name = "Page"
+	page.BackgroundTransparency = 1
+	page.Position = UDim2.fromOffset(-pad, -pad)
+	page.Size = UDim2.new(1, pad * 2, 1, pad * 2)
+	page.Image = Theme.Art.Page
+	page.ScaleType = Enum.ScaleType.Slice
+	page.SliceCenter = Rect.new(96, 96, 416, 416)
+	page.SliceScale = (corner or 48) / 96
+	page.ZIndex = if parent:IsA("GuiObject") then parent.ZIndex else 1
+	page.Parent = parent
+	return page
+end
+
+-- Letters that look struck in metal: lit at the top, dark at the foot. The label's own colour is set to white and
+-- the gradient gives it its colours (a UIGradient multiplies what it sits on).
+function Theme.metalText(label: TextLabel, top: Color3?, bottom: Color3?): UIGradient
+	label.TextColor3 = Color3.new(1, 1, 1)
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, top or Theme.Color.GoldBright),
+		ColorSequenceKeypoint.new(0.55, Theme.Color.Gold),
+		ColorSequenceKeypoint.new(1, bottom or Theme.Color.GoldDim),
+	})
+	gradient.Rotation = 90
+	gradient.Parent = label
+	return gradient
+end
+
+-- The shading of a bar's fill whatever its colour: full at the top, a light line, darker at the foot.
+function Theme.barShade(fill: GuiObject): UIGradient
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(0.18, Color3.fromRGB(235, 235, 235)),
+		ColorSequenceKeypoint.new(0.55, Color3.fromRGB(170, 170, 170)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(92, 92, 92)),
+	})
+	gradient.Rotation = 90
+	gradient.Parent = fill
+	return gradient
+end
+
+--============================================================================
 -- Contrast
 --============================================================================
 

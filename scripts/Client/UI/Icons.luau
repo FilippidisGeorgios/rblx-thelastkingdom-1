@@ -498,9 +498,18 @@ Icons.PICTURES = {
 	sword = "rbxassetid://72295026761848",
 	spear = "rbxassetid://74205604807301",
 	bow = "rbxassetid://113928900844748",
+	-- (2026-11-15, tools/blender/make_hud.py: "a much better, realistic UI")
+	backpack = "rbxassetid://110086793387902", -- a soldier's pack, a bedroll on top
+	person = "rbxassetid://80502165829518", -- a great helm, a cold light behind the slits (the Muster Roll)
+	gear = "rbxassetid://106758502337136", -- an iron cog (Settings)
+	coin = "rbxassetid://82142576237455", -- a worn gold penny
 } :: { [string]: string }
 
-local function picture(id: string, props: Props): Frame
+-- The weapons are drawn on a diagonal with room round them, so they are shown a quarter larger than their place;
+-- the others are framed close.
+local PICTURE_SCALE: { [string]: number } = { sword = 1.25, spear = 1.25, bow = 1.25 }
+
+local function picture(kind: string, id: string, props: Props): Frame
 	local holder = Instance.new("Frame")
 	holder.Name = "Picture"
 	holder.BackgroundTransparency = 1
@@ -510,15 +519,15 @@ local function picture(id: string, props: Props): Frame
 	holder.Position = props.Position or UDim2.new()
 	holder.LayoutOrder = props.LayoutOrder or 0
 	local image = Instance.new("ImageLabel")
+	image.Name = "Image"
 	image.BackgroundTransparency = 1
-	image.Size = UDim2.fromScale(1.25, 1.25)
+	local scale = PICTURE_SCALE[kind] or 1.08
+	image.Size = UDim2.fromScale(scale, scale)
 	image.AnchorPoint = Vector2.new(0.5, 0.5)
 	image.Position = UDim2.fromScale(0.5, 0.5)
 	image.Image = id
 	image.ScaleType = Enum.ScaleType.Fit
-	if props.Tint then
-		image.ImageColor3 = props.Tint
-	end
+	-- (a rendered picture keeps its own colours: `Tint` is for the drawn icons)
 	image.Parent = holder
 	holder.Parent = props.Parent
 	return holder
@@ -527,7 +536,7 @@ end
 function Icons.create(kind: string, props: Props): Frame?
 	local id = Icons.PICTURES[kind]
 	if id and id ~= "" then
-		return picture(id, props)
+		return picture(kind, id, props)
 	end
 	local make = (Icons :: any)[kind]
 	if kind == "create" or type(make) ~= "function" then

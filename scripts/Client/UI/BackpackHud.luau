@@ -10,10 +10,14 @@
 	            Relic is gold before the words are read. A Sound-or-better find
 	            also gets its line of flavour, once.
 
-	  THE PACK  A parchment panel (key B, or the INVENTORY tab on the left edge,
-	            which is also the touch way in): the stacks you carry, the
-	            gold, the charm, and what each thing is FOR. This is the only
-	            place the economy is explained, so every row says its use.
+	  THE PACK  A page of dark oiled leather with iron corners (key B, or the
+	            pack button on the left edge, which is also the touch way in):
+	            the stacks you carry, the gold, the charm, and what each thing
+	            is FOR. This is the only place the economy is explained, so
+	            every row says its use. Under the purse, a socket for each place
+	            in the pack, filled as the pack fills (2026-11-15: "a better
+	            pack, darker, realistic": the page, the pack and the coin are
+	            rendered pictures, tools/blender/make_hud.py).
 
 	  IN THE HUB the same panel is the INVENTORY: the stash the runs brought home,
 	            the purse, the charm, and the PRIZES OF THE ROAD waiting to be
@@ -85,7 +89,7 @@ function BackpackHud.create(): Handle
 		Name = "InventoryTab",
 		Parent = gui,
 		Icon = "backpack",
-		IconSize = 40,
+		IconSize = 48,
 		Size = UDim2.fromOffset(58, 58),
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 12, 0.5, 0),
@@ -141,25 +145,36 @@ function BackpackHud.create(): Handle
 	limit.MinSize = Vector2.new(430, 240)
 	limit.MaxSize = Vector2.new(430, 600)
 	limit.Parent = panel
-	panel.BackgroundColor3 = Theme.Color.Ink
-	panel.BackgroundTransparency = 0.06
+	panel.BackgroundTransparency = 1
 	panel.Visible = false
 	panel.Parent = gui
-	Theme.corner(panel)
-	Theme.surface(panel, Theme.Color.Navy, Theme.Color.Ink)
-	Theme.goldStroke(panel, 1.6)
-	Theme.padding(panel, 16)
+	-- the page: dark oiled leather, stitched round, an iron bracket at each corner (it reaches past the padding)
+	local PAD = 18
+	local page = Theme.leatherPage(panel, 44, PAD)
+	page.ImageColor3 = Color3.fromRGB(168, 156, 144) -- a shade darker than the picture: the page reads as old, oiled leather
+	local panelEdge = Instance.new("UIStroke")
+	panelEdge.Color = Color3.new(0, 0, 0)
+	panelEdge.Thickness = 2
+	panelEdge.Transparency = 0.2
+	panelEdge.Parent = panel
+	Theme.padding(panel, PAD)
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
 	title.Size = UDim2.new(1, 0, 0, 28)
 	title.BackgroundTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextSize = 24
-	title.TextColor3 = Theme.Color.Gold
+	title.TextSize = 26
 	title.Text = "THE PACK"
 	title.Parent = panel
 	Theme.applyFont(title, Theme.Role.Heading)
+	Theme.metalText(title)
+	local titleShadow = Instance.new("UIStroke")
+	titleShadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	titleShadow.Color = Color3.new(0, 0, 0)
+	titleShadow.Thickness = 1.2
+	titleShadow.Transparency = 0.3
+	titleShadow.Parent = title
 	-- the way out: the burgundy X in the corner (closePanel is defined below)
 	local closePanel: () -> () = function() end
 	Components.closeButton(title, function()
@@ -167,7 +182,7 @@ function BackpackHud.create(): Handle
 	end)
 
 	-- the purse: a coin, then the words
-	local coin = Icons.coin({ Size = 18, Position = UDim2.fromOffset(0, 32), Parent = panel })
+	Icons.create("coin", { Size = 20, Position = UDim2.fromOffset(0, 31), Parent = panel })
 
 	local summary = Instance.new("TextLabel")
 	summary.Name = "Summary"
@@ -185,6 +200,59 @@ function BackpackHud.create(): Handle
 	rows.Name = "Rows"
 	rows.Position = UDim2.fromOffset(0, 58)
 	rows.Size = UDim2.new(1, 0, 1, -58)
+
+	-- a socket for each place in the pack, filled as it fills (in the castle; the Hub's stash has no places)
+	local places = Instance.new("Frame")
+	places.Name = "Places"
+	places.Position = UDim2.fromOffset(0, 58)
+	places.Size = UDim2.new(1, 0, 0, 16)
+	places.BackgroundTransparency = 1
+	places.Visible = false
+	places.Parent = panel
+	local placeList = Instance.new("UIListLayout")
+	placeList.FillDirection = Enum.FillDirection.Horizontal
+	placeList.Padding = UDim.new(0, 3)
+	placeList.SortOrder = Enum.SortOrder.LayoutOrder
+	placeList.Parent = places
+	local shownPlaces = ""
+
+	local function drawPlaces(used: number, total: number)
+		local key = used .. "/" .. total
+		if key == shownPlaces then
+			return
+		end
+		shownPlaces = key
+		for _, child in places:GetChildren() do
+			if child:IsA("Frame") then
+				child:Destroy()
+			end
+		end
+		local full = total > 0 and used >= total
+		for i = 1, total do
+			local socket = Instance.new("Frame")
+			socket.Name = "Place" .. i
+			socket.LayoutOrder = i
+			socket.Size = UDim2.new(1 / total, -3 * (total - 1) / total, 1, 0)
+			socket.BorderSizePixel = 0
+			socket.Parent = places
+			local edge = Instance.new("UIStroke")
+			edge.Thickness = 1
+			edge.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+			edge.Parent = socket
+			if i <= used then
+				-- a place taken: warm bronze, red when the pack is full
+				socket.BackgroundColor3 = if full then Theme.Color.BordeauxLight else Theme.Color.Bronze
+				Theme.barShade(socket)
+				edge.Color = Color3.new(0, 0, 0)
+				edge.Transparency = 0.2
+			else
+				socket.BackgroundColor3 = Theme.Iron.Trough
+				socket.BackgroundTransparency = 0.25
+				edge.Color = Theme.Iron.Edge
+				edge.Transparency = 0.45
+			end
+		end
+	end
 	rows.BackgroundTransparency = 1
 	rows.BorderSizePixel = 0
 	rows.ScrollBarThickness = 3
@@ -383,6 +451,14 @@ function BackpackHud.create(): Handle
 			return
 		end
 		title.Text = if set.hub then "INVENTORY" else "THE PACK"
+		-- the sockets in the castle; the rows start under them
+		places.Visible = not set.hub and (set.slots or 0) > 0
+		if places.Visible then
+			drawPlaces(set.used or 0, set.slots or 0)
+		end
+		local top = if places.Visible then 84 else 58
+		rows.Position = UDim2.fromOffset(0, top)
+		rows.Size = UDim2.new(1, 0, 1, -top)
 		if set.hub then
 			local kinds = 0
 			for _ in set.stacks or {} do

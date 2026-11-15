@@ -23,7 +23,7 @@ local Hud = {
 		Width = 150,
 		Height = 18,
 		Margin = 14,
-		MarginBottom = 50,
+		MarginBottom = 56, -- (2026-11-15: up 6 for the iron rims of the two bars)
 		TextSize = 13,
 		Stops = {
 			{ At = 1.00, Color = Color3.fromRGB(86, 186, 82) }, -- green

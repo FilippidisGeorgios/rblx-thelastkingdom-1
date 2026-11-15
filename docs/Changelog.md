@@ -1,3 +1,29 @@
+## Version 0.49.0 — The HUD in iron and the pack in leather
+
+What the developer asked for (2026-11-14, item 12 of the long brief, taken first on 2026-11-15: "first the HUD and the pack"):
+a much better, realistic UI (it looked fake), a better pack, sharper, wilder, darker pictures, nothing for little children.
+
+- **Rendered surfaces, not flat frames** (`tools/blender/make_hud.py`, `assets/Icons/hud`, six images uploaded and registered in
+  `assets/manifest.json`): a blackened iron plate with a rivet in each corner, pitted and scratched (9-sliced: `Theme.ironPlate`),
+  and a page of dark oiled leather with a raised welt, stitching and an iron bracket at each corner (9-sliced: `Theme.leatherPage`).
+  New in `Theme`: `Art`, `Iron` (the iron, the groove, the ember edge, bone for small numbers), `metalText` (letters lit at the top,
+  dark at the foot), `barShade`.
+- **Pictures for the edge buttons** (`Icons.PICTURES`): a soldier's leather pack with straps, iron buckles and a bedroll; a great
+  helm with a cold light behind its slits (the Muster Roll); a grey iron cog (Settings); a worn gold penny with a long cross (gold
+  everywhere it is counted, in the Hub too). Picture only, no word, black plate with a dark-grey edge: the rule of 2026-10-30 holds.
+- **The health bar** keeps what the developer chose (green, yellow, orange, red, and the percentage) but sits sunk in an iron rim,
+  shaded like a liquid in a glass, with a mark at each quarter; a pale trail holds where the health was for a moment after a blow
+  and then sinks to it; under a quarter it beats slowly. **The stamina bar** keeps its blue, in the same rim, with a mark where
+  one roll's worth ends. Both a little higher (`configs/Hud`), so the rims clear the area's name.
+- **The weapon bar**: places of riveted iron, larger pictures (48 px), the weapon in hand edged like iron hot from the forge with a
+  glow rising from its foot (no more gold edge). **The area's name** is gold struck in metal, a little smaller.
+- **The pack**: the leather page, the title in struck gold, the coin picture, and under the purse a socket for each place in the
+  pack (16), filled in bronze as it fills, in red when it is full; the Hub's inventory has the same page without the sockets.
+- Seen in play in both places (FL v246, Hub v316, saved, not published). The Hub had not been synced since 0.47: it now has the
+  0.48 scripts too.
+- **Not done**: the player's sword, walk, run, crouch and roll animations and the movement; the phone-only buttons (crouch, run,
+  roll, lantern, attack) keep their drawn pictures on the new iron plates; the item cards inside the pack keep their walnut look.
+
 ## Version 0.48.0 — The dead move in the published game, hands that close on what they hold, the King and the Hollow Knight remade, the gate at the loading screen
 
 What the developer asked for (2026-11-14): fingers that touch exactly what a zombie holds; the crawlers more upright, the right
