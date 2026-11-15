@@ -230,6 +230,12 @@ local function smooth(a: number): number
 	return a * a * (3 - 2 * a)
 end
 
+-- Told of every foot coming down, any body's (AudioController plays a step): how much it runs and how ducked it is.
+local stepHeard: ((character: Model, run: number, duck: number) -> ())? = nil
+function BodyAnimController.onStep(fn: (character: Model, run: number, duck: number) -> ())
+	stepHeard = fn
+end
+
 local function onGround(body: Body): boolean
 	local humanoid = body.humanoid
 	if body.mine then
@@ -433,7 +439,14 @@ local function stepFeet(body: Body, dt: number, now: number, clips: { [string]: 
 	stride += (duck.length - stride) * body.duck
 	pace += (PlayerMoveAnims.DUCK_PACE - pace) * body.duck
 	local rate = if want == "move" then math.clamp(along / pace, 0.45, 1.4) else math.clamp(math.abs(body.turn) / 5, 0, 1)
+	local before = body.phase
 	body.phase = (body.phase + dt * rate / math.max(stride, 0.1)) % 1
+	-- a foot comes down at the start of the stride and halfway through it
+	if stepHeard and want == "move" and body.moving > 0.5 and onGround(body) then
+		if (before < 0.5 and body.phase >= 0.5) or body.phase < before then
+			task.spawn(stepHeard, body.character, body.run, body.duck)
+		end
+	end
 
 	local total = 0
 	for name, layer in body.layers do

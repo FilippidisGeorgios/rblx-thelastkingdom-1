@@ -659,7 +659,7 @@ function IntroUI.create(holdSeconds: number): Handle
 		end
 		local typed = 0
 		local okA, audio = pcall(Config.get, "Audio")
-		local typeEvery = (okA and audio and audio.Ui and audio.Ui.Type and audio.Ui.Type.Every) or 3
+		local typeEvery = (okA and audio and audio.Ui and audio.Ui.Type and audio.Ui.Type.Every) or 2
 		task.spawn(function()
 			local shown = ""
 			for _, code in utf8.codes(text) do

@@ -452,18 +452,24 @@ function TitleScreen.show(): Handle
 		-- lightning
 		if now >= nextFlash then
 			nextFlash = now + 6 + math.random() * 9
-			-- thunder a moment after the light (PSE: distant deep booms; the same as configs/Audio.Ui.Thunder)
-			task.delay(0.55, function()
+			-- the crack WITH the flash and the thunder rolling after it (as configs/Audio.Ui.Crack and .Thunder, which this
+			-- screen cannot read yet: it runs before the game's modules)
+			local function boom(id: string, volume: number, at: number?)
 				local s = Instance.new("Sound")
-				s.SoundId = "rbxassetid://9113169432"
-				s.Volume = 0.4
-				s.PlaybackSpeed = 0.85 + math.random() * 0.15
+				s.SoundId = id
+				s.Volume = volume
+				s.PlaybackSpeed = 0.9 + math.random() * 0.1
 				s.Parent = game:GetService("SoundService")
+				if at then
+					s.TimePosition = at
+				end
 				s.Ended:Once(function()
 					s:Destroy()
 				end)
 				s:Play()
-			end)
+			end
+			boom("rbxassetid://9116282875", 0.85, 1.3)
+			task.delay(0.7, boom, "rbxassetid://9113169432", 1.5)
 			flash.BackgroundTransparency = 0.55
 			TweenService:Create(flash, TweenInfo.new(0.09), { BackgroundTransparency = 0.95 }):Play()
 			task.delay(0.13, function()

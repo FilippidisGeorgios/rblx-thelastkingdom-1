@@ -1,3 +1,33 @@
+## Version 0.53.0 — Sounds measured: even letters, the lightning's crack, boots on the earth, no groans, no blade at the start
+
+What the developer asked for (2026-11-15): check the sounds so they can be heard (some letters loud, some not heard at
+all: make the letters medium to high); take away the zombies' sound; one general sound in the game, at a good level
+(players can turn it down); the crack of lightning with the white flash, besides the rolling thunder; a very quiet sound
+of boots when someone moves (many players will hear them all); take away the blade heard at the start.
+
+- **A way to "hear" without ears** (`tools/SoundMeter`): each clip is played silently into an AudioAnalyzer and its
+  loudness read every frame: the peak, the mean, and the moments it strikes. What it found:
+  - the typewriter is ONE strike, 0.043 s into its clip; the letters played it cut at 0.07 s, and a sound starts a frame
+    or two late: some letters got the strike, some got nothing. Now every other letter plays the whole strike, at an even
+    0.55 (a medium-high loudness of 0.45);
+  - the leather book strikes 0.85 s in: the name's sound came almost a second after the name. It starts at 0.78 s now;
+  - the far thunder is quiet by nature (peak 0.19) and was lost: 1.8 now; one of the two swings was nearly silent (0.14)
+    and is gone;
+  - every volume in `configs/Audio` is now the loudness wanted divided by the clip's own peak (written beside each).
+- **The lightning**: a sharp hissing crack (Pro Sound Effects, it cracks 1.4 s in: played from 1.3 s) WITH the white
+  flash, then the thunder rolling 0.7 s after; in the arrival scene and on the loading screen (`IntroCinema`, `TitleScreen`).
+- **Boots on the earth**: at every footfall of every player (the walk's own step: `BodyAnimController.onStep`), a foot
+  stomp, low and dull (pitched down), VERY quiet (0.22 of a clip whose peak is 0.3; running a little louder, crouched
+  hardly anything), heard only near (26 studs). Roblox's own plain footstep is silenced. Seen in play: six steps in 2.5 s
+  of walking, left and right in turn.
+- **No groans**: the dead's sound is taken away.
+- **No blade at the start**: the sword the game draws by itself (a new body, the end of the arrival scene) makes no sound;
+  only a sword the player draws does. Seen in play: the scene ended, the sword came back, no sound.
+- **The world's sound** (the far drone and the wind) is raised to a level that is heard (0.55 and 0.45: mean loudness
+  about 0.03); the blows, swings and the title sit above it.
+- 341 of 341 tests pass in a fresh run; FL saved v256; Hub synced and saved (not published).
+- **Not heard by a person yet**: the levels are measured, not listened to.
+
 ## Version 0.52.0 — Sound you can hear, the party on the hill in its own ways, the sword put away for the scene
 
 What the developer asked for (2026-11-15): the sword hidden while the arrival scene plays; sound effects ("it has nothing

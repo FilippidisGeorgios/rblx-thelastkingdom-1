@@ -199,7 +199,8 @@ function IntroCinema.rig(): Rig
 	end
 
 	function rig.flash()
-		-- thunder, a moment after the light (configs/Audio.Ui.Thunder)
+		-- the crack WITH the white flash, and the thunder rolling a moment after (configs/Audio.Ui)
+		Sfx.play("Crack")
 		Sfx.play("Thunder")
 		task.spawn(function()
 			for _, step in { { 0.34, 0.05 }, { 0.03, 0.1 }, { 0.5, 0.05 }, { 0, 0.8 } } do

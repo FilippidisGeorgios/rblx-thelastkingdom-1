@@ -48,13 +48,13 @@ local function group(name: string, volume: number): SoundGroup
 end
 
 -- A one-shot 3D sound at `part`, cleaned up when it ends.
-local function oneShot(id: string, part: BasePart, volume: number, speed: number, rollOff: number)
+local function oneShot(id: string, part: BasePart, volume: number, speed: number, rollOff: number, near: number?)
 	local s = Instance.new("Sound")
 	s.SoundId = id
 	s.Volume = volume
 	s.PlaybackSpeed = speed
 	s.RollOffMode = Enum.RollOffMode.InverseTapered
-	s.RollOffMinDistance = 6
+	s.RollOffMinDistance = near or 6
 	s.RollOffMaxDistance = rollOff
 	s.SoundGroup = effects
 	s.Parent = part
@@ -128,9 +128,27 @@ local function watchCharacter(character: Model, cfg: any)
 		return def and def.Kind or nil
 	end
 	local drawn = character:GetAttribute("WeaponDrawn") == true
+	-- (2026-11-15, the developer: "at the start you hear a blade: take it away". The game draws the starter sword by
+	-- itself when a body appears and when the arrival scene ends; only a sword the player draws makes the sound.)
+	local born = os.clock()
+	local sceneLeft = -math.huge
+	character:GetAttributeChangedSignal("ScenePose"):Connect(function()
+		if character:GetAttribute("ScenePose") == nil then
+			sceneLeft = os.clock()
+		end
+	end)
+	-- Roblox's own footstep (a plain one, loud) gives way to the game's boots
+	task.spawn(function()
+		local root = character:WaitForChild("HumanoidRootPart", 10)
+		local running = root and root:WaitForChild("Running", 10)
+		if running and running:IsA("Sound") then
+			running.Volume = 0
+		end
+	end)
 	character:GetAttributeChangedSignal("WeaponDrawn"):Connect(function()
 		local now = character:GetAttribute("WeaponDrawn") == true
-		if now and not drawn then
+		local byItself = os.clock() - born < 6 or os.clock() - sceneLeft < 4 or character:GetAttribute("ScenePose") ~= nil
+		if now and not drawn and not byItself then
 			local k = kind()
 			local at = character:FindFirstChild("HumanoidRootPart")
 			if k and draw.Kinds[k] and at and at:IsA("BasePart") then
@@ -138,36 +156,6 @@ local function watchCharacter(character: Model, cfg: any)
 			end
 		end
 		drawn = now
-	end)
-end
-
--- The dead groan now and then: one near the eyes, at random (configs/Audio.Groan).
-local function groans(cfg: any)
-	local g = cfg.Groan
-	if not g or #g.Ids == 0 then
-		return
-	end
-	task.spawn(function()
-		while true do
-			task.wait(g.EveryMin + math.random() * (g.EveryMax - g.EveryMin))
-			local camera = workspace.CurrentCamera
-			if camera then
-				local near = {}
-				for _, m in CollectionService:GetTagged(UNDEAD_TAG) do
-					local head = m:IsA("Model") and (m:FindFirstChild("Head") or m.PrimaryPart)
-					local humanoid = m:FindFirstChildOfClass("Humanoid")
-					if head and head:IsA("BasePart") and (not humanoid or humanoid.Health > 0)
-						and (head.Position - camera.CFrame.Position).Magnitude < g.Range then
-						table.insert(near, head)
-					end
-				end
-				if #near > 0 then
-					local at = near[math.random(1, #near)]
-					local id = g.Ids[math.random(1, #g.Ids)]
-					oneShot(id, at, g.Volume, g.PitchMin + math.random() * (g.PitchMax - g.PitchMin), g.RollOffMax or 60)
-				end
-			end
-		end
 	end)
 end
 
@@ -190,6 +178,21 @@ function AudioController.Start()
 		end
 		startAmbient(cfg)
 	end)
+	-- boots on the earth at every footfall, anyone's, very quiet
+	local st = cfg.Steps
+	if st and #st.Ids > 0 then
+		local nextFoot: { [Model]: boolean } = {}
+		BodyAnimController.onStep(function(character: Model, run: number, duck: number)
+			local left = not nextFoot[character]
+			nextFoot[character] = left
+			local foot = character:FindFirstChild(if left then "LeftFoot" else "RightFoot") or character:FindFirstChild("HumanoidRootPart")
+			if foot and foot:IsA("BasePart") then
+				local loud = st.Volume * (1 + (st.RunMult - 1) * run) * (1 + (st.DuckMult - 1) * duck)
+				local id = st.Ids[math.random(1, #st.Ids)]
+				oneShot(id, foot, loud, st.PitchMin + math.random() * (st.PitchMax - st.PitchMin), st.RollOffMax or 26, st.RollOffMin or 3)
+			end
+		end)
+	end
 	-- a blade through the air at every swing, anyone's
 	local sw = cfg.Swing
 	if sw and #sw.Ids > 0 then
@@ -201,7 +204,6 @@ function AudioController.Start()
 			end
 		end)
 	end
-	groans(cfg)
 	for _, m in CollectionService:GetTagged(UNDEAD_TAG) do
 		watchUndead(m, cfg)
 	end

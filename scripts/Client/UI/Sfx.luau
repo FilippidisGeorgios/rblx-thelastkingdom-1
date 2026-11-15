@@ -57,6 +57,10 @@ local function playNow(def: any, options: Options?)
 	s.PlaybackSpeed = (options and options.speed) or (lo + (hi - lo) * math.random())
 	s.SoundGroup = uiGroup()
 	s.Parent = SoundService
+	if def.Start then
+		-- past the clip's silent lead, so it lands with its moment
+		s.TimePosition = def.Start
+	end
 	s.Ended:Once(function()
 		s:Destroy()
 	end)
