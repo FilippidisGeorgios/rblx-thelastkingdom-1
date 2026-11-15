@@ -139,6 +139,39 @@ local function cut(upcoming: IntroCinema.Shot?, seconds: number, sway: number)
 	shotSway = sway
 end
 
+--[[
+	YOUR OWN BODY, WHOLE (2026-11-15). In first person your own head is hidden from your own eyes, and while a scene holds
+	the camera Roblox stops updating that: the face shot of the arrival showed your body with no head. While the scene
+	runs every part of your body is shown (Roblox hides the head again by itself when the eyes come back).
+]]
+local ownParts: { BasePart } = {}
+local ownFor: Model? = nil
+local ownScanned = 0
+
+local function showOwn()
+	local character = Players.LocalPlayer.Character
+	if not character then
+		return
+	end
+	local now = os.clock()
+	-- a hat or hair that arrives late is taken in at the next look (every two seconds)
+	if ownFor ~= character or now - ownScanned > 2 then
+		ownFor = character
+		ownScanned = now
+		table.clear(ownParts)
+		for _, d in character:GetDescendants() do
+			if d:IsA("BasePart") then
+				table.insert(ownParts, d)
+			end
+		end
+	end
+	for _, part in ownParts do
+		if part.LocalTransparencyModifier ~= 0 then
+			part.LocalTransparencyModifier = 0
+		end
+	end
+end
+
 -- The camera runs on frames, the scene on the clock: a hitch in rendering may stutter a shot, but it can never
 -- stall the dialogue or put this client out of step with the rest of the party.
 local function renderStep()
@@ -150,6 +183,7 @@ local function renderStep()
 	local t = math.clamp((os.clock() - shotStarted) / shotSeconds, 0, 1)
 	local cf, fov = current(t)
 	lens.frame(cf, fov, shotSway)
+	showOwn()
 end
 
 local function stopCamera()
@@ -233,6 +267,15 @@ local function play(speakers: { [number]: string }, speakerIds: { [number]: numb
 			handle.clearLine()
 		end
 
+		-- a cut between two shots dips to dark for a breath (a hard cut from a pan to a face jarred)
+		if i > 1 then
+			handle.black(0.75, 0.07)
+			task.delay(0.07, function()
+				if token == sceneToken then
+					handle.black(0, 0.32)
+				end
+			end)
+		end
 		local made, kind = shotFor(beat, speakerId, cfg.FieldOfView)
 		-- a person holding a camera shakes a little more on the long approach than at a speaker's face
 		cut(made, beat.Seconds, if kind == "Face" then 0.6 else 1)

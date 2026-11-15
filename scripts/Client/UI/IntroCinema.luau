@@ -106,9 +106,10 @@ function IntroCinema.face(character: Model, side: number): Shot?
 		local at = if h then h.Position else Vector3.zero
 		local angle = math.rad(side * (26 - 9 * t))
 		local dir = look * math.cos(angle) + right * math.sin(angle)
-		local pos = at + dir * (9.2 - 1.2 * t) + Vector3.new(0, 0.3 + 0.25 * t, 0)
+		local pos = at + dir * (10.6 - 1.2 * t) + Vector3.new(0, 0.3 + 0.25 * t, 0)
 		-- aimed a little below the face, so the face sits in the upper middle of the frame, above the dialogue box
-		return CFrame.lookAt(pos, at + Vector3.new(0, -1.0, 0)), 30
+		-- (2026-11-15: a little further and higher: the head touched the black bar)
+		return CFrame.lookAt(pos, at + Vector3.new(0, -0.7, 0)), 30
 	end
 end
 

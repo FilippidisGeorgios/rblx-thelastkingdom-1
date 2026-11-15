@@ -1,3 +1,31 @@
+## Version 0.51.0 — The arrival scene: a face that has a head, a struck-gold title, a leather page for the words
+
+What the developer asked for (2026-11-14, item 13 of the long brief, taken on 2026-11-15 when they said "go on with more of
+what I asked"): a much nicer intro, the buttons, the animation.
+
+- **The face shot showed a body with no head** (`Client/Controllers/IntroController`). In first person your own head is
+  hidden from your own eyes, and while a scene holds the camera Roblox stops updating that: the shot of the speaker's face
+  was a headless chest filling the screen. While the scene runs every part of your own body is now shown; the eyes hide
+  the head again by themselves when the scene ends. The face shot is a little wider and higher (`UI/IntroCinema`), so the
+  head no longer touches the black bar.
+- **A breath of dark at each cut**: a hard cut from a pan to a face jarred; each new shot after the first now dips to dark
+  for a moment (0.07 s down, 0.3 s up).
+- **The title card** (`UI/IntroUI`): the name in gold struck in metal (light at the top, dark at the foot) with a dark
+  edge, larger, set between two rules that draw themselves out from the middle; the line under it in italic bone; embers
+  rising slowly out of the dark behind it, glowing as they rise, fading with the title.
+- **The words**: the dialogue box is the pack's page of oiled leather (stitched, iron at the corners, a little see-through),
+  the speaker's name struck in gold on an iron plate over the words, the face in an iron frame with a gold edge, the line
+  with a soft dark edge so it reads on any shot. The box rises into place and fades out, instead of blinking on and off.
+- **SKIP** is an iron plate (as the HUD's) with its gold edge; the fill that rises while it is held runs from ember to gold.
+  It still says only SKIP and still has to be held.
+- A gold hairline along the inner edge of each black bar, fading at the ends.
+- **No stalls measured**: 8 seconds of play in the Outer Ward with the dead about, in Studio (server and client in one
+  process): no frame over 100 ms (worst 52, 36 frames a second on average), the server's step under 10 ms every time.
+- Seen in play: the title card, the castle shot with the bars, the face shot with the name plate. FL saved v253, Hub
+  synced and saved (not published).
+- **Not done / not seen**: the drawn sword is in the hand during the scene and crosses the face in the face shot (the
+  weapon could be put away for the scene); the scene on a phone; two players (the votes' dots, a friend's face).
+
 ## Version 0.50.0 — A real crouch, feet on the ground, a true forward roll, a sword that is felt
 
 What the developer asked for (2026-11-14, item 11 of the long brief, taken on 2026-11-15: "yes, the movements"): the best

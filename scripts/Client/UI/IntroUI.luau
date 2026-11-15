@@ -16,6 +16,12 @@
 	screen's height (and redone if it turns), so the box reads the same on a 5-inch phone held sideways and on a
 	monitor. The skip plate is only as big as its word (the letters 17 to 25 px, a thin margin round them).
 
+	2026-11-15 (the developer: "a much nicer intro, the buttons, the animation"): the title is gold struck in metal
+	between two rules that draw themselves out, over embers rising slowly out of the dark; the dialogue box is the pack's
+	page of oiled leather (Theme.leatherPage), the name on an iron plate, the face in an iron frame, and the box rises
+	into place and fades away instead of blinking; SKIP is an iron plate with the gold edge and the gold fill; a gold
+	hairline runs along the inner edge of each black bar.
+
 	Owns no logic: IntroController says what to show and when.
 
 	Location: StarterPlayer.StarterPlayerScripts.Client.UI.IntroUI
@@ -102,14 +108,116 @@ function IntroUI.create(holdSeconds: number): Handle
 	bottom.BorderSizePixel = 0
 	bottom.ZIndex = 2
 	bottom.Parent = gui
+	for _, bar in { top, bottom } do
+		local hair = Instance.new("Frame")
+		hair.Name = "Hairline"
+		hair.AnchorPoint = Vector2.new(0.5, if bar == top then 1 else 0)
+		hair.Position = UDim2.fromScale(0.5, if bar == top then 1 else 0)
+		hair.Size = UDim2.new(0.7, 0, 0, 1)
+		hair.BackgroundColor3 = Theme.Color.Gold
+		hair.BackgroundTransparency = 0.55
+		hair.BorderSizePixel = 0
+		hair.ZIndex = 3
+		hair.Parent = bar
+		local fadeEnds = Instance.new("UIGradient")
+		fadeEnds.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		fadeEnds.Parent = hair
+	end
 
 	-- Title card, centred: the name, a gold rule that draws itself out from the middle, and the line under it.
 	local titleText = label(gui, "Title", Theme.Role.Heading, Theme.Color.Parchment)
 	titleText.AnchorPoint = Vector2.new(0.5, 0.5)
 	titleText.Position = UDim2.fromScale(0.5, 0.45)
-	titleText.Size = UDim2.fromScale(0.9, 0.1)
+	titleText.Size = UDim2.fromScale(0.9, 0.11)
 	titleText.TextTransparency = 1
 	titleText.ZIndex = 5
+	Theme.metalText(titleText)
+	local titleShade = Instance.new("UIStroke")
+	titleShade.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	titleShade.Color = Color3.fromRGB(20, 10, 4)
+	titleShade.Thickness = 1.6
+	titleShade.Transparency = 1
+	titleShade.Parent = titleText
+
+	-- a rule above the title too: the name is set between two
+	local titleRuleTop = Instance.new("Frame")
+	titleRuleTop.Name = "TitleRuleTop"
+	titleRuleTop.AnchorPoint = Vector2.new(0.5, 0.5)
+	titleRuleTop.Position = UDim2.fromScale(0.5, 0.385)
+	titleRuleTop.Size = UDim2.fromScale(0, 0)
+	titleRuleTop.BackgroundColor3 = Theme.Color.Gold
+	titleRuleTop.BackgroundTransparency = 0.35
+	titleRuleTop.BorderSizePixel = 0
+	titleRuleTop.ZIndex = 5
+	titleRuleTop.Parent = gui
+
+	-- embers rising slowly out of the dark behind the title (shown with it)
+	local embers = Instance.new("Frame")
+	embers.Name = "Embers"
+	embers.Size = UDim2.fromScale(1, 1)
+	embers.BackgroundTransparency = 1
+	embers.ZIndex = 2
+	embers.Visible = false
+	embers.Parent = gui
+	type Ember = { f: Frame, x: number, y: number, speed: number, sway: number, phase: number, life: number }
+	local emberList: { Ember } = {}
+	for i = 1, 34 do
+		local e = Instance.new("Frame")
+		e.Name = "Ember"
+		e.AnchorPoint = Vector2.new(0.5, 0.5)
+		local px = 2 + (i % 3)
+		e.Size = UDim2.fromOffset(px, px)
+		e.BackgroundColor3 = if i % 4 == 0 then Theme.Color.EmberBright else Theme.Color.Ember
+		e.BackgroundTransparency = 1
+		e.BorderSizePixel = 0
+		e.ZIndex = 2
+		e.Parent = embers
+		Theme.corner(e, UDim.new(0.5, 0))
+		table.insert(emberList, {
+			f = e,
+			x = math.random(),
+			y = math.random(),
+			speed = 0.025 + math.random() * 0.05,
+			sway = 0.004 + math.random() * 0.01,
+			phase = math.random() * 6.28,
+			life = math.random(),
+		})
+	end
+	local emberConn: RBXScriptConnection? = nil
+	local emberAlpha = 0
+	local emberGoal = 0
+	local function runEmbers()
+		if emberConn then
+			return
+		end
+		embers.Visible = true
+		emberConn = RunService.RenderStepped:Connect(function(dt)
+			emberAlpha += (emberGoal - emberAlpha) * math.min(1, dt * 1.6)
+			for _, e in emberList do
+				e.y -= e.speed * dt
+				e.life += dt * 0.35
+				if e.y < -0.05 then
+					e.y = 1.05
+					e.x = math.random()
+					e.life = 0
+				end
+				local x = e.x + math.sin(e.phase + e.life * 3) * e.sway
+				e.f.Position = UDim2.fromScale(x, e.y)
+				-- each glows up from below and dies as it rises; all of them fade with the title
+				local glow = math.clamp(1 - e.y, 0, 1) * (0.55 + 0.45 * math.sin(e.phase + e.life * 7))
+				e.f.BackgroundTransparency = 1 - math.clamp(glow, 0, 1) * 0.8 * emberAlpha
+			end
+			if emberGoal == 0 and emberAlpha < 0.01 and emberConn then
+				emberConn:Disconnect()
+				emberConn = nil
+				embers.Visible = false
+			end
+		end)
+	end
 	local titleScale = Instance.new("UIScale")
 	titleScale.Scale = 1.08
 	titleScale.Parent = titleText
@@ -125,7 +233,10 @@ function IntroUI.create(holdSeconds: number): Handle
 	titleRule.ZIndex = 5
 	titleRule.Parent = gui
 
-	local subText = label(gui, "Subtitle", Theme.Role.Body, Theme.Color.Muted)
+	local subText = label(gui, "Subtitle", Theme.Role.Body, Theme.Iron.Bone)
+	pcall(function()
+		subText.FontFace = Font.new("rbxasset://fonts/families/Merriweather.json", Enum.FontWeight.Regular, Enum.FontStyle.Italic)
+	end)
 	subText.AnchorPoint = Vector2.new(0.5, 0)
 	subText.Position = UDim2.fromScale(0.5, 0.53)
 	subText.Size = UDim2.fromScale(0.9, 0.06)
@@ -133,25 +244,34 @@ function IntroUI.create(holdSeconds: number): Handle
 	subText.ZIndex = 5
 
 	-- The dialogue box: just above the bottom bar, centred.
-	local box = Instance.new("Frame")
+	local BOX_AT = UDim2.new(0.5, 0, 1 - BAR, -10)
+	local BOX_BELOW = UDim2.new(0.5, 0, 1 - BAR, 6)
+	local box = Instance.new("CanvasGroup")
 	box.Name = "Dialogue"
 	box.AnchorPoint = Vector2.new(0.5, 1)
-	box.Position = UDim2.new(0.5, 0, 1 - BAR, -10)
+	box.Position = BOX_AT
 	box.Size = UDim2.fromScale(0.86, 0.17)
-	box.BackgroundColor3 = Theme.Color.Ink
-	box.BackgroundTransparency = 0.25
+	box.BackgroundTransparency = 1
+	box.GroupTransparency = 1
 	box.BorderSizePixel = 0
 	box.Visible = false
 	box.ZIndex = 4
 	box.Parent = gui
-	Theme.corner(box)
 	local boxLimit = Instance.new("UISizeConstraint")
 	boxLimit.MaxSize = Vector2.new(860, math.huge)
 	boxLimit.Parent = box
+	-- the page of oiled leather, a little see-through so the scene is not shut out
+	local page = Theme.leatherPage(box, 26)
+	page.ImageTransparency = 0.12
+	page.ImageColor3 = Color3.fromRGB(176, 164, 150)
+	page.ZIndex = 3
 	local rule = Instance.new("Frame")
 	rule.Name = "Rule"
-	rule.Size = UDim2.new(1, 0, 0, 2)
+	rule.AnchorPoint = Vector2.new(0.5, 0)
+	rule.Position = UDim2.fromScale(0.5, 0)
+	rule.Size = UDim2.new(1, -40, 0, 1)
 	rule.BackgroundColor3 = Theme.Color.Gold
+	rule.BackgroundTransparency = 0.35
 	rule.BorderSizePixel = 0
 	rule.ZIndex = 5
 	rule.Parent = box
@@ -168,22 +288,31 @@ function IntroUI.create(holdSeconds: number): Handle
 	portrait.Visible = false
 	portrait.ZIndex = 5
 	portrait.Parent = box
-	Theme.corner(portrait, Theme.Size.CornerSmall)
-	Theme.goldStroke(portrait, 1.5)
+	Theme.goldStroke(portrait, 1)
+	-- the iron frame round the face (a sibling under it, a little larger; it follows the face)
+	local portraitFrame = Instance.new("Frame")
+	portraitFrame.Name = "PortraitFrame"
+	portraitFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	portraitFrame.BackgroundTransparency = 1
+	portraitFrame.ZIndex = 4
+	portraitFrame.Visible = false
+	portraitFrame.Parent = box
+	Theme.ironPlate(portraitFrame, 8).ZIndex = 4
 
 	-- The name plate sits on the box's top edge, left.
 	local plate = Instance.new("Frame")
 	plate.Name = "NamePlate"
-	plate.AnchorPoint = Vector2.new(0, 0.5)
-	plate.Position = UDim2.new(0, 14, 0, 0)
+	-- (inside the page, over the words: the box fades as one CanvasGroup, which cuts off whatever sticks out of it)
+	plate.AnchorPoint = Vector2.new(0, 0)
+	plate.Position = UDim2.new(0, 18, 0, 10)
 	plate.Size = UDim2.fromOffset(160, 30)
 	plate.AutomaticSize = Enum.AutomaticSize.X
-	plate.BackgroundColor3 = Theme.Color.Navy
+	plate.BackgroundColor3 = Theme.Iron.Black
 	plate.BorderSizePixel = 0
 	plate.ZIndex = 6
 	plate.Parent = box
-	Theme.corner(plate, Theme.Size.CornerSmall)
-	Theme.goldStroke(plate, 1.5)
+	Theme.ironPlate(plate, 8).ZIndex = 6
+	Theme.goldStroke(plate, 1)
 	local platePad = Instance.new("UIPadding")
 	platePad.PaddingLeft = UDim.new(0, 12)
 	platePad.PaddingRight = UDim.new(0, 12)
@@ -194,6 +323,7 @@ function IntroUI.create(holdSeconds: number): Handle
 	nameText.AutomaticSize = Enum.AutomaticSize.X
 	nameText.TextWrapped = false
 	nameText.ZIndex = 7
+	Theme.metalText(nameText)
 
 	local lineText = label(box, "Line", Theme.Role.Body, Theme.Color.Parchment)
 	lineText.Position = UDim2.new(0, 18, 0, 22)
@@ -201,6 +331,12 @@ function IntroUI.create(holdSeconds: number): Handle
 	lineText.TextXAlignment = Enum.TextXAlignment.Left
 	lineText.TextYAlignment = Enum.TextYAlignment.Top
 	lineText.ZIndex = 5
+	local lineShade = Instance.new("UIStroke")
+	lineShade.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+	lineShade.Color = Color3.new(0, 0, 0)
+	lineShade.Thickness = 1
+	lineShade.Transparency = 0.55
+	lineShade.Parent = lineText
 
 	--[[
 		SKIP, in the bottom bar, right: a small plate only as big as its one word, in bold cream letters. Golden brown
@@ -223,8 +359,8 @@ function IntroUI.create(holdSeconds: number): Handle
 	skip.Name = "Skip"
 	skip.Position = UDim2.fromScale(0, 0)
 	skip.Size = UDim2.fromOffset(80, 34)
-	skip.BackgroundColor3 = Color3.fromRGB(104, 72, 32) -- golden brown
-	skip.BackgroundTransparency = 0.22
+	skip.BackgroundColor3 = Theme.Iron.Black -- (2026-11-15: iron, as the HUD's plates; it was golden brown)
+	skip.BackgroundTransparency = 0.1
 	skip.AutoButtonColor = false
 	skip.Text = ""
 	skip.ClipsDescendants = true
@@ -232,12 +368,16 @@ function IntroUI.create(holdSeconds: number): Handle
 	skip.Parent = skipGroup
 	Theme.corner(skip, Theme.Size.CornerSmall)
 	local skipEdge = Theme.goldStroke(skip, 1.2)
+	Theme.ironPlate(skip, 8).ZIndex = 3
 
 	local skipFill = Instance.new("Frame")
 	skipFill.Name = "Fill"
 	skipFill.Size = UDim2.fromScale(0, 1)
 	skipFill.BackgroundColor3 = Theme.Color.Gold
-	skipFill.BackgroundTransparency = 0.4
+	skipFill.BackgroundTransparency = 0.35
+	local fillHeat = Instance.new("UIGradient")
+	fillHeat.Color = ColorSequence.new(Theme.Color.Ember, Theme.Color.GoldBright)
+	fillHeat.Parent = skipFill
 	skipFill.BorderSizePixel = 0
 	skipFill.ZIndex = 4
 	skipFill.Parent = skip
@@ -267,7 +407,7 @@ function IntroUI.create(holdSeconds: number): Handle
 	local function resize()
 		local camera = Workspace.CurrentCamera
 		local h = if camera then camera.ViewportSize.Y else 720
-		titleText.TextSize = math.clamp(math.floor(h * 0.06), 24, 52)
+		titleText.TextSize = math.clamp(math.floor(h * 0.072), 28, 64)
 		subText.TextSize = math.clamp(math.floor(h * 0.03), 14, 24)
 		lineText.TextSize = math.clamp(math.floor(h * 0.034), 15, 28)
 		nameText.TextSize = math.clamp(math.floor(h * 0.026), 13, 20)
@@ -283,14 +423,21 @@ function IntroUI.create(holdSeconds: number): Handle
 		pips.Size = UDim2.fromOffset(w, 6)
 		plate.Size = UDim2.fromOffset(0, math.max(26, nameText.TextSize + 12))
 		titleRule.Size = UDim2.new(titleRule.Size.X.Scale, 0, 0, 2)
+		titleRuleTop.Size = UDim2.new(titleRuleTop.Size.X.Scale, 0, 0, 1)
 	end
 	local function layoutLine()
 		-- the face is a square as tall as most of the box; the text starts after it, when there is one
 		local side = math.floor(box.AbsoluteSize.Y * 0.74)
 		portrait.Size = UDim2.fromOffset(side, side)
+		portraitFrame.Size = UDim2.fromOffset(side + 10, side + 10)
+		portraitFrame.Position = UDim2.new(0, 14 + side / 2, 0.5, 4)
+		portraitFrame.Visible = portrait.Visible
 		local face = if portrait.Visible then side + 14 else 0
-		lineText.Position = UDim2.new(0, 18 + face + (if face > 0 then 12 else 0), 0, 22)
-		lineText.Size = UDim2.new(1, -(36 + face + (if face > 0 then 12 else 0)), 1, -30)
+		local x = 18 + face + (if face > 0 then 12 else 0)
+		local plateH = plate.AbsoluteSize.Y > 0 and plate.AbsoluteSize.Y or 26
+		plate.Position = UDim2.new(0, x, 0, 10)
+		lineText.Position = UDim2.new(0, x, 0, 10 + plateH + 6)
+		lineText.Size = UDim2.new(1, -(x + 18), 1, -(10 + plateH + 12))
 	end
 	resize()
 	local camera = Workspace.CurrentCamera
@@ -441,10 +588,14 @@ function IntroUI.create(holdSeconds: number): Handle
 		subText.Text = sub
 		local inInfo = ease(1.2)
 		TweenService:Create(titleText, inInfo, { TextTransparency = 0 }):Play()
+		TweenService:Create(titleShade, inInfo, { Transparency = 0.2 }):Play()
+		emberGoal = 1
+		runEmbers()
 		-- it settles from a little too large, slowly, for as long as it is on screen
 		TweenService:Create(titleScale, TweenInfo.new(math.max(seconds, 1), Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 		task.delay(0.5, function()
 			TweenService:Create(titleRule, ease(1.4), { Size = UDim2.new(0.34, 0, 0, 2) }):Play()
+			TweenService:Create(titleRuleTop, ease(1.6), { Size = UDim2.new(0.22, 0, 0, 1) }):Play()
 		end)
 		task.delay(0.9, function()
 			TweenService:Create(subText, inInfo, { TextTransparency = 0 }):Play()
@@ -454,6 +605,9 @@ function IntroUI.create(holdSeconds: number): Handle
 			TweenService:Create(titleText, outInfo, { TextTransparency = 1 }):Play()
 			TweenService:Create(subText, outInfo, { TextTransparency = 1 }):Play()
 			TweenService:Create(titleRule, outInfo, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(titleRuleTop, outInfo, { BackgroundTransparency = 1 }):Play()
+			TweenService:Create(titleShade, outInfo, { Transparency = 1 }):Play()
+			emberGoal = 0
 		end)
 	end
 
@@ -469,7 +623,11 @@ function IntroUI.create(holdSeconds: number): Handle
 			portrait.Visible = false
 		end
 		layoutLine()
-		box.Visible = true
+		if not box.Visible or box.GroupTransparency > 0.5 then
+			box.Visible = true
+			box.Position = BOX_BELOW
+			TweenService:Create(box, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = BOX_AT, GroupTransparency = 0 }):Play()
+		end
 		task.spawn(function()
 			local shown = ""
 			for _, code in utf8.codes(text) do
@@ -485,7 +643,13 @@ function IntroUI.create(holdSeconds: number): Handle
 
 	function handle.clearLine()
 		typeToken += 1
-		box.Visible = false
+		local mineToken = typeToken
+		TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { GroupTransparency = 1 }):Play()
+		task.delay(0.32, function()
+			if typeToken == mineToken then
+				box.Visible = false
+			end
+		end)
 	end
 
 	function handle.setVotes(count: number, need: number, iHaveHeld: boolean)
@@ -512,6 +676,10 @@ function IntroUI.create(holdSeconds: number): Handle
 			resizeConn:Disconnect()
 		end
 		portraitConn:Disconnect()
+		if emberConn then
+			emberConn:Disconnect()
+			emberConn = nil
+		end
 		gui:Destroy()
 	end
 
