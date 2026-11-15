@@ -1,3 +1,10 @@
+## Version 0.53.1 — Everybody walks as the Ranger
+
+The developer chose the second movement set (2026-11-15), after watching the three in `docs/media/moves` (videos rendered
+from the game's own clips by `tools/blender/render_moves.py`): the RANGER, low and quiet, the knees always a little bent,
+long soft steps rolling heel to toe, the chest forward, the run long and low (`configs/Movement.Style` 1 -> 2). Seen in play
+("set 2 (Ranger)"); FL saved v257, Hub synced and saved (not published).
+
 ## Version 0.53.0 — Sounds measured: even letters, the lightning's crack, boots on the earth, no groans, no blade at the start
 
 What the developer asked for (2026-11-15): check the sounds so they can be heard (some letters loud, some not heard at

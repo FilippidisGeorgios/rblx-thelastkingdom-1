@@ -21,7 +21,9 @@ local Movement = {
 	-- Which of the three movement sets everybody walks with (Shared/Anim/PlayerMoveAnims: 1 the soldier, 2 the ranger,
 	-- 3 the veteran). For a test in Studio, set the workspace attribute `TLK_MoveStyle` to 1, 2 or 3: everybody changes
 	-- at once.
-	Style = 1,
+	-- (2026-11-15: the developer chose 2, the RANGER, after seeing the three in docs/media/moves: low and quiet, the knees
+	-- a little bent, long soft steps, the run long and low.)
+	Style = 2,
 
 	Stamina = {
 		Max = 6, -- seconds of running on a full bar
